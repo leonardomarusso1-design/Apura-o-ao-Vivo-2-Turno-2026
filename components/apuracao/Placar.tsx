@@ -15,7 +15,7 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
         {(top.length ? top : [null, null]).map((c, i) => (
           <div key={c?.sq ?? i} className={i === 1 ? "text-right" : ""}>
             <div className={`flex items-center gap-2 ${i === 1 ? "flex-row-reverse" : ""}`}>
-              {c ? <Avatar n={c.n} nome={c.nome} cor={cor(c.n)} size={44} /> : null}
+              {c ? <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={44} /> : null}
               <span className="min-w-0">
                 <span className="line-clamp-2 block text-sm leading-tight">{c ? c.nome : "—"}</span>
                 <span className="block text-[11px] text-mute">{c ? `${c.partido} · ${c.n}` : ""}</span>

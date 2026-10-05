@@ -90,6 +90,7 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
         id,
         pct: a.pctApurado,
         candN: l.n,
+        candSq: l.sq,
         candNome: l.nome,
         texto: mudouLider
           ? `${id}: ${l.nome} assumiu a liderança (${a.pctApurado.toFixed(0)}% apurado)`

@@ -30,6 +30,7 @@ export type Evento = {
   pct: number;
   texto: string;
   candN?: number; // nº do candidato citado (p/ foto/avatar)
+  candSq?: number;
   candNome?: string;
 };
 

@@ -3,11 +3,26 @@
 import { useState } from "react";
 
 /**
- * Foto do candidato se existir em /public/candidatos/{n}.jpg; senão, iniciais num círculo colorido.
+ * Foto do candidato se existir em /public/candidatos/{sqcand}.jpg ou {número}.jpg; senão, iniciais num círculo colorido.
  * (Coloque as fotos oficiais do TSE nessa pasta: 13.jpg, 22.jpg...)
  */
-export default function Avatar({ n, nome, cor, size = 36 }: { n?: number; nome: string; cor: string; size?: number }) {
-  const [falhou, setFalhou] = useState(false);
+export default function Avatar({
+  n,
+  sq,
+  nome,
+  cor,
+  size = 36,
+}: {
+  n?: number;
+  sq?: number;
+  nome: string;
+  cor: string;
+  size?: number;
+}) {
+  // tenta /candidatos/{sqcand}.jpg (nome do arquivo do TSE) e depois /candidatos/{número}.jpg
+  const fontes = [sq, n].filter((v): v is number => typeof v === "number" && v > 0).map((v) => `/candidatos/${v}.jpg`);
+  const [idx, setIdx] = useState(0);
+  const falhou = idx >= fontes.length;
   const iniciais = nome
     .replace(/\(.*?\)/g, "")
     .split(/\s+/)
@@ -17,16 +32,16 @@ export default function Avatar({ n, nome, cor, size = 36 }: { n?: number; nome: 
     .join("")
     .toUpperCase() || nome.slice(0, 2).toUpperCase();
 
-  if (n && !falhou) {
+  if (!falhou) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={`/candidatos/${n}.jpg`}
+        src={fontes[idx]}
         alt={nome}
         width={size}
         height={size}
         loading="lazy"
-        onError={() => setFalhou(true)}
+        onError={() => setIdx((i) => i + 1)}
         className="shrink-0 rounded-full object-cover"
         style={{ width: size, height: size, boxShadow: `0 0 0 2px ${cor}` }}
       />

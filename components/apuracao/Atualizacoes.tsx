@@ -15,7 +15,7 @@ export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor:
         ) : (
           eventos.map((e, i) => (
             <li key={`${e.t}-${i}`} className="grid grid-cols-[2.25rem_1fr] items-start gap-3">
-              <Avatar n={e.candN} nome={e.candNome ?? e.id} cor={e.candN ? cor(e.candN) : "#8a9792"} size={36} />
+              <Avatar n={e.candN} sq={e.candSq} nome={e.candNome ?? e.id} cor={e.candN ? cor(e.candN) : "#8a9792"} size={36} />
               <span className="min-w-0">
                 <span className="tabular block text-[11px] text-mute">{hora(e.t)} · {e.id}</span>
                 <span className="block leading-snug">{e.texto}</span>
