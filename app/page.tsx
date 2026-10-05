@@ -31,11 +31,16 @@ export default function Home() {
               Fim da votação: domingo, 25/10, às 17h (Brasília). A divulgação dos resultados segue o TSE.
             </p>
           </div>
-          <WaitlistForm />
+          <div className="grid gap-3">
+            <WaitlistForm />
+            <a href="/apuracao" className="text-center text-sm text-mute underline">
+              Quer ver como a apuração vai funcionar? Abra a prévia →
+            </a>
+          </div>
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
-          <Sponsors />
+          <div id="anuncie"><Sponsors /></div>
           <PixSupport />
         </div>
 

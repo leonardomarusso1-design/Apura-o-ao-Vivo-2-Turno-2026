@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-/** Envia um ping anônimo a cada 60s (só com a aba visível) para o contador "online agora". */
+/** Envia um ping anônimo a cada 2 min (só com a aba visível) para o contador "online agora". */
 export default function Heartbeat({ electionIso }: { electionIso: string }) {
   useEffect(() => {
     // Liga só a partir de 6h antes da votação encerrar (decidido no cliente: a página é estática)
@@ -27,7 +27,7 @@ export default function Heartbeat({ electionIso }: { electionIso: string }) {
       }).catch(() => undefined);
     };
     ping();
-    const id = setInterval(ping, 60_000);
+    const id = setInterval(ping, 120_000);
     return () => clearInterval(id);
   }, [electionIso]);
   return null;

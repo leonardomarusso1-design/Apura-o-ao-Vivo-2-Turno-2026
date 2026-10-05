@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
-import { redis } from "@/lib/redis";
+import { limited } from "@/lib/ratelimit";
+import { forbidden, readJson, sameOrigin, assertProdConfig } from "@/lib/security";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { clientIp, hashIp, newRefCode } from "@/lib/ip";
 import {
   cleanName,
@@ -22,32 +24,14 @@ type Body = {
   ref?: unknown;
   utm?: unknown;
   website?: unknown; // honeypot
+  cfToken?: unknown;
 };
 
-// Fallback em memória (por instância) quando não há Redis
-const mem = new Map<string, { n: number; reset: number }>();
-
-async function limited(key: string, max: number, windowSec: number): Promise<boolean> {
-  const r = await redis<number>(["INCR", `rl:${key}`]);
-  if (r !== null) {
-    if (r === 1) await redis(["EXPIRE", `rl:${key}`, windowSec]);
-    return r > max;
-  }
-  const now = Date.now();
-  const cur = mem.get(key);
-  if (!cur || cur.reset < now) {
-    mem.set(key, { n: 1, reset: now + windowSec * 1000 });
-    return false;
-  }
-  cur.n += 1;
-  return cur.n > max;
-}
-
 export async function POST(req: Request) {
-  let body: Body;
-  try {
-    body = (await req.json()) as Body;
-  } catch {
+  assertProdConfig();
+  if (!sameOrigin(req)) return forbidden();
+  const body = await readJson<Body>(req);
+  if (!body || typeof body !== "object") {
     return NextResponse.json({ ok: false, error: "Requisição inválida." }, { status: 400 });
   }
 
@@ -56,12 +40,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const ipHash = hashIp(clientIp(req));
-  if (await limited(`sub:${ipHash}`, 5, 60)) {
+  const ip = clientIp(req);
+  const ipHash = hashIp(ip);
+  // 5/min por IP e 40/hora por IP (rede de celular compartilha IP, então o teto horário é folgado)
+  if ((await limited(`sub:${ipHash}`, 5, 60)) || (await limited(`subh:${ipHash}`, 40, 3600))) {
     return NextResponse.json(
       { ok: false, error: "Muitas tentativas. Aguarde um minuto." },
       { status: 429 },
     );
+  }
+
+  if (!(await verifyTurnstile(body.cfToken, ip))) {
+    return NextResponse.json({ ok: false, error: "Verificação anti-robô falhou. Recarregue a página." }, { status: 400 });
   }
 
   const email = normalizeEmail(body.email);

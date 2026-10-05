@@ -23,8 +23,8 @@ async function waitingCount(): Promise<number | null> {
 }
 
 async function onlineCount(): Promise<number | null> {
-  const minute = Math.floor(Date.now() / 60_000);
-  const keys = [0, 1, 2].map((i) => `on:${minute - i}`);
+  const bucket = Math.floor(Date.now() / 120_000);
+  const keys = [0, 1].map((i) => `on:${bucket - i}`);
   const n = await redis<number>(["PFCOUNT", ...keys]);
   return typeof n === "number" ? n : null;
 }
