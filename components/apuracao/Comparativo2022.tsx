@@ -24,12 +24,12 @@ export default function Comparativo2022({ area, turno, cor, rotulo }: { area: Ar
   if (linhas.length === 0) return null;
   return (
     <div className="mt-3 border-t border-white/[0.06] pt-3" aria-label={`Comparação com 2022 — ${rotulo}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-mute">Comparado a 2022 · {turno}º turno</p>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-mute">Mesmo partido/número em 2022 · {turno}º turno</p>
       <ul className="mt-2 grid gap-1.5 text-xs">
         {linhas.map((l) => (
           <li key={l.n} className="tabular flex items-center justify-between gap-2">
             <span className="min-w-0 truncate" style={{ color: cor(l.n) }}>
-              {l.nome} <span className="text-mute">({l.n}{l.nome22 ? ` · ${l.nome22} em 2022` : ""})</span>
+              {l.nome22 ? `${l.nome22} (2022)` : `Nº ${l.n} (2022)`} → {l.nome}
             </span>
             <span className="shrink-0 text-paper">
               {f1(l.antes)}% → {f1(l.agora)}%{" "}

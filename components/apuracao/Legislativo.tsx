@@ -6,6 +6,8 @@ import type { CargoLeg, LegData } from "@/lib/apuracao/legislativo";
 import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 import MunicipioBusca from "./MunicipioBusca";
+import MapaBR from "./MapaBR";
+import { mkArea } from "./mapaAreas";
 import { fmtInt } from "./types";
 
 const ROTULO: Record<Bloco, string> = { esquerda: "Esquerda", centro: "Centrão", direita: "Direita", outros: "Outros" };
@@ -76,6 +78,31 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
     return ORDEM.flatMap((b) => porBloco[b]);
   }, [d]);
 
+  const ordemBloco: Bloco[] = ["esquerda", "centro", "direita", "outros"];
+  const areas = useMemo(() => {
+    const out: Record<string, ReturnType<typeof mkArea>> = {};
+    if (!d) return out;
+    for (const [id, v] of Object.entries(d.porUf)) {
+      const tot = Object.values(v.blocos).reduce((a, b) => a + b, 0) || 1;
+      const cands = ordemBloco
+        .map((b, i) => ({ b, i, qt: v.blocos[b] }))
+        .filter((x) => x.qt > 0)
+        .sort((a, b) => b.qt - a.qt || a.i - b.i)
+        .map((x) => ({
+          sq: x.i + 1,
+          n: x.i + 1,
+          nome: ROTULO[x.b],
+          partido: `${x.qt} de ${tot}`,
+          votos: x.qt,
+          pct: (x.qt / tot) * 100,
+          eleito: true,
+        }));
+      out[id] = mkArea(id, cands);
+    }
+    return out;
+  }, [d]);
+  const corBloco = (n: number | undefined) => (n === undefined ? "#2a332f" : COR_BLOCO[ordemBloco[n - 1] ?? "outros"][0]);
+
   if (erro) return <p className="rounded-2xl border border-line bg-panel p-6 text-sm text-mute">Não foi possível carregar agora. Tente novamente em instantes.</p>;
   if (!d)
     return (
@@ -106,6 +133,21 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
           <Hemiciclo seats={seats} />
         </div>
         <p className="mt-1 text-[11px] text-mute">Classificação em blocos é uma simplificação convencional, só para colorir.</p>
+      </section>
+
+      <section className="glass-panel rounded-2xl p-3 sm:p-5" aria-label="Mapa">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+          {cargo === 5 ? "Senadores eleitos por estado" : "Bloco que mais elegeu em cada estado"}
+        </h3>
+        <MapaBR ufs={areas} cor={corBloco} selecionada={uf} onSelect={(x) => setUf(x === uf ? null : x)} />
+        <ul className="mt-2 flex flex-wrap gap-3 text-xs text-mute">
+          {ORDEM.filter((b) => d.blocos[b] > 0).map((b) => (
+            <li key={b} className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
+              {ROTULO[b]}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="glass-panel rounded-2xl p-4 sm:p-5">

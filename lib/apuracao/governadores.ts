@@ -51,16 +51,16 @@ async function pool<T>(items: string[], size: number, fn: (x: string) => Promise
 const resumo = (a: Area, n = 3) => ({
   pa: Math.round(a.pctApurado * 10) / 10,
   top: a.cands.slice(0, n).map((c) => ({ sq: c.sq, n: c.n, nome: c.nome, partido: c.partido, pct: c.pct, votos: c.votos })),
-  eleito: a.definidoTse,
+  eleito: a.cands.some((c) => c.eleito), // marca oficial por candidato (a.definidoTse também vale para quem vai ao 2º turno)
 });
 
-const KEY_R1 = "gov:r1:v2";
-const KEY_R2 = "gov:r2:v2";
+const KEY_R1 = "gov:r1:v3";
+const KEY_R2 = "gov:r2:v3";
 let memR1: Record<string, DisputaGov["r1"]> | null = null;
 let memR2: { at: number; data: Record<string, DisputaGov["r2"]> } | null = null;
 
 /** Regra do 2º turno: o líder do 1º turno não passou de 50% dos votos válidos. */
-const vaiAoSegundo = (r1: DisputaGov["r1"]) => r1.pa >= 99.9 && r1.top.length > 1 && r1.top[0].pct <= 50 && !r1.eleito;
+const vaiAoSegundo = (r1: DisputaGov["r1"]) => r1.pa >= 99 && r1.top.length > 1 && !r1.eleito;
 
 async function getR1(): Promise<Record<string, DisputaGov["r1"]>> {
   const cached = await redis<string>(["GET", KEY_R1]);

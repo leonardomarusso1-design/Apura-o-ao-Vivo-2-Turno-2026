@@ -17,7 +17,7 @@ export type LegData = {
   definidas: number;
   blocos: Record<Bloco, number>;
   partidos: { sg: string; bloco: Bloco; cadeiras: number }[];
-  porUf: Record<string, { vagas: number; definidas: number; top: Eleito[] }>;
+  porUf: Record<string, { vagas: number; definidas: number; top: Eleito[]; blocos: Record<Bloco, number> }>;
   eleitos: Eleito[]; // Senado: todos; demais: só os mais votados
 };
 
@@ -78,7 +78,7 @@ async function pool<T>(items: readonly string[], size: number, fn: (x: string) =
 const mem = new Map<number, LegData>();
 
 export async function getLegislativo(cargo: CargoLeg): Promise<LegData | null> {
-  const key = `leg:v2:${ELE}:${cargo}`;
+  const key = `leg:v3:${ELE}:${cargo}`;
   const cached = await redis<string>(["GET", key]);
   if (typeof cached === "string") {
     try {
@@ -106,7 +106,10 @@ export async function getLegislativo(cargo: CargoLeg): Promise<LegData | null> {
     if (!r) continue;
     vagas += r.vagas;
     todos.push(...r.eleitos);
+    const bu: Record<Bloco, number> = { esquerda: 0, centro: 0, direita: 0, outros: 0 };
+    for (const e of r.eleitos) bu[blocoDe(e.partido)]++;
     porUf[uf] = {
+      blocos: bu,
       vagas: r.vagas,
       definidas: r.eleitos.length,
       top: [...r.eleitos].sort((a, b) => b.votos - a.votos).slice(0, cargo === 5 ? 3 : 1),

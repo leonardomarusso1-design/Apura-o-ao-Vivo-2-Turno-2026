@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BR_UFS } from "@/lib/br-map";
 import { blocoDe, COR_BLOCO } from "@/lib/apuracao/blocos";
 import type { CandGov, DisputaGov } from "@/lib/apuracao/governadores";
 import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 import MunicipioBusca from "./MunicipioBusca";
-import { fmtInt, fmtPct } from "./types";
+import MapaBR from "./MapaBR";
+import { mkArea } from "./mapaAreas";
+import { fmtInt, fmtPct, makeCor } from "./types";
 
 type Resp = { ok: boolean; r2Aberto: boolean; disputas: DisputaGov[] };
 
@@ -70,6 +72,18 @@ function Cartao({ d }: { d: DisputaGov }) {
 
 export default function Governadores() {
   const [d, setD] = useState<Resp | null>(null);
+  const [sel, setSel] = useState<string | null>(null);
+  const { areas, corMapa } = useMemo(() => {
+    const out: Record<string, ReturnType<typeof mkArea>> = {};
+    const todos: { n: number; partido: string }[] = [];
+    for (const x of d?.disputas ?? []) {
+      const base = x.r2 && x.r2.top.length ? x.r2 : x.r1;
+      const cands = base.top.map((c) => ({ sq: c.sq ?? c.n, n: c.n, nome: c.nome, partido: c.partido, votos: c.votos, pct: c.pct, eleito: false }));
+      todos.push(...cands.map((c) => ({ n: c.n, partido: c.partido })));
+      out[x.uf] = mkArea(x.uf, cands);
+    }
+    return { areas: out, corMapa: makeCor(todos) };
+  }, [d]);
   useEffect(() => {
     let alive = true;
     let t: ReturnType<typeof setTimeout>;
@@ -108,8 +122,29 @@ export default function Governadores() {
     });
   const eleitos = d.disputas.filter((x) => !x.segundoTurno).sort((a, b) => a.uf.localeCompare(b.uf));
 
+  const escolhido = sel ? d.disputas.find((x) => x.uf === sel) : undefined;
   return (
     <div className="grid gap-4">
+      <section className="glass-panel rounded-2xl p-3 sm:p-5" aria-label="Mapa dos governos">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+          {eleitos.length} eleitos · {segundo.length} no 2º turno
+        </h2>
+        <MapaBR ufs={areas} cor={corMapa} selecionada={sel} onSelect={(u) => setSel(u === sel ? null : u)} />
+        <ul className="mt-2 flex flex-wrap gap-3 text-xs text-mute">
+          {(["esquerda", "centro", "direita", "outros"] as const).map((b) => (
+            <li key={b} className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
+              {b === "esquerda" ? "Esquerda" : b === "direita" ? "Direita" : b === "centro" ? "Centrão" : "Outros"}
+            </li>
+          ))}
+        </ul>
+        {escolhido ? (
+          <div className="mt-4">
+            <Cartao d={escolhido} />
+          </div>
+        ) : null}
+      </section>
+
       <section aria-label="Governadores no 2º turno">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-mute">
           {segundo.length} {segundo.length === 1 ? "estado vai" : "estados vão"} ao 2º turno
