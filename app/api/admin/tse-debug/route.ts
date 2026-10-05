@@ -57,6 +57,10 @@ export async function GET(req: Request) {
     }
     if (key === "cfg" && /^[a-z]{2}$/.test(u) && parsed) {
       const abr = (parsed as { abr?: { cd: string; mu?: unknown[] }[] }).abr?.find((a) => a.cd === u);
+      if (sp.get("l") === "1") {
+        const lista = (abr?.mu ?? []) as { cd: string; nm: string }[];
+        return NextResponse.json({ total: lista.length, lista: lista.map((x) => `${x.cd}|${x.nm}`).join(";") });
+      }
       return NextResponse.json({ status: r.status, cd: abr?.cd, total: abr?.mu?.length ?? 0, amostra: abr?.mu?.slice(0, 3) ?? null });
     }
     return NextResponse.json({ status: r.status, bytes: text.length, shape: parsed ? shape(parsed) : text.slice(0, 200) });
