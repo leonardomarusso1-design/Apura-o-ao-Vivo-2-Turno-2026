@@ -30,6 +30,10 @@ const MapaExterior = dynamic(() => import("./MapaExterior"), {
   ssr: false,
   loading: () => <div className="h-[420px] animate-pulse rounded-2xl border border-line bg-panel" />,
 });
+const Governadores = dynamic(() => import("./Governadores"), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse rounded-2xl border border-line bg-panel" />,
+});
 const TvView = dynamic(() => import("./TvView"), { ssr: false });
 
 export default function ApuracaoClient({ initial = null }: { initial?: Payload | null }) {
@@ -43,6 +47,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [busca, setBusca] = useState(false);
+  const [aba, setAba] = useState<"presidente" | "governadores">("presidente");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -251,13 +256,36 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
         </div>
       </header>
 
-      {esperandoVotos ? (
+      <div className="mb-4 flex gap-1.5" role="tablist" aria-label="Cargo">
+        {(
+          [
+            ["presidente", "Presidente"],
+            ["governadores", "Governadores"],
+          ] as const
+        ).map(([k, nome]) => (
+          <button
+            key={k}
+            role="tab"
+            aria-selected={aba === k}
+            onClick={() => setAba(k)}
+            className={`h-10 rounded-xl border px-4 text-sm font-medium transition ${aba === k ? "border-white/20 bg-white/10 text-paper" : "border-line text-mute hover:text-paper"}`}
+          >
+            {nome}
+          </button>
+        ))}
+      </div>
+
+      {aba === "governadores" ? <Governadores /> : null}
+
+      {aba === "presidente" && esperandoVotos ? (
         <p className="mb-4 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-mute" role="status">
           <span className="pulse-dot mr-2 inline-block h-2 w-2 rounded-full bg-amber align-middle" />
           Esperando novos votos serem contabilizados…
         </p>
       ) : null}
 
+      {aba === "presidente" ? (
+        <>
       {aguardando && !data?.br ? (
         <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
           <p className="font-display text-2xl">Aguardando os primeiros votos</p>
@@ -351,6 +379,8 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       <div className="mt-6">
         <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={120} label="Anuncie aqui · faixa grande" />
       </div>
+        </>
+      ) : null}
 
       <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={setUf} />
 
