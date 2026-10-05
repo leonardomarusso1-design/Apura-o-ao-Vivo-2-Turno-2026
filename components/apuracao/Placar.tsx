@@ -7,61 +7,141 @@ import Avatar from "./Avatar";
 import Num from "./Num";
 
 export default function Placar({ br, cor }: { br: Area | null; cor: (n: number | undefined) => string }) {
-  // Os 2 primeiros por votos, mas SEMPRE na mesma posição (por nº da urna) — evita trocar de lado a cada virada
+  // Ordena por votos para saber o líder
+  const candsPorVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
+  const lider = candsPorVotos[0];
+  const segundo = candsPorVotos[1];
+
+  // Posição estável para não trocar de lado bruscamente se houver empate técnico
   const top = (br?.cands.slice(0, 2) ?? []).sort((a, b) => a.n - b.n);
   const resto = br ? br.cands.slice(2) : [];
   const [todos, setTodos] = useState(false);
-  const dif = top.length === 2 ? Math.abs(top[0].votos - top[1].votos) : 0;
-  const difPct = top.length === 2 ? Math.abs(top[0].pct - top[1].pct) : 0;
+
+  const dif = lider && segundo ? Math.abs(lider.votos - segundo.votos) : 0;
+  const difPct = lider && segundo ? Math.abs(lider.pct - segundo.pct) : 0;
 
   return (
-    <section className="glow-card rise rounded-2xl border border-line bg-panel/95 p-4 sm:p-6" aria-label="Placar nacional">
-      <div className="grid grid-cols-2 gap-3">
-        {(top.length ? top : [null, null]).map((c, i) => (
-          <div key={c?.sq ?? i} className={i === 1 ? "text-right" : ""}>
-            <div className={`flex items-center gap-2 ${i === 1 ? "flex-row-reverse" : ""}`}>
-              {c ? <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={44} /> : null}
-              <span className="min-w-0">
-                <span className="line-clamp-2 block text-sm leading-tight">{c ? c.nome : "—"}</span>
-                <span className="block text-[11px] text-mute">{c ? `${c.partido} · ${c.n}` : ""}</span>
-              </span>
-            </div>
-            <div className="tabular mt-3 whitespace-nowrap font-display text-[2rem] leading-none sm:text-5xl lg:text-[2rem] xl:text-4xl 2xl:text-5xl">
-              {c ? <Num v={c.pct} /> : "––"}
-              <span className="text-base text-mute">%</span>
-            </div>
-            <div className="tabular mt-1 text-xs text-mute">{c ? `${fmtInt(c.votos)} votos` : ""}</div>
-          </div>
-        ))}
+    <section 
+      className="glass-panel rise rounded-2xl p-4 sm:p-5 relative overflow-hidden transition-all duration-300"
+      aria-label="Placar nacional"
+    >
+      {/* Indicador de Status / Liderança sutil no topo do card */}
+      <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] mb-4">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-mute flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          Presidência da República
+        </span>
+        {br?.definidoTse ? (
+          <span className="rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+            Matematicamente Eleito
+          </span>
+        ) : br?.pctApurado ? (
+          <span className="text-[11px] font-medium text-mute tabular">
+            Total apurado: <strong className="text-paper font-semibold">{fmtPct(br.pctApurado, 1)}%</strong>
+          </span>
+        ) : null}
       </div>
 
-      <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-line" aria-hidden>
+      {/* Duelo de Candidatos */}
+      <div className="grid grid-cols-2 gap-4">
+        {(top.length ? top : [null, null]).map((c, i) => {
+          const isLider = Boolean(c && lider && c.n === lider.n && c.votos > 0);
+          const candidatoCor = c ? cor(c.n) : "#7e8d9f";
+
+          return (
+            <div 
+              key={c?.sq ?? i} 
+              className={`flex flex-col ${i === 1 ? "items-end text-right" : "items-start text-left"}`}
+            >
+              <div className={`flex items-center gap-3 ${i === 1 ? "flex-row-reverse" : ""}`}>
+                {c ? (
+                  <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
+                ) : (
+                  <div className="w-[46px] h-[46px] rounded-full bg-white/[0.05] animate-pulse" />
+                )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-sm sm:text-base text-paper truncate max-w-[110px] sm:max-w-[150px]">
+                      {c ? c.nome : "—"}
+                    </span>
+                    {isLider && (
+                      <span 
+                        className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded uppercase"
+                        style={{ backgroundColor: `${candidatoCor}25`, color: candidatoCor }}
+                      >
+                        Líder
+                      </span>
+                    )}
+                  </div>
+                  <span className="block text-xs text-mute font-medium mt-0.5">
+                    {c ? `${c.partido} · ${c.n}` : ""}
+                  </span>
+                </div>
+              </div>
+
+              {/* Porcentagem Grande de Alta Legibilidade */}
+              <div className="tabular mt-3.5 flex items-baseline gap-1 font-bold text-3xl sm:text-4xl lg:text-3xl xl:text-4xl text-white tracking-tight">
+                {c ? <Num v={c.pct} /> : "––"}
+                <span className="text-base sm:text-lg font-medium text-mute">%</span>
+              </div>
+
+              {/* Votos absolutos formatados */}
+              <div className="tabular mt-1 text-xs text-mute font-medium">
+                {c ? `${fmtInt(c.votos)} votos` : ""}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Barra de Progresso Bicolor de Alto Contraste */}
+      <div className="mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-black/40 border border-white/[0.06] p-[1px]" aria-hidden>
         {top.map((c) => (
-          <div key={c.sq} className="bar-grow" style={{ width: `${c.pct}%`, background: cor(c.n) }} />
+          <div 
+            key={c.sq} 
+            className="bar-grow h-full rounded-full transition-all duration-700 first:mr-[1px]" 
+            style={{ 
+              width: `${c.pct}%`, 
+              backgroundColor: cor(c.n),
+              boxShadow: `0 0 10px ${cor(c.n)}60`
+            }} 
+          />
         ))}
       </div>
 
-      {br && top.length === 2 ? (
-        <p className="tabular mt-3 text-xs text-mute">
-          Diferença: <strong className="text-paper">{fmtPct(difPct)} pontos</strong> · {fmtInt(dif)} votos
-          {br.definidoTse ? <span className="ml-2 rounded bg-lime px-1.5 py-0.5 font-semibold text-ink">TSE: definido</span> : null}
-        </p>
+      {/* Margem de Diferença */}
+      {br && top.length === 2 && dif > 0 ? (
+        <div className="mt-3.5 flex items-center justify-between text-xs bg-white/[0.03] border border-white/[0.05] rounded-xl px-3 py-2">
+          <span className="text-mute">Diferença</span>
+          <span className="tabular font-medium text-paper">
+            <strong className="text-white font-semibold">{fmtPct(difPct)} pts</strong>
+            <span className="text-mute ml-1">({fmtInt(dif)} votos)</span>
+          </span>
+        </div>
       ) : null}
 
+      {/* Demais Candidatos (se houver mais de 2, como na prévia do 1º turno) */}
       {resto.length > 0 ? (
-        <ul className="mt-3 grid gap-1 border-t border-line pt-3 text-xs text-mute">
-          {(todos ? resto : resto.slice(0, 3)).map((c) => (
-            <li key={c.sq} className="tabular flex justify-between">
-              <span className="truncate">{c.nome}</span>
-              <span>{fmtPct(c.pct)}%</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {resto.length > 3 ? (
-        <button onClick={() => setTodos((t) => !t)} className="mt-2 text-xs underline text-mute">
-          {todos ? "Mostrar menos" : `Todos os ${resto.length + 2} candidatos`}
-        </button>
+        <div className="mt-3 border-t border-white/[0.06] pt-3">
+          <ul className="grid gap-1.5 text-xs text-mute">
+            {(todos ? resto : resto.slice(0, 2)).map((c) => (
+              <li key={c.sq} className="tabular flex items-center justify-between py-0.5">
+                <span className="truncate max-w-[180px] text-mute hover:text-paper transition">
+                  {c.nome} ({c.partido})
+                </span>
+                <span className="font-medium text-paper">{fmtPct(c.pct)}%</span>
+              </li>
+            ))}
+          </ul>
+          {resto.length > 2 && (
+            <button 
+              onClick={() => setTodos((t) => !t)} 
+              className="mt-2 text-[11px] font-medium text-primary hover:underline transition"
+            >
+              {todos ? "Recolher candidatos" : `Ver outros ${resto.length} candidatos`}
+            </button>
+          )}
+        </div>
       ) : null}
     </section>
   );
