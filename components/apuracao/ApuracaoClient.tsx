@@ -17,7 +17,8 @@ import Legenda from "./Legenda";
 import Linha from "./Linha";
 import TvView from "./TvView";
 import Credito from "../Credito";
-import { SITE_URL } from "@/lib/env";
+import { SITE_URL, ELECTION_ISO } from "@/lib/env";
+import { marcarInscrito } from "@/lib/inscrito";
 
 const POLL_MS = 15_000;
 const STALE_MIN = 4; // minutos sem mudança => mensagem de espera
@@ -78,6 +79,7 @@ export default function ApuracaoClient() {
       const saved = localStorage.getItem(LS_REF);
       setRefCode(saved && saved !== "-" ? saved : null);
       setNovo(q.get("novo") === "1" || Boolean(saved));
+      if (saved) marcarInscrito();
     } catch {
       setNovo(q.get("novo") === "1");
     }
@@ -147,6 +149,11 @@ export default function ApuracaoClient() {
   const aguardando = !data || data.status === "aguardando";
   const esperandoVotos = data && data.status === "apurando" && parado && !data.demo;
 
+  // O aviso "você está na lista" some sozinho a partir das 00h do dia da eleição (ou quando a apuração real começa)
+  const diaDaEleicao =
+    Date.now() >= new Date(`${ELECTION_ISO.slice(0, 10)}T00:00:00-03:00`).getTime() ||
+    Boolean(data && !data.previa && !data.demo && data.status !== "aguardando");
+
   const link = refCode ? `${SITE_URL}/?ref=${refCode}` : SITE_URL;
   const share = `Estou acompanhando a apuração do 2º turno ao vivo aqui. Entra na lista pra ser avisado: ${link}`;
 
@@ -156,7 +163,7 @@ export default function ApuracaoClient() {
 
   return (
     <div className="mx-auto w-full max-w-[1800px] px-4 pb-16 pt-5 lg:px-6">
-      {novo ? (
+      {novo && !diaDaEleicao ? (
         <div className="mb-4 rounded-2xl border border-lime/40 bg-panel p-4">
           <p className="font-semibold">Você está na lista ✓</p>
           <p className="mt-1 text-sm text-mute">

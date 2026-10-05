@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { marcarInscrito } from "@/lib/inscrito";
 import { useRouter } from "next/navigation";
 import { CONSENT_TEXT } from "@/lib/env";
 
@@ -45,7 +46,10 @@ export default function WaitlistForm() {
     setIncomingRef(q.get("ref"));
     setUtm(q.get("utm_source") ?? q.get("src"));
     try {
-      if (localStorage.getItem(LS_REF)) setState({ kind: "already" });
+      if (localStorage.getItem(LS_REF)) {
+        setState({ kind: "already" });
+        marcarInscrito();
+      }
     } catch {
       /* storage indisponível */
     }
@@ -103,6 +107,7 @@ export default function WaitlistForm() {
       } catch {
         /* ignore */
       }
+      marcarInscrito();
       // Leva a pessoa para ver o site funcionando (evita sensação de golpe)
       router.push("/apuracao?novo=1");
     } catch {

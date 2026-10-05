@@ -4,3 +4,7 @@ node_modules
 !.env.example
 next-env.d.ts
 *.tsbuildinfo
+
+# pacotes grandes (nao subir inteiros)
+public/pacote_bandeiras/
+dados/
