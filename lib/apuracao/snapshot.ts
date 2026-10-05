@@ -87,7 +87,8 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
     if (a.cands.length && (mudouLider || avancou)) {
       const l = a.cands[0];
       eventos.unshift({
-        t: new Date().toISOString(),
+        // apuração concluída: usa a hora oficial em que o TSE totalizou (importante na prévia, com dados já finais)
+        t: (a.pctApurado >= 99.99 && a.totalizadoEm) || new Date().toISOString(),
         id,
         pct: a.pctApurado,
         candN: l.n,
@@ -101,6 +102,23 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
       });
     }
   }
+
+  // Brasil concluído: 1 evento de destaque (uma única vez)
+  if (br && br.pctApurado >= 99.99 && br.cands.length >= 2 && !eventos.some((e) => e.id === "BR")) {
+    const [a1, a2] = br.cands;
+    eventos.unshift({
+      t: br.totalizadoEm ?? new Date().toISOString(),
+      id: "BR",
+      pct: br.pctApurado,
+      candN: a1.n,
+      candSq: a1.sq,
+      candNome: a1.nome,
+      texto: br.definidoTse
+        ? `Brasil: ${a1.nome} (${a1.pct.toFixed(2).replace(".", ",")}%) e ${a2.nome} (${a2.pct.toFixed(2).replace(".", ",")}%) — apuração concluída`
+        : `Brasil: 100% apurado — ${a1.nome} ${a1.pct.toFixed(2).replace(".", ",")}%, ${a2.nome} ${a2.pct.toFixed(2).replace(".", ",")}%`,
+    });
+  }
+  eventos.sort((x, y) => new Date(y.t).getTime() - new Date(x.t).getTime());
 
   const historico: Ponto[] = [...(prev?.historico ?? [])];
   if (br && (historico.length === 0 || historico[historico.length - 1].pct !== br.pctApurado)) {

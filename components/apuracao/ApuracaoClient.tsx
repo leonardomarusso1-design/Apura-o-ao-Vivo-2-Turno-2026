@@ -218,11 +218,6 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
         <p className="mb-4 rounded-lg border border-amber/50 px-3 py-2 text-xs text-amber">
           DEMONSTRAÇÃO — números fictícios para você ver como a página funciona.
         </p>
-      ) : data?.previa ? (
-        <p className="mb-4 rounded-lg border border-amber/50 px-3 py-2 text-xs text-amber">
-          PRÉVIA — estes são os resultados do 1º turno (dados oficiais do TSE), para você ver como a página funciona. No
-          dia 25 ela passa a mostrar o 2º turno ao vivo.
-        </p>
       ) : null}
 
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -231,7 +226,9 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
           <Credito compact />
           <p className="tabular text-xs text-mute">
             {data?.br
-              ? `${fmtPct(data.br.pctApurado, 2)}% das seções apuradas`
+              ? data.previa && data.br.totalizadoEm
+                ? `Como estava às ${new Date(data.br.totalizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).replace(":", "h")} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
+                : `${fmtPct(data.br.pctApurado, 2)}% das seções apuradas`
               : "Aguardando o TSE iniciar a divulgação"}
             {erro ? " · reconectando…" : ""}
           </p>
@@ -297,7 +294,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[340px_minmax(0,1fr)_360px]">
           <div className="contents lg:flex lg:flex-col lg:gap-4">
             <div className="order-1 lg:order-none">
-              <Placar br={data?.br ?? null} cor={cor} />
+              <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} />
             </div>
             <div className="order-3 lg:order-none">{data ? <Projecao p={data.projecao} cor={cor} /> : null}</div>
             <div className="order-6 lg:order-none">

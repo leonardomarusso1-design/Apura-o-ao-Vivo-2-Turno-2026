@@ -34,7 +34,11 @@ export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor:
               key={`${e.t}|${e.id}|${idx}`} 
               className="flash-in flex items-start gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] transition"
             >
-              {e.id === "ZZ" ? (
+              {e.id === "BR" ? (
+                <span className="flex w-9 shrink-0 justify-center">
+                  <Bandeira iso="br" w={34} ring={e.candN ? cor(e.candN) : undefined} />
+                </span>
+              ) : e.id === "ZZ" ? (
                 <UfIcone uf={e.id} cor={e.candN ? cor(e.candN) : "#7e8d9f"} size={30} />
               ) : (
                 <div className="pt-0.5">
@@ -43,7 +47,7 @@ export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor:
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 text-[10px] text-mute mb-0.5">
-                  <span className="font-semibold text-paper/80">{e.id === "ZZ" ? "Exterior" : e.id}</span>
+                  <span className="font-semibold text-paper/80">{e.id === "ZZ" ? "Exterior" : e.id === "BR" ? "Brasil" : e.id}</span>
                   <span>·</span>
                   <span className="tabular">{hora(e.t)}</span>
                 </div>

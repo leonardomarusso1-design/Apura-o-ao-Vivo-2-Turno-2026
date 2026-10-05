@@ -6,7 +6,15 @@ import { fmtInt, fmtPct } from "./types";
 import Avatar from "./Avatar";
 import Num from "./Num";
 
-export default function Placar({ br, cor }: { br: Area | null; cor: (n: number | undefined) => string }) {
+export default function Placar({
+  br,
+  cor,
+  turno = 2,
+}: {
+  br: Area | null;
+  cor: (n: number | undefined) => string;
+  turno?: 1 | 2;
+}) {
   // Ordena por votos para saber o líder
   const candsPorVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
   const lider = candsPorVotos[0];
@@ -41,6 +49,17 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
           </span>
         ) : null}
       </div>
+
+      {/* 1º turno encerrado: manchete + data do 2º turno (como no resultado oficial) */}
+      {turno === 1 && lider && segundo && br && br.pctApurado >= 99.99 ? (
+        <div className="mb-4">
+          <p className="text-xl font-semibold leading-snug sm:text-2xl">
+            <span style={{ color: cor(top[0]?.n) }}>{top[0]?.nome}</span> e{" "}
+            <span style={{ color: cor(top[1]?.n) }}>{top[1]?.nome}</span> vão ao 2º turno
+          </p>
+          <p className="mt-1 text-xs text-mute">2º turno · Em 25 de outubro</p>
+        </div>
+      ) : null}
 
       {/* Duelo de Candidatos */}
       <div className="grid grid-cols-2 gap-3">

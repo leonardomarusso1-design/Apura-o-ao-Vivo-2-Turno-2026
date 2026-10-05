@@ -47,6 +47,11 @@ export async function GET(req: Request) {
   const u = sp.get("u") ?? "";
   const m = sp.get("m") ?? "";
   let path = TARGETS[key];
+  // ?t=cg&u=sp&k=5 => cargo (3 gov, 5 senador, 6 dep. federal, 7 dep. estadual) do 1º turno 2026
+  const k = sp.get("k") ?? "";
+  if (key === "cg" && /^[a-z]{2}$/.test(u) && /^[35678]$/.test(k)) {
+    path = `ele2026/6259/dados/${u}/${u}-c000${k}-e006259-u.json`;
+  }
   // ?t=cfg&u=zz  => 3 primeiras cidades do exterior (estrutura real); ?t=mun&u=zz&m=12345 => resultado de 1 município
   if (key === "mun" && /^[a-z]{2}$/.test(u) && /^\d{1,6}$/.test(m)) {
     path = `ele2026/6257/dados/${u}/${u}${m}-c0001-e${ELE}-u.json`;
@@ -62,6 +67,21 @@ export async function GET(req: Request) {
       /* não-JSON */
     }
     // ?t=elec&c=ele2026 => eleições do ciclo (códigos, cargos, turnos) em vez da estrutura genérica
+    if (key === "cg" && parsed) {
+      const c0 = (parsed as { carg?: { agr?: unknown[]; nv?: string; cd?: string }[] }).carg?.[0];
+      const agr = c0?.agr ?? [];
+      return NextResponse.json({
+        status: r.status,
+        bytes: text.length,
+        nv: c0?.nv,
+        agrTotal: agr.length,
+        agrChaves: Object.keys((agr[0] ?? {}) as object),
+        // 1ª agremiação inteira, cortada (para ver os campos reais dos candidatos)
+        agr0: JSON.stringify(agr[0] ?? null).slice(0, 2600),
+        agrUltima: agr.length > 1 ? JSON.stringify(agr[agr.length - 1]).slice(0, 1200) : null,
+        fed: JSON.stringify((c0 as { fed?: unknown } | undefined)?.fed ?? null).slice(0, 600),
+      });
+    }
     if (key === "elec" && /^ele\d{4}$/.test(sp.get("c") ?? "") && parsed) {
       const ciclo = (parsed as { pl?: { c?: string; e?: unknown[] }[] }).pl?.find((x) => x.c === sp.get("c"));
       return NextResponse.json({ status: r.status, ciclo: ciclo ?? null });
