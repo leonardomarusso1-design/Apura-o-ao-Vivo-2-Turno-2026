@@ -36,8 +36,15 @@ function shape(v: unknown, depth = 0): unknown {
 
 export async function GET(req: Request) {
   if (!authorized(req)) return new NextResponse(null, { status: 404 });
-  const key = new URL(req.url).searchParams.get("t") ?? "";
-  const path = TARGETS[key];
+  const sp = new URL(req.url).searchParams;
+  const key = sp.get("t") ?? "";
+  const u = sp.get("u") ?? "";
+  const m = sp.get("m") ?? "";
+  let path = TARGETS[key];
+  // ?t=cfg&u=zz  => 3 primeiras cidades do exterior (estrutura real); ?t=mun&u=zz&m=12345 => resultado de 1 município
+  if (key === "mun" && /^[a-z]{2}$/.test(u) && /^\d{1,6}$/.test(m)) {
+    path = `ele2026/6257/dados/${u}/${u}${m}-c0001-e${ELE}-u.json`;
+  }
   if (!path) return NextResponse.json({ ok: false, targets: Object.keys(TARGETS) }, { status: 400 });
   try {
     const r = await fetch(BASE + path, { cache: "no-store", signal: AbortSignal.timeout(8000) });
@@ -47,6 +54,10 @@ export async function GET(req: Request) {
       parsed = JSON.parse(text);
     } catch {
       /* não-JSON */
+    }
+    if (key === "cfg" && /^[a-z]{2}$/.test(u) && parsed) {
+      const abr = (parsed as { abr?: { cd: string; mu?: unknown[] }[] }).abr?.find((a) => a.cd === u);
+      return NextResponse.json({ status: r.status, cd: abr?.cd, total: abr?.mu?.length ?? 0, amostra: abr?.mu?.slice(0, 3) ?? null });
     }
     return NextResponse.json({ status: r.status, bytes: text.length, shape: parsed ? shape(parsed) : text.slice(0, 200) });
   } catch (e) {
