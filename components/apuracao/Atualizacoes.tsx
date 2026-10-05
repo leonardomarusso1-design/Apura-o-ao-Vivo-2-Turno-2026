@@ -1,5 +1,6 @@
 import type { Evento } from "@/lib/apuracao/types";
 import UfIcone from "./UfIcone";
+import Bandeira from "./Bandeira";
 
 const hora = (iso: string) =>
   new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -15,7 +16,13 @@ export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor:
         ) : (
           eventos.map((e, i) => (
             <li key={`${e.t}-${i}`} className="grid grid-cols-[2.25rem_1fr] items-start gap-3">
-              <UfIcone uf={e.id} cor={e.candN ? cor(e.candN) : "#8a9792"} size={36} />
+              {e.id === "ZZ" ? (
+                <UfIcone uf={e.id} cor={e.candN ? cor(e.candN) : "#8a9792"} size={36} />
+              ) : (
+                <span className="flex w-9 shrink-0 justify-center">
+                  <Bandeira uf={e.id} w={34} ring={e.candN ? cor(e.candN) : undefined} />
+                </span>
+              )}
               <span className="min-w-0">
                 <span className="tabular block text-[11px] text-mute">{hora(e.t)} · {e.id === "ZZ" ? "Exterior" : e.id}</span>
                 <span className="block leading-snug">{e.texto}</span>

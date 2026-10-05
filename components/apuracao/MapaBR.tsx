@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { BR_UFS } from "@/lib/br-map";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtPct } from "./types";
+import Bandeira from "./Bandeira";
 
 type Props = {
   ufs: Record<string, Area>;
@@ -284,7 +285,10 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
           top: Math.min(Math.max(hover.y - box.top + 14, 0), Math.max(0, box.height - 130)),
         }}
       >
-        <p className="font-semibold">{nomeUf(hover.uf)}</p>
+        <p className="flex items-center gap-2 font-semibold">
+          <Bandeira uf={hover.uf} w={24} />
+          {nomeUf(hover.uf)}
+        </p>
         <p className="tabular text-mute">{fmtPct(tip.pctApurado, 1)}% das seções apuradas</p>
         {tip.cands.slice(0, 2).map((c) => (
           <p key={c.sq} className="tabular mt-1.5 flex items-center gap-1.5">

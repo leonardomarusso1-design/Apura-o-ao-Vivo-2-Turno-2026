@@ -1,6 +1,7 @@
 import { BR_UFS } from "@/lib/br-map";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
+import Bandeira from "./Bandeira";
 
 export default function PainelUF({
   uf,
@@ -18,7 +19,10 @@ export default function PainelUF({
     <section className="rounded-2xl border border-line bg-panel p-4 sm:p-5" aria-label={`Resultado em ${nome}`}>
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="font-display text-2xl">{nome}</h2>
+          <h2 className="flex items-center gap-2 font-display text-2xl">
+            <Bandeira uf={uf} w={34} />
+            {nome}
+          </h2>
           <p className="tabular text-xs text-mute">
             {area ? `${fmtPct(area.pctApurado, 1)}% das seções apuradas · ${fmtInt(area.eleitores)} eleitores` : uf === "ZZ" ? "Os votos do exterior são divulgados pelo TSE junto com os do Brasil, a partir das 17h (Brasília)." : "Ainda sem dados do TSE"}
           </p>

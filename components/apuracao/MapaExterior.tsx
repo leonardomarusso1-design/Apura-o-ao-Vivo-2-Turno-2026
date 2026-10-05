@@ -5,6 +5,7 @@ import { EXT_CIDADES, WORLD_BORDERS, WORLD_H, WORLD_LAND, WORLD_W } from "@/lib/
 import type { CidadeRes } from "@/lib/apuracao/exterior";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
+import Bandeira from "./Bandeira";
 
 type Cor = (n: number | undefined) => string;
 const POLL = 30_000;
@@ -51,6 +52,7 @@ export default function MapaExterior({
   const comDados = Object.keys(cidades).length;
   const fechadas = Object.values(cidades).filter((c) => c.pa >= 99.99).length;
   const nomeDe = (cd: string) => EXT_CIDADES.find((c) => c.cd === cd)?.nome ?? cd;
+  const isoDe = (cd: string) => EXT_CIDADES.find((c) => c.cd === cd)?.iso;
   const lista = useMemo(
     () => Object.values(cidades).sort((a, b) => b.el - a.el),
     [cidades],
@@ -156,7 +158,10 @@ export default function MapaExterior({
         </div>
         {det && ativa ? (
           <div className="pointer-events-none absolute bottom-2 left-2 max-w-[260px] rounded-xl border border-line bg-panel/95 p-3 text-xs">
-            <p className="font-semibold">{nomeDe(ativa)}</p>
+            <p className="flex items-center gap-2 font-semibold">
+              <Bandeira iso={isoDe(ativa)} w={22} />
+              {nomeDe(ativa)}
+            </p>
             <p className="tabular text-mute">
               {fmtPct(det.pa, 1)}% das seções · {fmtInt(det.el)} eleitores
             </p>
@@ -188,6 +193,7 @@ export default function MapaExterior({
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left ${sel === c.cd ? "bg-ink" : ""}`}
               >
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cor(c.top[0]?.n) }} />
+                <Bandeira iso={isoDe(c.cd)} w={22} />
                 <span className="min-w-0 flex-1 truncate">{nomeDe(c.cd)}</span>
                 <span className="tabular text-xs text-mute">{fmtInt(c.el)} el.</span>
                 <span className="tabular w-14 text-right text-xs">{c.top[0] ? `${fmtPct(c.top[0].pct, 1)}%` : "—"}</span>
