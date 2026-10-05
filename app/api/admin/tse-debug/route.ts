@@ -61,6 +61,11 @@ export async function GET(req: Request) {
     } catch {
       /* não-JSON */
     }
+    // ?t=elec&c=ele2026 => eleições do ciclo (códigos, cargos, turnos) em vez da estrutura genérica
+    if (key === "elec" && /^ele\d{4}$/.test(sp.get("c") ?? "") && parsed) {
+      const ciclo = (parsed as { pl?: { c?: string; e?: unknown[] }[] }).pl?.find((x) => x.c === sp.get("c"));
+      return NextResponse.json({ status: r.status, ciclo: ciclo ?? null });
+    }
     if (key === "cfg" && /^[a-z]{2}$/.test(u) && parsed) {
       const abr = (parsed as { abr?: { cd: string; mu?: unknown[] }[] }).abr?.find((a) => a.cd === u);
       if (sp.get("l") === "1") {
