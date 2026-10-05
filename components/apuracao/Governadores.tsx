@@ -7,6 +7,7 @@ import type { CandGov, DisputaGov } from "@/lib/apuracao/governadores";
 import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 import MunicipioBusca from "./MunicipioBusca";
+import MapaMunicipios from "./MapaMunicipios";
 import MapaBR from "./MapaBR";
 import { mkArea } from "./mapaAreas";
 import { fmtInt, fmtPct, makeCor } from "./types";
@@ -65,6 +66,7 @@ function Cartao({ d }: { d: DisputaGov }) {
       <p className="tabular mt-3 text-[11px] text-mute">
         {usaR2 ? `Diferença: ${fmtInt(dif)} votos` : `Resultado do 1º turno (${fmtPct(d.r1.pa, 0)}% apurado) · diferença ${fmtInt(dif)} votos`}
       </p>
+      <MapaMunicipios uf={d.uf} cargo={3} />
       <MunicipioBusca uf={d.uf} cargo={3} cor={(n) => cs[top.findIndex((c) => c.n === n)] ?? "#8a9792"} />
     </article>
   );

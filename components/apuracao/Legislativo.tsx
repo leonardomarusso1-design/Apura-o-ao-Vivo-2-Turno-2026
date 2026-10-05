@@ -6,6 +6,7 @@ import type { CargoLeg, LegData } from "@/lib/apuracao/legislativo";
 import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 import MunicipioBusca from "./MunicipioBusca";
+import MapaMunicipios from "./MapaMunicipios";
 import MapaBR from "./MapaBR";
 import { mkArea } from "./mapaAreas";
 import { fmtInt } from "./types";
@@ -225,6 +226,7 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
                   </li>
                 ))}
             </ul>
+            <MapaMunicipios uf={uf} cargo={5} />
             <MunicipioBusca uf={uf} cargo={5} cor={(n) => COR_BLOCO[bl(d.eleitos.find((e) => e.n === n)?.partido ?? "")][0]} />
           </div>
         ) : null}

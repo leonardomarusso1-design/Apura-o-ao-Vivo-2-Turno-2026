@@ -65,6 +65,7 @@ export default function MapaExterior({
     const el = svg.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return; // só amplia com Ctrl/⌘ + roda; senão rola a página
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const px = ((e.clientX - rect.left) / rect.width) * WORLD_W;

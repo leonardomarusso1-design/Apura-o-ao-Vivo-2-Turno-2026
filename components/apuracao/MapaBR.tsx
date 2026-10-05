@@ -79,6 +79,7 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
     const el = svgRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return; // rolagem normal rola a página; zoom só com Ctrl/⌘ + roda (ou botões / pinça)
       e.preventDefault();
       const p = toSvg(e.clientX, e.clientY);
       zoomEm(e.deltaY < 0 ? 1.2 : 1 / 1.2, p.x, p.y);

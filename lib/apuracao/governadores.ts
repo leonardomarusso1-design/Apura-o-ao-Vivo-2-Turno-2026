@@ -51,11 +51,11 @@ async function pool<T>(items: string[], size: number, fn: (x: string) => Promise
 const resumo = (a: Area, n = 3) => ({
   pa: Math.round(a.pctApurado * 10) / 10,
   top: a.cands.slice(0, n).map((c) => ({ sq: c.sq, n: c.n, nome: c.nome, partido: c.partido, pct: c.pct, votos: c.votos })),
-  eleito: a.cands.some((c) => c.eleito), // marca oficial por candidato (a.definidoTse também vale para quem vai ao 2º turno)
+  eleito: (a.cands[0]?.pct ?? 0) > 50, // maioria absoluta dos válidos = eleito no 1º turno (a marca "e" do TSE também vale p/ quem segue ao 2º)
 });
 
-const KEY_R1 = "gov:r1:v3";
-const KEY_R2 = "gov:r2:v3";
+const KEY_R1 = "gov:r1:v4";
+const KEY_R2 = "gov:r2:v4";
 let memR1: Record<string, DisputaGov["r1"]> | null = null;
 let memR2: { at: number; data: Record<string, DisputaGov["r2"]> } | null = null;
 
