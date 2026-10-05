@@ -5,20 +5,13 @@ import { BR_UFS } from "@/lib/br-map";
 import { blocoDe, COR_BLOCO } from "@/lib/apuracao/blocos";
 import type { CandGov, DisputaGov } from "@/lib/apuracao/governadores";
 import Bandeira from "./Bandeira";
+import Avatar from "./Avatar";
+import MunicipioBusca from "./MunicipioBusca";
 import { fmtInt, fmtPct } from "./types";
 
 type Resp = { ok: boolean; r2Aberto: boolean; disputas: DisputaGov[] };
 
 const nomeUf = (uf: string) => BR_UFS.find((u) => u.id.toUpperCase() === uf)?.nome ?? uf;
-const iniciais = (nome: string) =>
-  nome
-    .replace(/\(.*?\)/g, "")
-    .split(/\s+/)
-    .filter((p) => p.length > 2)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase() || nome.slice(0, 2).toUpperCase();
 
 /** Cor por partido (mesmo critério do mapa); dois do mesmo bloco ganham tons diferentes. */
 function cores(cands: CandGov[]): string[] {
@@ -52,13 +45,7 @@ function Cartao({ d }: { d: DisputaGov }) {
         {top.map((c, i) => (
           <li key={c.n}>
             <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-ink"
-                style={{ background: cs[i] }}
-              >
-                {iniciais(c.nome)}
-              </span>
+              <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cs[i]} size={36} />
               <span className="min-w-0 flex-1">
                 <span className="line-clamp-1 block text-sm font-medium">{c.nome}</span>
                 <span className="block text-[11px] text-mute">
@@ -76,6 +63,7 @@ function Cartao({ d }: { d: DisputaGov }) {
       <p className="tabular mt-3 text-[11px] text-mute">
         {usaR2 ? `Diferença: ${fmtInt(dif)} votos` : `Resultado do 1º turno (${fmtPct(d.r1.pa, 0)}% apurado) · diferença ${fmtInt(dif)} votos`}
       </p>
+      <MunicipioBusca uf={d.uf} cargo={3} cor={(n) => cs[top.findIndex((c) => c.n === n)] ?? "#8a9792"} />
     </article>
   );
 }

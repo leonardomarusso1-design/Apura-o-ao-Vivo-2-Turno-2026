@@ -8,7 +8,7 @@ const ELE = Number(process.env.TSE_LEG_ELE ?? "6259");
 export type CargoLeg = 5 | 6 | 7;
 export const CARGOS_LEG: CargoLeg[] = [5, 6, 7];
 
-export type Eleito = { uf: string; nome: string; partido: string; n: number; votos: number; pct: number; st: string };
+export type Eleito = { sq: number; uf: string; nome: string; partido: string; n: number; votos: number; pct: number; st: string };
 export type LegData = {
   geradoEm: string;
   cargo: CargoLeg;
@@ -24,7 +24,7 @@ export type LegData = {
 const pad = (n: number, w: number) => String(n).padStart(w, "0");
 const num = (v: unknown) => Number(String(v ?? "0").replace(",", ".")) || 0;
 
-type RawCand = { n?: string; nmu?: string; nm?: string; e?: string; st?: string; vap?: string; pvapn?: string };
+type RawCand = { sqcand?: string; n?: string; nmu?: string; nm?: string; e?: string; st?: string; vap?: string; pvapn?: string };
 type RawPar = { sg?: string; cand?: RawCand[] };
 type RawAgr = { par?: RawPar[] };
 type RawFile = { carg?: { nv?: string; agr?: RawAgr[] }[] };
@@ -49,6 +49,7 @@ async function fetchUf(uf: string, cargo: CargoLeg): Promise<{ vagas: number; el
         for (const cd of par.cand ?? [])
           if (cd.e === "s")
             eleitos.push({
+              sq: num(cd.sqcand),
               uf,
               nome: cd.nmu || cd.nm || "",
               partido: par.sg ?? "",
@@ -77,7 +78,7 @@ async function pool<T>(items: readonly string[], size: number, fn: (x: string) =
 const mem = new Map<number, LegData>();
 
 export async function getLegislativo(cargo: CargoLeg): Promise<LegData | null> {
-  const key = `leg:v1:${ELE}:${cargo}`;
+  const key = `leg:v2:${ELE}:${cargo}`;
   const cached = await redis<string>(["GET", key]);
   if (typeof cached === "string") {
     try {

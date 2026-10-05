@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { COR_BLOCO, type Bloco } from "@/lib/apuracao/blocos";
 import type { CargoLeg, LegData } from "@/lib/apuracao/legislativo";
 import Bandeira from "./Bandeira";
+import Avatar from "./Avatar";
+import MunicipioBusca from "./MunicipioBusca";
 import { fmtInt } from "./types";
 
 const ROTULO: Record<Bloco, string> = { esquerda: "Esquerda", centro: "Centrão", direita: "Direita", outros: "Outros" };
@@ -142,21 +144,48 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
                   {v.definidas}/{v.vagas}
                 </span>
               </span>
-              <span className="mt-2 flex flex-wrap gap-1">
+              <span className="mt-2 flex flex-wrap gap-2">
                 {v.top.map((e) => (
-                  <span
-                    key={e.n + e.nome}
-                    className="rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-ink"
-                    style={{ background: COR_BLOCO[bl(e.partido)][0] }}
-                    title={`${e.nome} · ${fmtInt(e.votos)} votos`}
-                  >
-                    {e.nome.split(" ").slice(0, 2).join(" ")} · {e.partido}
+                  <span key={e.sq || e.n + e.nome} className="flex items-center gap-1.5" title={`${e.nome} · ${fmtInt(e.votos)} votos`}>
+                    <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={30} />
+                    <span className="text-[11px] leading-tight">
+                      <span className="block max-w-[110px] truncate font-medium">{e.nome}</span>
+                      <span className="font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
+                        {e.partido}
+                      </span>
+                    </span>
                   </span>
                 ))}
               </span>
             </button>
           ))}
         </div>
+        {uf && cargo === 5 ? (
+          <div className="mt-4 rounded-xl border border-line bg-black/20 p-4" aria-label={`Senado em ${uf}`}>
+            <h4 className="flex items-center gap-2 text-sm font-semibold">
+              <Bandeira uf={uf} w={26} /> {uf} · {d.porUf[uf]?.definidas ?? 0} de {d.porUf[uf]?.vagas ?? 0} vagas
+            </h4>
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+              {d.eleitos
+                .filter((e) => e.uf === uf)
+                .map((e) => (
+                  <li key={e.sq || e.n} className="flex items-center gap-3">
+                    <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={52} />
+                    <span className="min-w-0 flex-1 text-sm">
+                      <span className="block truncate font-semibold">{e.nome}</span>
+                      <span className="text-xs" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
+                        {e.partido} · {e.st}
+                      </span>
+                      <span className="tabular block text-xs text-mute">
+                        {fmtInt(e.votos)} votos · {e.pct.toFixed(1).replace(".", ",")}%
+                      </span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+            <MunicipioBusca uf={uf} cargo={5} cor={(n) => COR_BLOCO[bl(d.eleitos.find((e) => e.n === n)?.partido ?? "")][0]} />
+          </div>
+        ) : null}
       </section>
 
       <section className="glass-panel rounded-2xl p-4 sm:p-5">
@@ -167,8 +196,10 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
           {(uf ? d.eleitos.filter((e) => e.uf === uf) : d.eleitos).map((e, i) => (
             <li key={e.uf + e.n + e.nome} className="flex items-center gap-2 border-b border-line/50 py-1.5">
               <span className="tabular w-6 text-xs text-mute">{i + 1}</span>
-              <Bandeira uf={e.uf} w={20} />
-              <span className="min-w-0 flex-1 truncate">{e.nome}</span>
+              <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={28} />
+              <span className="min-w-0 flex-1 truncate">
+                {e.nome} <span className="text-[11px] text-mute">· {e.uf}</span>
+              </span>
               <span className="text-[11px] font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
                 {e.partido}
               </span>

@@ -7,7 +7,7 @@ const ELE_R1 = Number(process.env.TSE_GOV_R1 ?? "6259");
 const ELE_R2 = Number(process.env.TSE_GOV_R2 ?? "6260");
 const pad = (n: number, w: number) => String(n).padStart(w, "0");
 
-export type CandGov = { n: number; nome: string; partido: string; pct: number; votos: number };
+export type CandGov = { sq?: number; n: number; nome: string; partido: string; pct: number; votos: number };
 export type DisputaGov = {
   uf: string;
   r1: { pa: number; top: CandGov[]; eleito: boolean };
@@ -50,12 +50,12 @@ async function pool<T>(items: string[], size: number, fn: (x: string) => Promise
 
 const resumo = (a: Area, n = 3) => ({
   pa: Math.round(a.pctApurado * 10) / 10,
-  top: a.cands.slice(0, n).map((c) => ({ n: c.n, nome: c.nome, partido: c.partido, pct: c.pct, votos: c.votos })),
+  top: a.cands.slice(0, n).map((c) => ({ sq: c.sq, n: c.n, nome: c.nome, partido: c.partido, pct: c.pct, votos: c.votos })),
   eleito: a.definidoTse,
 });
 
-const KEY_R1 = "gov:r1:v1";
-const KEY_R2 = "gov:r2:v1";
+const KEY_R1 = "gov:r1:v2";
+const KEY_R2 = "gov:r2:v2";
 let memR1: Record<string, DisputaGov["r1"]> | null = null;
 let memR2: { at: number; data: Record<string, DisputaGov["r2"]> } | null = null;
 
