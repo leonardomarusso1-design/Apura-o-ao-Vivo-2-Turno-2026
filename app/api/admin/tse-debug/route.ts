@@ -14,6 +14,9 @@ const TARGETS: Record<string, string> = {
   sp: `ele2026/6257/dados/sp/sp-c0001-e${ELE}-u.json`,
   cfg: `ele2026/6257/config/mun-e${ELE}-cm.json`,
   // 2022 (2º turno presidente = 545): dois formatos possíveis, testar 1x cada
+  // Governadores: catálogo de eleições (códigos) e um estado de exemplo (1º turno, cargo 3)
+  elec: "comum/config/ele-c.json",
+  gov1: `ele2026/6259/dados/sp/sp-c0003-e006259-u.json`,
   p22a: "ele2022/545/dados-simplificados/sp/sp-c0001-e000545-r.json",
   p22b: "ele2022/545/dados/sp/sp-c0001-e000545-u.json",
 };
