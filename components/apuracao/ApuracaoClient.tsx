@@ -9,13 +9,13 @@ import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
 import SponsorSlot from "./SponsorSlot";
 import LiveBox from "./LiveBox";
-import MapaExterior from "./MapaExterior";
+import dynamic from "next/dynamic";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
 import Legenda from "./Legenda";
 import Linha from "./Linha";
-import TvView from "./TvView";
+
 import Credito from "../Credito";
 import { SITE_URL, ELECTION_ISO } from "@/lib/env";
 import { marcarInscrito } from "@/lib/inscrito";
@@ -24,8 +24,15 @@ const POLL_MS = 15_000;
 const STALE_MIN = 4; // minutos sem mudança => mensagem de espera
 const LS_REF = "apuracao:ref";
 
-export default function ApuracaoClient() {
-  const [data, setData] = useState<Payload | null>(null);
+// Partes pesadas só são baixadas quando usadas (o mapa-múndi tem ~100 KB)
+const MapaExterior = dynamic(() => import("./MapaExterior"), {
+  ssr: false,
+  loading: () => <div className="h-[420px] animate-pulse rounded-2xl border border-line bg-panel" />,
+});
+const TvView = dynamic(() => import("./TvView"), { ssr: false });
+
+export default function ApuracaoClient({ initial = null }: { initial?: Payload | null }) {
+  const [data, setData] = useState<Payload | null>(initial);
   const [erro, setErro] = useState(false);
   const [uf, setUf] = useState<string | null>(null);
   const [novo, setNovo] = useState(false);

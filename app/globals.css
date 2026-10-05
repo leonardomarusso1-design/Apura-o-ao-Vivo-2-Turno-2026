@@ -12,11 +12,16 @@
   --font-display: ui-serif, Georgia, "Times New Roman", serif;
 }
 
-html { color-scheme: dark; background: var(--color-ink); }
-body {
+html {
+  color-scheme: dark;
   background:
-    radial-gradient(1000px 500px at 80% -10%, rgb(198 242 78 / 0.07), transparent 60%),
+    radial-gradient(1000px 500px at 80% -10%, rgb(198 242 78 / 0.08), transparent 60%),
+    radial-gradient(800px 420px at 0% 100%, rgb(229 72 77 / 0.05), transparent 60%),
     var(--color-ink);
+  background-attachment: fixed;
+}
+body {
+  background: transparent;
   color: var(--color-paper);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -36,3 +41,47 @@ body {
 .ticker { animation: ticker linear infinite; }
 .ticker:hover { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .ticker { animation: none; } }
+
+/* ---------- Animações (leves; desligam com "reduzir movimento") ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+.rise { animation: rise .6s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0s); }
+
+@keyframes flash-in {
+  0% { opacity: 0; transform: translateX(10px); background: rgb(198 242 78 / .22) }
+  60% { background: rgb(198 242 78 / .10) }
+  100% { opacity: 1; transform: none; background: transparent }
+}
+.flash-in { animation: flash-in 1.4s ease-out both; border-radius: .5rem; }
+
+/* brilho que passa por cima do cartão, de tempos em tempos */
+@keyframes sweep { 0% { transform: translateX(-120%) } 55%, 100% { transform: translateX(220%) } }
+.glow-card { position: relative; overflow: hidden; }
+.glow-card::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgb(198 242 78 / .07), transparent);
+  transform: translateX(-120%); animation: sweep 9s ease-in-out infinite; animation-delay: var(--d, 2s);
+}
+.glow-card:hover { border-color: rgb(198 242 78 / .35); }
+
+/* ponto "ao vivo" com onda */
+@keyframes ripple { 0% { transform: scale(1); opacity: .55 } 100% { transform: scale(3.2); opacity: 0 } }
+.live-dot { position: relative; display: inline-block; width: .5rem; height: .5rem; border-radius: 999px; background: #e5484d; }
+.live-dot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: ripple 1.8s ease-out infinite; }
+
+/* rede neural sobre o mapa */
+@keyframes net-flow { to { stroke-dashoffset: -40 } }
+.net-line { stroke: #c6f24e; stroke-opacity: .3; stroke-width: .7; stroke-dasharray: 3 7; animation: net-flow 4s linear infinite; }
+@keyframes twinkle { 0%,100% { opacity: .15; r: 1.4 } 50% { opacity: .9; r: 2.6 } }
+.net-dot { fill: #c6f24e; animation: twinkle 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+
+/* estados do mapa: realce ao passar o mouse */
+.uf-path { transition: filter .2s, fill-opacity .35s, fill .35s; }
+.uf-path:hover { filter: brightness(1.28) drop-shadow(0 0 6px rgb(198 242 78 / .45)); }
+
+/* barras que crescem suavemente */
+.bar-grow { transition: width .9s cubic-bezier(.2,.7,.2,1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .flash-in, .glow-card::before, .live-dot::after, .net-line, .net-dot { animation: none !important; }
+  .bar-grow, .uf-path { transition: none; }
+}

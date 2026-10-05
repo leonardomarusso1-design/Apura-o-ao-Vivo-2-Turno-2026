@@ -9,6 +9,12 @@ const HANDLE = "BNTVBrasil";
 export default function LiveBox() {
   const [s, setS] = useState<Live>({ live: false, videoId: null });
   const [fechado, setFechado] = useState(false);
+  const [pronto, setPronto] = useState(false); // o vídeo (pesado) só carrega depois do resto da página
+
+  useEffect(() => {
+    const t = setTimeout(() => setPronto(true), 3500);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -46,7 +52,7 @@ export default function LiveBox() {
         </button>
       </div>
       <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
-        <iframe
+        {pronto ? <iframe
           src={src}
           title={`Live do canal ${HANDLE}`}
           className="h-full w-full"
@@ -54,7 +60,7 @@ export default function LiveBox() {
           allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
-        />
+        /> : <div className="h-full w-full animate-pulse bg-line" />}
       </div>
       <a
         href={`https://www.youtube.com/@${HANDLE}/live`}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import FundoRede from "@/components/FundoRede";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -28,7 +29,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <FundoRede />
+        {children}
+      </body>
     </html>
   );
 }

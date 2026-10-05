@@ -41,6 +41,10 @@ export default function Avatar({
         width={size}
         height={size}
         loading="lazy"
+        // a página já chega pronta do servidor: a imagem pode ter falhado ANTES do React assumir, então confere ao montar
+        ref={(el) => {
+          if (el && el.complete && el.naturalWidth === 0) setIdx((i) => i + 1);
+        }}
         onError={() => setIdx((i) => i + 1)}
         className="shrink-0 rounded-full object-cover"
         style={{ width: size, height: size, boxShadow: `0 0 0 2px ${cor}` }}

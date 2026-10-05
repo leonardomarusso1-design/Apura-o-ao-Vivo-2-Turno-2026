@@ -16,7 +16,7 @@ export default function PainelUF({
 }) {
   const nome = uf === "ZZ" ? "Exterior" : (BR_UFS.find((u) => u.id.toUpperCase() === uf)?.nome ?? uf);
   return (
-    <section className="rounded-2xl border border-line bg-panel p-4 sm:p-5" aria-label={`Resultado em ${nome}`}>
+    <section className="rise rounded-2xl border border-line bg-panel/95 p-4 sm:p-5" aria-label={`Resultado em ${nome}`}>
       <div className="flex items-start justify-between">
         <div>
           <h2 className="flex items-center gap-2 font-display text-2xl">
@@ -43,7 +43,7 @@ export default function PainelUF({
                 <span className="tabular">{fmtPct(c.pct)}%</span>
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
-                <div className="h-full" style={{ width: `${c.pct}%`, background: cor(c.n) }} />
+                <div className="bar-grow h-full" style={{ width: `${c.pct}%`, background: cor(c.n) }} />
               </div>
               <div className="tabular mt-0.5 text-[11px] text-mute">{fmtInt(c.votos)} votos</div>
             </li>
