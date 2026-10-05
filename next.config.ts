@@ -5,12 +5,12 @@ const isDev = process.env.NODE_ENV !== "production";
 const csp = [
   "default-src 'self'",
   // Next injeta scripts inline; Turnstile (captcha) vem da Cloudflare
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://www.googletagservices.com https://adservice.google.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self'",
-  "frame-src https://challenges.cloudflare.com",
+  "connect-src 'self' https://*.googlesyndication.com https://*.doubleclick.net https://pagead2.googlesyndication.com",
+  "frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://*.googlesyndication.com https://*.doubleclick.net",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

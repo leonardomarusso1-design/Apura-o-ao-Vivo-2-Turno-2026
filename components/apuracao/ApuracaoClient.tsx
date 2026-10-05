@@ -8,6 +8,8 @@ import Regioes from "./Regioes";
 import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
 import SponsorSlot from "./SponsorSlot";
+import LiveBox from "./LiveBox";
+import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
 import Legenda from "./Legenda";
@@ -238,13 +240,16 @@ export default function ApuracaoClient() {
 
           <div className="contents lg:flex lg:flex-col lg:gap-4">
             <div className="order-4 lg:order-none">
+              <LiveBox />
+            </div>
+            <div className="order-4 lg:order-none">
               <Atualizacoes eventos={data?.eventos ?? []} cor={cor} />
             </div>
             <div className="order-5 lg:order-none">
               <ToqyCard />
             </div>
             <div className="order-8 grid gap-4 lg:order-none">
-              <SponsorSlot label="Anuncie aqui" />
+              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={250} label="Anuncie aqui" />
               <SponsorSlot label="Sua marca na apuração" />
             </div>
           </div>
@@ -252,7 +257,7 @@ export default function ApuracaoClient() {
       )}
 
       <div className="mt-6">
-        <SponsorSlot label="Anuncie aqui · faixa grande" />
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={120} label="Anuncie aqui · faixa grande" />
       </div>
 
       <footer className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-mute">
