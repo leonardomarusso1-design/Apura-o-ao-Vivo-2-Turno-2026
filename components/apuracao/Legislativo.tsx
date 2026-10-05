@@ -1,0 +1,185 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { COR_BLOCO, type Bloco } from "@/lib/apuracao/blocos";
+import type { CargoLeg, LegData } from "@/lib/apuracao/legislativo";
+import Bandeira from "./Bandeira";
+import { fmtInt } from "./types";
+
+const ROTULO: Record<Bloco, string> = { esquerda: "Esquerda", centro: "Centrão", direita: "Direita", outros: "Outros" };
+const ORDEM: Bloco[] = ["esquerda", "centro", "outros", "direita"];
+const TITULO: Record<CargoLeg, string> = { 5: "Senado", 6: "Câmara dos Deputados", 7: "Assembleias Legislativas" };
+
+/** Hemiciclo em SVG: fileiras concêntricas, pontos ordenados por ângulo (esquerda → direita). */
+function Hemiciclo({ seats }: { seats: { cor: string; titulo: string }[] }) {
+  const total = seats.length;
+  const pontos = useMemo(() => {
+    const filas = Math.max(2, Math.round(Math.sqrt(total / 3.2)));
+    const r0 = 0.38;
+    const raios = Array.from({ length: filas }, (_, i) => r0 + ((1 - r0) * i) / (filas - 1));
+    const soma = raios.reduce((a, b) => a + b, 0);
+    const out: { x: number; y: number; a: number }[] = [];
+    raios.forEach((r, i) => {
+      const n = i === filas - 1 ? total - out.length : Math.round((total * r) / soma);
+      for (let k = 0; k < n; k++) {
+        const a = Math.PI - (Math.PI * (k + 0.5)) / n;
+        out.push({ x: 50 + 48 * r * Math.cos(a), y: 50 - 48 * r * Math.sin(a), a });
+      }
+    });
+    return out.sort((p, q) => q.a - p.a).slice(0, total);
+  }, [total]);
+  const raio = Math.max(0.7, Math.min(2.2, 70 / Math.sqrt(total * 6)));
+  return (
+    <svg viewBox="0 0 100 54" className="w-full" role="img" aria-label={`Hemiciclo com ${total} cadeiras`}>
+      {pontos.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y + 3} r={raio} fill={seats[i]?.cor ?? "#333"}>
+          <title>{seats[i]?.titulo}</title>
+        </circle>
+      ))}
+    </svg>
+  );
+}
+
+export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
+  const [d, setD] = useState<LegData | null>(null);
+  const [erro, setErro] = useState(false);
+  const [uf, setUf] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    setD(null);
+    setErro(false);
+    const carregar = async (tentativa: number) => {
+      try {
+        const r = await fetch(`/api/legislativo?c=${cargo}`);
+        const j = (await r.json()) as { ok: boolean; data: LegData | null };
+        if (!vivo) return;
+        if (j.ok && j.data) setD(j.data);
+        else if (tentativa < 6) setTimeout(() => void carregar(tentativa + 1), 8000);
+        else setErro(true);
+      } catch {
+        if (vivo) setErro(true);
+      }
+    };
+    void carregar(0);
+    return () => {
+      vivo = false;
+    };
+  }, [cargo]);
+
+  const seats = useMemo(() => {
+    if (!d) return [];
+    const porBloco: Record<Bloco, { cor: string; titulo: string }[]> = { esquerda: [], centro: [], direita: [], outros: [] };
+    for (const p of d.partidos) for (let i = 0; i < p.cadeiras; i++) porBloco[p.bloco].push({ cor: COR_BLOCO[p.bloco][0], titulo: `${p.sg} (${ROTULO[p.bloco]})` });
+    return ORDEM.flatMap((b) => porBloco[b]);
+  }, [d]);
+
+  if (erro) return <p className="rounded-2xl border border-line bg-panel p-6 text-sm text-mute">Não foi possível carregar agora. Tente novamente em instantes.</p>;
+  if (!d)
+    return (
+      <p className="rounded-2xl border border-line bg-panel p-6 text-sm text-mute" role="status">
+        Carregando {TITULO[cargo]}… (na primeira vez pode levar alguns segundos)
+      </p>
+    );
+
+  const ufsOrd = Object.entries(d.porUf).sort(([a], [b]) => a.localeCompare(b));
+  return (
+    <div className="grid gap-4">
+      <section className="glass-panel rounded-2xl p-4 sm:p-5">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">{TITULO[cargo]}</h2>
+        <p className="tabular mt-1 text-xs text-mute">
+          {d.definidas} de {d.vagas} vagas definidas
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {ORDEM.filter((b) => d.blocos[b] > 0).map((b) => (
+            <div key={b} className="rounded-xl border border-line p-3" style={{ borderColor: `${COR_BLOCO[b][0]}66` }}>
+              <p className="text-[11px] uppercase tracking-wide text-mute">{ROTULO[b]}</p>
+              <p className="tabular font-display text-2xl" style={{ color: COR_BLOCO[b][0] }}>
+                {d.blocos[b]}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="mx-auto mt-4 max-w-2xl">
+          <Hemiciclo seats={seats} />
+        </div>
+        <p className="mt-1 text-[11px] text-mute">Classificação em blocos é uma simplificação convencional, só para colorir.</p>
+      </section>
+
+      <section className="glass-panel rounded-2xl p-4 sm:p-5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">Cadeiras por partido</h3>
+        <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3 lg:grid-cols-4">
+          {d.partidos.map((p) => (
+            <li key={p.sg} className="flex items-center justify-between gap-2 border-b border-line/50 py-1">
+              <span className="flex items-center gap-2">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[p.bloco][0] }} />
+                {p.sg}
+              </span>
+              <span className="tabular font-semibold">{p.cadeiras}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="glass-panel rounded-2xl p-4 sm:p-5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+          {cargo === 5 ? "Eleitos por estado" : "Resultado por estado"}
+        </h3>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {ufsOrd.map(([id, v]) => (
+            <button
+              key={id}
+              onClick={() => setUf(uf === id ? null : id)}
+              className="rounded-xl border border-line p-3 text-left transition hover:bg-white/5"
+              aria-expanded={uf === id}
+            >
+              <span className="flex items-center justify-between text-sm font-semibold">
+                <span className="flex items-center gap-2">
+                  <Bandeira uf={id} w={22} />
+                  {id}
+                </span>
+                <span className="tabular text-xs text-mute">
+                  {v.definidas}/{v.vagas}
+                </span>
+              </span>
+              <span className="mt-2 flex flex-wrap gap-1">
+                {v.top.map((e) => (
+                  <span
+                    key={e.n + e.nome}
+                    className="rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-ink"
+                    style={{ background: COR_BLOCO[bl(e.partido)][0] }}
+                    title={`${e.nome} · ${fmtInt(e.votos)} votos`}
+                  >
+                    {e.nome.split(" ").slice(0, 2).join(" ")} · {e.partido}
+                  </span>
+                ))}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="glass-panel rounded-2xl p-4 sm:p-5">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+          {cargo === 5 ? "Senadores eleitos" : "Mais votados do Brasil"}
+        </h3>
+        <ol className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+          {(uf ? d.eleitos.filter((e) => e.uf === uf) : d.eleitos).map((e, i) => (
+            <li key={e.uf + e.n + e.nome} className="flex items-center gap-2 border-b border-line/50 py-1.5">
+              <span className="tabular w-6 text-xs text-mute">{i + 1}</span>
+              <Bandeira uf={e.uf} w={20} />
+              <span className="min-w-0 flex-1 truncate">{e.nome}</span>
+              <span className="text-[11px] font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
+                {e.partido}
+              </span>
+              <span className="tabular text-xs text-mute">{fmtInt(e.votos)}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </div>
+  );
+}
+
+import { blocoDe } from "@/lib/apuracao/blocos";
+const bl = blocoDe;

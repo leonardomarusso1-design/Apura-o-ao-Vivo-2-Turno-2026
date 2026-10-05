@@ -1,7 +1,7 @@
 import { redis, redisEnabled } from "@/lib/redis";
 import { ELEICAO, PREVIA, fetchArea } from "./tse";
 import { mockSnapshot } from "./mock";
-import { UFS, type Area, type Evento, type Ponto, type Snapshot } from "./types";
+import { UFS, type Area, type Evento, type Ponto, type PontoReplay, type Snapshot } from "./types";
 
 const key = (ele: number) => `snap:v1:${ele}`;
 const lockKey = (ele: number) => `snap:lock:${ele}`;
@@ -52,6 +52,45 @@ async function pool<T, R>(items: T[], size: number, fn: (x: T) => Promise<R>): P
     }),
   );
   return out;
+}
+
+const histKey = (ele: number) => `hist:v1:${ele}`;
+const MAX_REPLAY = 900;
+
+/** Grava a linha do tempo (sem expirar): 1 ponto a cada mudança de % do Brasil ou de líder em algum estado. */
+async function gravarReplay(ele: number, br: Area | null, ufs: Record<string, Area>) {
+  if (!redisEnabled || ele !== ELEICAO || !br || br.pctApurado <= 0 || br.cands.length === 0) return;
+  const u: Record<string, [number, number]> = {};
+  for (const [id, a] of Object.entries(ufs)) if (a.cands[0]) u[id] = [a.cands[0].n, Math.round(a.pctApurado * 10) / 10];
+  const raw = await redis<string>(["GET", histKey(ele)]);
+  let arr: PontoReplay[] = [];
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw) as PontoReplay[];
+    } catch {
+      arr = [];
+    }
+  }
+  const last = arr[arr.length - 1];
+  const pct = Math.round(br.pctApurado * 100) / 100;
+  if (last && last.pct === pct && JSON.stringify(last.u) === JSON.stringify(u)) return;
+  arr.push({
+    t: new Date().toISOString(),
+    pct,
+    c: br.cands.slice(0, 4).map((c) => ({ n: c.n, pct: c.pct, v: c.votos })),
+    u,
+  });
+  await redis(["SET", histKey(ele), JSON.stringify(arr.slice(-MAX_REPLAY))]);
+}
+
+export async function lerReplay(): Promise<PontoReplay[]> {
+  const raw = await redis<string>(["GET", histKey(ELEICAO)]);
+  if (typeof raw !== "string") return [];
+  try {
+    return JSON.parse(raw) as PontoReplay[];
+  } catch {
+    return [];
+  }
 }
 
 async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
@@ -128,6 +167,8 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
       c: br.cands.slice(0, 3).map((c) => ({ n: c.n, pct: c.pct })),
     });
   }
+
+  await gravarReplay(ele, br, ufs).catch(() => undefined);
 
   const status: Snapshot["status"] = !br || br.pctApurado <= 0 ? "aguardando" : br.pctApurado >= 99.99 || br.definidoTse ? "finalizado" : "apurando";
 

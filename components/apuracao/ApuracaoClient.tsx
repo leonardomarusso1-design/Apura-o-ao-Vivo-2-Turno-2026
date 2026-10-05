@@ -14,6 +14,7 @@ import BuscaModal from "./BuscaModal";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
+import type { PontoReplay } from "@/lib/apuracao/types";
 import Legenda from "./Legenda";
 import Linha from "./Linha";
 
@@ -34,10 +35,59 @@ const Governadores = dynamic(() => import("./Governadores"), {
   ssr: false,
   loading: () => <div className="h-64 animate-pulse rounded-2xl border border-line bg-panel" />,
 });
+const Legislativo = dynamic(() => import("./Legislativo"), {
+  ssr: false,
+  loading: () => <div className="h-40 animate-pulse rounded-2xl bg-panel" />,
+});
 const TvView = dynamic(() => import("./TvView"), { ssr: false });
 
+const horaBR = (iso: string) =>
+  new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).replace(":", "h");
+
+/** Reconstrói a tela como estava num ponto gravado (placar, líder e % de cada estado). */
+function aplicarReplay(live: Payload, p: PontoReplay): Payload {
+  const t = new Date(p.t).getTime();
+  const br = live.br
+    ? {
+        ...live.br,
+        pctApurado: p.pct,
+        cands: p.c
+          .map((pc) => {
+            const base = live.br!.cands.find((c) => c.n === pc.n);
+            return base ? { ...base, pct: pc.pct, votos: pc.v } : null;
+          })
+          .filter((c): c is NonNullable<typeof c> => c !== null),
+      }
+    : live.br;
+  const ufs: Payload["ufs"] = {};
+  for (const [id, a] of Object.entries(live.ufs)) {
+    const u = p.u[id];
+    if (!u) {
+      ufs[id] = { ...a, pctApurado: 0, cands: [], definidoTse: false };
+      continue;
+    }
+    const lider = a.cands.find((c) => c.n === u[0]);
+    ufs[id] = {
+      ...a,
+      pctApurado: u[1],
+      definidoTse: false,
+      cands: lider ? [lider, ...a.cands.filter((c) => c.n !== u[0])] : a.cands,
+    };
+  }
+  return {
+    ...live,
+    br,
+    ufs,
+    eventos: live.eventos.filter((e) => new Date(e.t).getTime() <= t),
+    historico: live.historico.filter((h) => new Date(h.t).getTime() <= t),
+  };
+}
+
 export default function ApuracaoClient({ initial = null }: { initial?: Payload | null }) {
-  const [data, setData] = useState<Payload | null>(initial);
+  const [dataLive, setData] = useState<Payload | null>(initial);
+  const [pontos, setPontos] = useState<PontoReplay[]>([]);
+  const [ri, setRi] = useState<number | null>(null); // null = ao vivo
+  const data = useMemo(() => (ri === null || !dataLive || !pontos[ri] ? dataLive : aplicarReplay(dataLive, pontos[ri])), [dataLive, pontos, ri]);
   const [erro, setErro] = useState(false);
   const [uf, setUf] = useState<string | null>(null);
   const [novo, setNovo] = useState(false);
@@ -47,7 +97,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [busca, setBusca] = useState(false);
-  const [aba, setAba] = useState<"presidente" | "governadores">("presidente");
+  const [aba, setAba] = useState<"presidente" | "governadores" | "senado" | "federais" | "estaduais">("presidente");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -59,6 +109,29 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  const gravando = Boolean(dataLive && !dataLive.previa && !dataLive.demo && dataLive.status !== "aguardando");
+  useEffect(() => {
+    if (!gravando) return;
+    let alive = true;
+    const load = async () => {
+      try {
+        const r = await fetch("/api/historico");
+        if (!r.ok) return;
+        const j = (await r.json()) as { pontos: PontoReplay[] };
+        if (alive && Array.isArray(j.pontos)) setPontos(j.pontos);
+      } catch {
+        /* sem replay */
+      }
+    };
+    void load();
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 60_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [gravando]);
   const lastChange = useRef<{ key: string; at: number }>({ key: "", at: Date.now() });
   const [, force] = useState(0);
 
@@ -253,11 +326,42 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
         </div>
       </header>
 
-      <div className="mb-4 flex gap-1.5" role="tablist" aria-label="Cargo">
+      {gravando && pontos.length >= 2 ? (
+        <div className="glass-panel mb-4 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-mute">Linha do tempo</span>
+          <input
+            type="range"
+            min={0}
+            max={pontos.length - 1}
+            value={ri ?? pontos.length - 1}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setRi(v >= pontos.length - 1 ? null : v);
+            }}
+            aria-label="Voltar no tempo da apuração"
+            className="h-8 min-w-[140px] flex-1 accent-[#00e599]"
+          />
+          <span className="tabular text-xs text-paper">
+            {ri === null
+              ? "Ao vivo"
+              : `Como estava às ${horaBR(pontos[ri].t)} · ${fmtPct(pontos[ri].pct, 1)}% das seções`}
+          </span>
+          {ri !== null ? (
+            <button onClick={() => setRi(null)} className="h-9 rounded-xl bg-lime px-3 text-xs font-semibold text-ink">
+              Voltar ao vivo
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Cargo">
         {(
           [
             ["presidente", "Presidente"],
             ["governadores", "Governadores"],
+            ["senado", "Senado"],
+            ["federais", "Deputados Federais"],
+            ["estaduais", "Deputados Estaduais"],
           ] as const
         ).map(([k, nome]) => (
           <button
@@ -265,7 +369,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
             role="tab"
             aria-selected={aba === k}
             onClick={() => setAba(k)}
-            className={`h-10 rounded-xl border px-4 text-sm font-medium transition ${aba === k ? "border-white/20 bg-white/10 text-paper" : "border-line text-mute hover:text-paper"}`}
+            className={`h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 text-sm font-medium transition ${aba === k ? "border-white/20 bg-white/10 text-paper" : "border-line text-mute hover:text-paper"}`}
           >
             {nome}
           </button>
@@ -273,6 +377,9 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       </div>
 
       {aba === "governadores" ? <Governadores /> : null}
+      {aba === "senado" ? <Legislativo cargo={5} /> : null}
+      {aba === "federais" ? <Legislativo cargo={6} /> : null}
+      {aba === "estaduais" ? <Legislativo cargo={7} /> : null}
 
       {aba === "presidente" && esperandoVotos ? (
         <p className="mb-4 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-mute" role="status">

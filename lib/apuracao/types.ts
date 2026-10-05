@@ -53,3 +53,11 @@ export type Snapshot = {
 export const UFS = [
   "AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO",
 ] as const;
+
+/** Ponto gravado da linha do tempo (replay). u = UF -> [nº do líder, % apurado]. */
+export type PontoReplay = {
+  t: string;
+  pct: number;
+  c: { n: number; pct: number; v: number }[];
+  u: Record<string, [number, number]>;
+};
