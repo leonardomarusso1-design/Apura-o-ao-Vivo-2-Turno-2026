@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
 import Avatar from "./Avatar";
@@ -6,6 +9,7 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
   // Os 2 primeiros por votos, mas SEMPRE na mesma posição (por nº da urna) — evita trocar de lado a cada virada
   const top = (br?.cands.slice(0, 2) ?? []).sort((a, b) => a.n - b.n);
   const resto = br ? br.cands.slice(2) : [];
+  const [todos, setTodos] = useState(false);
   const dif = top.length === 2 ? Math.abs(top[0].votos - top[1].votos) : 0;
   const difPct = top.length === 2 ? Math.abs(top[0].pct - top[1].pct) : 0;
 
@@ -45,13 +49,18 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
 
       {resto.length > 0 ? (
         <ul className="mt-3 grid gap-1 border-t border-line pt-3 text-xs text-mute">
-          {resto.slice(0, 5).map((c) => (
+          {(todos ? resto : resto.slice(0, 3)).map((c) => (
             <li key={c.sq} className="tabular flex justify-between">
               <span className="truncate">{c.nome}</span>
               <span>{fmtPct(c.pct)}%</span>
             </li>
           ))}
         </ul>
+      ) : null}
+      {resto.length > 3 ? (
+        <button onClick={() => setTodos((t) => !t)} className="mt-2 text-xs underline text-mute">
+          {todos ? "Mostrar menos" : `Todos os ${resto.length + 2} candidatos`}
+        </button>
       ) : null}
     </section>
   );

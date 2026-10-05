@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import MapaBR from "./MapaBR";
+import MapaBR, { type ModoMapa } from "./MapaBR";
 import Placar from "./Placar";
 import Projecao from "./Projecao";
 import Regioes from "./Regioes";
@@ -30,6 +30,9 @@ export default function ApuracaoClient() {
   const [novo, setNovo] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
+  const [modo, setModo] = useState<ModoMapa>("estados");
+  const [candN, setCandN] = useState<number | null>(null);
+  const [copiado, setCopiado] = useState(false);
   const lastChange = useRef<{ key: string; at: number }>({ key: "", at: Date.now() });
   const [, force] = useState(0);
 
@@ -126,6 +129,20 @@ export default function ApuracaoClient() {
 
   const cor = useMemo(() => makeCor(data?.br?.cands.map((c) => ({ n: c.n, partido: c.partido })) ?? []), [data]);
 
+  const compartilhar = async () => {
+    const url = `${SITE_URL}/apuracao`;
+    try {
+      if (navigator.share) await navigator.share({ title: "Apuração ao vivo", text: share, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2000);
+      }
+    } catch {
+      /* cancelado */
+    }
+  };
+
   const parado = Date.now() - lastChange.current.at > STALE_MIN * 60_000;
   const aguardando = !data || data.status === "aguardando";
   const esperandoVotos = data && data.status === "apurando" && parado && !data.demo;
@@ -195,6 +212,9 @@ export default function ApuracaoClient() {
           >
             Exterior
           </button>
+          <button onClick={compartilhar} className="h-10 rounded-xl border border-line px-4 text-sm">
+            {copiado ? "Link copiado ✓" : "Compartilhar"}
+          </button>
           <button onClick={entrarTv} className="h-10 rounded-xl border border-line px-4 text-sm">
             Tela cheia
           </button>
@@ -235,7 +255,44 @@ export default function ApuracaoClient() {
               <MapaExterior total={data?.ufs["ZZ"]} cor={cor} onVoltar={() => setUf(null)} />
             ) : (
               <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
-                <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} />
+                <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs" role="tablist" aria-label="Modo do mapa">
+                  {(
+                    [
+                      ["estados", "Estados"],
+                      ["vantagem", "Vantagem"],
+                      ["apurado", "Apurado"],
+                    ] as [ModoMapa, string][]
+                  ).map(([m, nome]) => (
+                    <button
+                      key={m}
+                      role="tab"
+                      aria-selected={modo === m}
+                      onClick={() => setModo(m)}
+                      className={`h-8 rounded-lg border px-3 ${modo === m ? "border-lime bg-lime text-ink" : "border-line text-mute"}`}
+                    >
+                      {nome}
+                    </button>
+                  ))}
+                  <select
+                    aria-label="Mapa de um candidato"
+                    value={modo === "candidato" && candN != null ? String(candN) : ""}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setCandN(Number(e.target.value));
+                        setModo("candidato");
+                      } else setModo("estados");
+                    }}
+                    className={`h-8 rounded-lg border bg-panel px-2 ${modo === "candidato" ? "border-lime text-paper" : "border-line text-mute"}`}
+                  >
+                    <option value="">Candidato…</option>
+                    {(data?.br?.cands ?? []).map((c) => (
+                      <option key={c.sq} value={c.n}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo} candN={candN} />
                 <Legenda cands={data?.br?.cands ?? []} />
                 <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
               </div>

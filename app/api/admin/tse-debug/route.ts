@@ -13,6 +13,9 @@ const TARGETS: Record<string, string> = {
   br: `ele2026/6257/dados/br/br-c0001-e${ELE}-u.json`,
   sp: `ele2026/6257/dados/sp/sp-c0001-e${ELE}-u.json`,
   cfg: `ele2026/6257/config/mun-e${ELE}-cm.json`,
+  // 2022 (2º turno presidente = 545): dois formatos possíveis, testar 1x cada
+  p22a: "ele2022/545/dados-simplificados/sp/sp-c0001-e000545-r.json",
+  p22b: "ele2022/545/dados/sp/sp-c0001-e000545-u.json",
 };
 
 function authorized(req: Request): boolean {
