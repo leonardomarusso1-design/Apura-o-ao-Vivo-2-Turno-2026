@@ -9,19 +9,19 @@ type Resp = { ok: boolean; pendente?: boolean; itens?: ItemMapa[] };
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /** Mapa de municípios de um estado: cada cidade colorida pelo líder (cor do bloco do partido). */
-export default function MapaMunicipios({ uf, cargo }: { uf: string; cargo: 1 | 3 | 5 }) {
-  const [aberto, setAberto] = useState(false);
+export default function MapaMunicipios({ uf, cargo, inicial = false }: { uf: string; cargo: 1 | 3 | 5; inicial?: boolean }) {
+  const [aberto, setAberto] = useState(inicial);
   const [geo, setGeo] = useState<Geo | null | "falta">(null);
   const [dados, setDados] = useState<ItemMapa[] | null>(null);
   const [tent, setTent] = useState(0);
   const [hover, setHover] = useState<{ x: number; y: number; it: ItemMapa } | null>(null);
 
   useEffect(() => {
-    setAberto(false);
+    setAberto(inicial);
     setGeo(null);
     setDados(null);
     setTent(0);
-  }, [uf, cargo]);
+  }, [uf, cargo, inicial]);
 
   useEffect(() => {
     if (!aberto) return;

@@ -11,6 +11,7 @@ import SponsorSlot from "./SponsorSlot";
 import LiveBox from "./LiveBox";
 import dynamic from "next/dynamic";
 import BuscaModal from "./BuscaModal";
+import MapaMunicipios from "./MapaMunicipios";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
@@ -415,6 +416,14 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
           <div className="order-2 grid gap-4 lg:order-none lg:content-start">
             {uf === "ZZ" ? (
               <MapaExterior total={data?.ufs["ZZ"]} cor={cor} onVoltar={() => setUf(null)} />
+            ) : uf ? (
+              <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
+                <button onClick={() => setUf(null)} className="mb-2 h-9 rounded-lg border border-line px-3 text-xs hover:bg-white/5">
+                  ← Brasil
+                </button>
+                <MapaMunicipios uf={uf} cargo={1} inicial />
+                <p className="mt-1 text-center text-[11px] text-mute">Passe o mouse (ou toque) em um município · cor = quem lidera</p>
+              </div>
             ) : (
               <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
                 <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs" role="tablist" aria-label="Modo do mapa">
@@ -456,6 +465,21 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                 </div>
                 <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo} candN={candN} />
                 <Legenda cands={data?.br?.cands ?? []} />
+                <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Escolher estado">
+                  {Object.keys(data?.ufs ?? {})
+                    .filter((k) => k !== "ZZ")
+                    .sort()
+                    .map((k) => (
+                      <button
+                        key={k}
+                        onClick={() => setUf(k)}
+                        className="flex h-8 items-center gap-1.5 rounded-lg border border-line px-2 text-xs hover:bg-white/5"
+                      >
+                        <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: cor(data?.ufs[k]?.cands[0]?.n) }} />
+                        {k}
+                      </button>
+                    ))}
+                </div>
                 <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
               </div>
             )}

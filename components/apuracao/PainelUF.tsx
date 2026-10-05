@@ -5,7 +5,6 @@ import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 import Comparativo2022 from "./Comparativo2022";
 import MunicipioBusca from "./MunicipioBusca";
-import MapaMunicipios from "./MapaMunicipios";
 
 export default function PainelUF({
   uf,
@@ -101,7 +100,6 @@ export default function PainelUF({
           })}
         </div>
       ) : null}
-      {uf !== "ZZ" ? <MapaMunicipios uf={uf} cargo={1} /> : null}
       {uf !== "ZZ" ? <MunicipioBusca uf={uf} cargo={1} cor={cor} /> : null}
       {area ? <Comparativo2022 area={area} turno={turno} cor={cor} rotulo={nome} /> : null}
     </section>
