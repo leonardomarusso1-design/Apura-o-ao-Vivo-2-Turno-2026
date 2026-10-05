@@ -184,9 +184,18 @@ export default function ApuracaoClient() {
             {erro ? " · reconectando…" : ""}
           </p>
         </div>
-        <button onClick={entrarTv} className="h-10 rounded-xl border border-line px-4 text-sm">
-          Tela cheia
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setUf(uf === "ZZ" ? null : "ZZ")}
+            aria-pressed={uf === "ZZ"}
+            className={`h-10 rounded-xl border px-4 text-sm ${uf === "ZZ" ? "border-lime bg-lime text-ink" : "border-line"}`}
+          >
+            Exterior
+          </button>
+          <button onClick={entrarTv} className="h-10 rounded-xl border border-line px-4 text-sm">
+            Tela cheia
+          </button>
+        </div>
       </header>
 
       {esperandoVotos ? (

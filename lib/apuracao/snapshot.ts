@@ -79,6 +79,7 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
       continue;
     }
     const id = abr.toUpperCase();
+    const rot = id === "ZZ" ? "Exterior" : id;
     const before = ufs[id];
     ufs[id] = a;
     const mudouLider = before && before.cands[0]?.n !== a.cands[0]?.n;
@@ -93,10 +94,10 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
         candSq: l.sq,
         candNome: l.nome,
         texto: mudouLider
-          ? `${id}: ${l.nome} assumiu a liderança (${a.pctApurado.toFixed(0)}% apurado)`
+          ? `${rot}: ${l.nome} assumiu a liderança (${a.pctApurado.toFixed(0)}% apurado)`
           : a.pctApurado >= 99.99
-            ? `${id}: apuração concluída — ${l.nome} lidera com ${l.pct.toFixed(1)}%`
-            : `${id}: ${a.pctApurado.toFixed(0)}% apurado — ${l.nome} lidera com ${l.pct.toFixed(1)}%`,
+            ? `${rot}: apuração concluída — ${l.nome} lidera com ${l.pct.toFixed(1)}%`
+            : `${rot}: ${a.pctApurado.toFixed(0)}% apurado — ${l.nome} lidera com ${l.pct.toFixed(1)}%`,
       });
     }
   }

@@ -13,14 +13,14 @@ export default function PainelUF({
   cor: (n: number | undefined) => string;
   onClose: () => void;
 }) {
-  const nome = BR_UFS.find((u) => u.id.toUpperCase() === uf)?.nome ?? uf;
+  const nome = uf === "ZZ" ? "Exterior" : (BR_UFS.find((u) => u.id.toUpperCase() === uf)?.nome ?? uf);
   return (
     <section className="rounded-2xl border border-line bg-panel p-4 sm:p-5" aria-label={`Resultado em ${nome}`}>
       <div className="flex items-start justify-between">
         <div>
           <h2 className="font-display text-2xl">{nome}</h2>
           <p className="tabular text-xs text-mute">
-            {area ? `${fmtPct(area.pctApurado, 1)}% das seções apuradas · ${fmtInt(area.eleitores)} eleitores` : "Ainda sem dados do TSE"}
+            {area ? `${fmtPct(area.pctApurado, 1)}% das seções apuradas · ${fmtInt(area.eleitores)} eleitores` : uf === "ZZ" ? "Os votos do exterior são divulgados pelo TSE junto com os do Brasil, a partir das 17h (Brasília)." : "Ainda sem dados do TSE"}
           </p>
         </div>
         <button onClick={onClose} className="h-9 rounded-lg border border-line px-3 text-xs" aria-label="Fechar">
