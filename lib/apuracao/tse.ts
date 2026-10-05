@@ -1,6 +1,6 @@
 import type { Area, Cand } from "./types";
 
-const BASE = process.env.TSE_BASE ?? "https://resultados.tse.jus.br";
+export const BASE = process.env.TSE_BASE ?? "https://resultados.tse.jus.br";
 export const ELEICAO = Number(process.env.TSE_ELEICAO ?? "6258"); // 6258 = Presidente 2º turno 2026
 
 const pad = (n: number, w: number) => String(n).padStart(w, "0");

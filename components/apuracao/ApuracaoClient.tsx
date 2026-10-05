@@ -9,6 +9,7 @@ import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
 import SponsorSlot from "./SponsorSlot";
 import LiveBox from "./LiveBox";
+import MapaExterior from "./MapaExterior";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
@@ -230,12 +231,16 @@ export default function ApuracaoClient() {
           </div>
 
           <div className="order-2 grid gap-4 lg:order-none lg:content-start">
-            <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
-              <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} />
-              <Legenda cands={data?.br?.cands ?? []} />
-              <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
-            </div>
-            {uf ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} onClose={() => setUf(null)} /> : null}
+            {uf === "ZZ" ? (
+              <MapaExterior total={data?.ufs["ZZ"]} cor={cor} onVoltar={() => setUf(null)} />
+            ) : (
+              <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
+                <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} />
+                <Legenda cands={data?.br?.cands ?? []} />
+                <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
+              </div>
+            )}
+            {uf && uf !== "ZZ" ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} onClose={() => setUf(null)} /> : null}
           </div>
 
           <div className="contents lg:flex lg:flex-col lg:gap-4">
