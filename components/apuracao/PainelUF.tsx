@@ -3,17 +3,20 @@ import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
 import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
+import Comparativo2022 from "./Comparativo2022";
 
 export default function PainelUF({
   uf,
   area,
   cor,
   onClose,
+  turno = 2,
 }: {
   uf: string;
   area: Area | undefined;
   cor: (n: number | undefined) => string;
   onClose: () => void;
+  turno?: 1 | 2;
 }) {
   const nome = uf === "ZZ" ? "Exterior" : (BR_UFS.find((u) => u.id.toUpperCase() === uf)?.nome ?? uf);
   
@@ -96,6 +99,7 @@ export default function PainelUF({
           })}
         </div>
       ) : null}
+      {area ? <Comparativo2022 area={area} turno={turno} cor={cor} rotulo={nome} /> : null}
     </section>
   );
 }

@@ -8,3 +8,11 @@ next-env.d.ts
 # pacotes grandes (nao subir inteiros)
 public/pacote_bandeiras/
 dados/
+
+# dados brutos do TSE (nao subir: sao gigabytes)
+*.csv
+leiame.pdf
+patch-*.tar.gz
+public/candidatos/*.zip
+public/candidatos/foto_cand2026_*
+public/candidatos/candidatos/

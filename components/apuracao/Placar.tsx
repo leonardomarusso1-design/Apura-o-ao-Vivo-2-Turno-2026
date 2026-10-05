@@ -5,6 +5,7 @@ import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
 import Avatar from "./Avatar";
 import Num from "./Num";
+import Comparativo2022 from "./Comparativo2022";
 
 export default function Placar({
   br,
@@ -160,6 +161,7 @@ export default function Placar({
           )}
         </div>
       ) : null}
+      {br ? <Comparativo2022 area={br} turno={turno} cor={cor} rotulo="Brasil" /> : null}
     </section>
   );
 }

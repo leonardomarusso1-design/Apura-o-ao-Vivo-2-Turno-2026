@@ -459,7 +459,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                 <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
               </div>
             )}
-            {uf && uf !== "ZZ" ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} onClose={() => setUf(null)} /> : null}
+            {uf && uf !== "ZZ" ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={data?.turno === 1 ? 1 : 2} onClose={() => setUf(null)} /> : null}
           </div>
 
           <div className="contents lg:flex lg:flex-col lg:gap-4">

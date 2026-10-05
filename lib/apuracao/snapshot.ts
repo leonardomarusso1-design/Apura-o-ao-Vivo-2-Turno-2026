@@ -3,7 +3,7 @@ import { ELEICAO, PREVIA, fetchArea } from "./tse";
 import { mockSnapshot } from "./mock";
 import { UFS, type Area, type Evento, type Ponto, type PontoReplay, type Snapshot } from "./types";
 
-const key = (ele: number) => `snap:v1:${ele}`;
+const key = (ele: number) => `snap:v2:${ele}`;
 const lockKey = (ele: number) => `snap:lock:${ele}`;
 const FRESH_MS = 12_000; // não atualiza mais de 1x a cada 12s, não importa quantos acessem
 const FRESH_PREVIA_MS = 300_000; // prévia (dados antigos) muda pouco
