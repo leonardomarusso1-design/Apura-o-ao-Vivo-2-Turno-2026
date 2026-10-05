@@ -28,7 +28,7 @@ export default function Projecao({ p, cor }: { p: P; cor: (n: number | undefined
             ritmos diferentes). Faltam <strong className="text-paper">{fmtPct(p.restantePct, 1)}%</strong> do eleitorado.
             Base: {p.ufsComDados} localidades com dados suficientes.
           </p>
-          {p.irreversivel ? (
+          {p.irreversivel && p.restantePct >= 0.5 ? (
             <p className="mt-2 rounded-lg border border-lime/40 px-3 py-2 text-xs text-lime">
               Diferença maior que o máximo de votos que ainda podem entrar ({fmtInt(p.votosRestantesMax)}). Cálculo do
               site — o resultado oficial é o do TSE.

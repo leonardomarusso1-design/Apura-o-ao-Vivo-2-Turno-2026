@@ -8,7 +8,12 @@ import Regioes from "./Regioes";
 import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
 import SponsorSlot from "./SponsorSlot";
+import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
+import Legenda from "./Legenda";
+import Linha from "./Linha";
+import TvView from "./TvView";
+import Credito from "../Credito";
 import { SITE_URL } from "@/lib/env";
 
 const POLL_MS = 15_000;
@@ -21,7 +26,7 @@ export default function ApuracaoClient() {
   const [uf, setUf] = useState<string | null>(null);
   const [novo, setNovo] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
-  const [full, setFull] = useState(false);
+  const [tv, setTv] = useState(false);
   const lastChange = useRef<{ key: string; at: number }>({ key: "", at: Date.now() });
   const [, force] = useState(0);
 
@@ -74,12 +79,15 @@ export default function ApuracaoClient() {
 
   // Tela cheia estável: o elemento raiz nunca é remontado e a tela é mantida acordada
   useEffect(() => {
-    const onFs = () => setFull(Boolean(document.fullscreenElement));
+    // Saiu da tela cheia pelo ESC/gesto => sai do modo TV. Não recarrega nada: só troca a visualização.
+    const onFs = () => {
+      if (!document.fullscreenElement) setTv(false);
+    };
     document.addEventListener("fullscreenchange", onFs);
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
   useEffect(() => {
-    if (!full) return;
+    if (!tv) return;
     let lock: WakeLockSentinel | null = null;
     const get = async () => {
       try {
@@ -95,17 +103,25 @@ export default function ApuracaoClient() {
       document.removeEventListener("visibilitychange", re);
       void lock?.release();
     };
-  }, [full]);
-  const toggleFull = useCallback(async () => {
+  }, [tv]);
+  const entrarTv = useCallback(async () => {
+    setTv(true);
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch {
+      /* iOS Safari: sem API de tela cheia — o modo TV (overlay) continua funcionando */
+    }
+  }, []);
+  const sairTv = useCallback(async () => {
+    setTv(false);
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
     } catch {
-      /* iOS Safari não permite em páginas */
+      /* ignore */
     }
   }, []);
 
-  const cor = useMemo(() => makeCor(data?.br?.cands.map((c) => c.n) ?? []), [data]);
+  const cor = useMemo(() => makeCor(data?.br?.cands.map((c) => ({ n: c.n, partido: c.partido })) ?? []), [data]);
 
   const parado = Date.now() - lastChange.current.at > STALE_MIN * 60_000;
   const aguardando = !data || data.status === "aguardando";
@@ -114,8 +130,12 @@ export default function ApuracaoClient() {
   const link = refCode ? `${SITE_URL}/?ref=${refCode}` : SITE_URL;
   const share = `Estou acompanhando a apuração do 2º turno ao vivo aqui. Entra na lista pra ser avisado: ${link}`;
 
+  if (tv && data?.br) {
+    return <TvView data={data} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-5">
+    <div className="mx-auto w-full max-w-[1800px] px-4 pb-16 pt-5 lg:px-6">
       {novo ? (
         <div className="mb-4 rounded-2xl border border-lime/40 bg-panel p-4">
           <p className="font-semibold">Você está na lista ✓</p>
@@ -156,6 +176,7 @@ export default function ApuracaoClient() {
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl sm:text-3xl">Apuração do {data?.turno === 1 ? "1º" : "2º"} turno</h1>
+          <Credito compact />
           <p className="tabular text-xs text-mute">
             {data?.br
               ? `${fmtPct(data.br.pctApurado, 2)}% das seções apuradas`
@@ -163,8 +184,8 @@ export default function ApuracaoClient() {
             {erro ? " · reconectando…" : ""}
           </p>
         </div>
-        <button onClick={toggleFull} className="h-10 rounded-xl border border-line px-4 text-sm">
-          {full ? "Sair da tela cheia" : "Tela cheia"}
+        <button onClick={entrarTv} className="h-10 rounded-xl border border-line px-4 text-sm">
+          Tela cheia
         </button>
       </header>
 
@@ -183,29 +204,52 @@ export default function ApuracaoClient() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="grid content-start gap-4">
-            <Placar br={data?.br ?? null} cor={cor} />
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[340px_minmax(0,1fr)_360px]">
+          <div className="contents lg:flex lg:flex-col lg:gap-4">
+            <div className="order-1 lg:order-none">
+              <Placar br={data?.br ?? null} cor={cor} />
+            </div>
+            <div className="order-3 lg:order-none">{data ? <Projecao p={data.projecao} cor={cor} /> : null}</div>
+            <div className="order-6 lg:order-none">
+              <Linha pontos={data?.historico ?? []} cor={cor} />
+            </div>
+            <div className="order-7 lg:order-none">
+              <Regioes ufs={data?.ufs ?? {}} cor={cor} />
+            </div>
+          </div>
+
+          <div className="order-2 grid gap-4 lg:order-none lg:content-start">
             <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
               <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} />
-              <p className="mt-2 text-center text-[11px] text-mute">Toque em um estado · cor = quem lidera, intensidade = margem</p>
+              <Legenda cands={data?.br?.cands ?? []} />
+              <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
             </div>
             {uf ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} onClose={() => setUf(null)} /> : null}
           </div>
-          <div className="grid content-start gap-4">
-            {data ? <Projecao p={data.projecao} cor={cor} /> : null}
-            <Regioes ufs={data?.ufs ?? {}} cor={cor} />
-            <Atualizacoes eventos={data?.eventos ?? []} />
+
+          <div className="contents lg:flex lg:flex-col lg:gap-4">
+            <div className="order-4 lg:order-none">
+              <Atualizacoes eventos={data?.eventos ?? []} cor={cor} />
+            </div>
+            <div className="order-5 lg:order-none">
+              <ToqyCard />
+            </div>
+            <div className="order-8 grid gap-4 lg:order-none">
+              <SponsorSlot label="Anuncie aqui" />
+              <SponsorSlot label="Sua marca na apuração" />
+            </div>
           </div>
         </div>
       )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <SponsorSlot label="Anuncie aqui" />
-        <SponsorSlot label="Sua marca na apuração" />
+      <div className="mt-6">
+        <SponsorSlot label="Anuncie aqui · faixa grande" />
       </div>
 
       <footer className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-mute">
+        <p className="mb-2">
+          <Credito />
+        </p>
         <p>
           Dados oficiais: TSE (resultados.tse.jus.br). Projeção e cálculos de diferença são estimativas do site e não
           substituem o resultado oficial. Projeto independente, sem vínculo com o TSE, partidos ou campanhas. Mapa:

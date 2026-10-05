@@ -4,5 +4,3 @@ node_modules
 !.env.example
 next-env.d.ts
 *.tsbuildinfo
-*.tar.gz
-*.tsbuildinfo

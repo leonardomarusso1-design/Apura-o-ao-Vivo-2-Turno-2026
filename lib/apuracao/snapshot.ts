@@ -89,6 +89,8 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
         t: new Date().toISOString(),
         id,
         pct: a.pctApurado,
+        candN: l.n,
+        candNome: l.nome,
         texto: mudouLider
           ? `${id}: ${l.nome} assumiu a liderança (${a.pctApurado.toFixed(0)}% apurado)`
           : a.pctApurado >= 99.99

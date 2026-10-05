@@ -1,5 +1,6 @@
 import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
+import Avatar from "./Avatar";
 
 export default function Placar({ br, cor }: { br: Area | null; cor: (n: number | undefined) => string }) {
   // Os 2 primeiros por votos, mas SEMPRE na mesma posição (por nº da urna) — evita trocar de lado a cada virada
@@ -10,16 +11,19 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
 
   return (
     <section className="rounded-2xl border border-line bg-panel p-4 sm:p-6" aria-label="Placar nacional">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {(top.length ? top : [null, null]).map((c, i) => (
           <div key={c?.sq ?? i} className={i === 1 ? "text-right" : ""}>
-            <div className="flex items-center gap-2" style={{ justifyContent: i === 1 ? "flex-end" : "flex-start" }}>
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: c ? cor(c.n) : "#2a332f" }} />
-              <span className="truncate text-sm text-mute">{c ? `${c.nome}` : "—"}</span>
+            <div className={`flex items-center gap-2 ${i === 1 ? "flex-row-reverse" : ""}`}>
+              {c ? <Avatar n={c.n} nome={c.nome} cor={cor(c.n)} size={44} /> : null}
+              <span className="min-w-0">
+                <span className="line-clamp-2 block text-sm leading-tight">{c ? c.nome : "—"}</span>
+                <span className="block text-[11px] text-mute">{c ? `${c.partido} · ${c.n}` : ""}</span>
+              </span>
             </div>
-            <div className="tabular font-display text-4xl leading-none sm:text-6xl">
+            <div className="tabular mt-3 whitespace-nowrap font-display text-[2rem] leading-none sm:text-5xl lg:text-[2rem] xl:text-4xl 2xl:text-5xl">
               {c ? fmtPct(c.pct) : "––"}
-              <span className="text-xl text-mute">%</span>
+              <span className="text-base text-mute">%</span>
             </div>
             <div className="tabular mt-1 text-xs text-mute">{c ? `${fmtInt(c.votos)} votos` : ""}</div>
           </div>

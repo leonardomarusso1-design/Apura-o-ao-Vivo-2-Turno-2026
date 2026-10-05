@@ -29,6 +29,8 @@ export type Evento = {
   id: string; // UF
   pct: number;
   texto: string;
+  candN?: number; // nº do candidato citado (p/ foto/avatar)
+  candNome?: string;
 };
 
 export type Ponto = { t: string; pct: number; c: { n: number; pct: number }[] };

@@ -25,8 +25,8 @@ function area(id: string, ele: number, lean: number, prog: number): Area {
   const validos = Math.round(ele * f * 0.74);
   const a = Math.round(validos * lean);
   const cands: Cand[] = [
-    { sq: 1, n: 13, nome: "Candidato A (demo)", partido: "—", votos: a, pct: validos ? (a / validos) * 100 : 0, eleito: false },
-    { sq: 2, n: 22, nome: "Candidato B (demo)", partido: "—", votos: validos - a, pct: validos ? ((validos - a) / validos) * 100 : 0, eleito: false },
+    { sq: 1, n: 13, nome: "Candidato A (demo)", partido: "ESQ", votos: a, pct: validos ? (a / validos) * 100 : 0, eleito: false },
+    { sq: 2, n: 22, nome: "Candidato B (demo)", partido: "DIR", votos: validos - a, pct: validos ? ((validos - a) / validos) * 100 : 0, eleito: false },
   ].sort((x, y) => y.votos - x.votos);
   return {
     id, secoesTotal: tot, secoesApuradas: apur, pctApurado: prog * 100, eleitores: ele,
@@ -55,8 +55,8 @@ export function mockSnapshot(): Snapshot {
     eleitores: sum((a) => a.eleitores), eleitoresApurados: sum((a) => a.eleitoresApurados), comparecimento: 79,
     validos: v, brancos: sum((a) => a.brancos), nulos: sum((a) => a.nulos),
     cands: [
-      { sq: 1, n: 13, nome: "Candidato A (demo)", partido: "—", votos: va, pct: v ? (va / v) * 100 : 0, eleito: false },
-      { sq: 2, n: 22, nome: "Candidato B (demo)", partido: "—", votos: vb, pct: v ? (vb / v) * 100 : 0, eleito: false },
+      { sq: 1, n: 13, nome: "Candidato A (demo)", partido: "ESQ", votos: va, pct: v ? (va / v) * 100 : 0, eleito: false },
+      { sq: 2, n: 22, nome: "Candidato B (demo)", partido: "DIR", votos: vb, pct: v ? (vb / v) * 100 : 0, eleito: false },
     ].sort((x, y) => y.votos - x.votos),
     definidoTse: false, totalizadoEm: null,
   };

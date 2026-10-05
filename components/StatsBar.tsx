@@ -37,7 +37,7 @@ export default function StatsBar() {
   // Altura fixa: evita layout shift enquanto carrega
   return (
     <div className="border-b border-line bg-panel/80 backdrop-blur">
-      <div className="mx-auto flex h-11 max-w-5xl items-center justify-between gap-4 px-4 text-[13px]">
+      <div className="mx-auto flex h-11 w-full max-w-[1800px] items-center justify-between gap-4 px-4 text-[13px] lg:px-6">
         <div className="flex items-center gap-2 min-w-0">
           <span className="pulse-dot h-2 w-2 shrink-0 rounded-full bg-lime" aria-hidden />
           <span className="truncate text-mute">

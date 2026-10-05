@@ -31,3 +31,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pulse-dot { animation: none; }
 }
+
+@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.ticker { animation: ticker linear infinite; }
+.ticker:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .ticker { animation: none; } }

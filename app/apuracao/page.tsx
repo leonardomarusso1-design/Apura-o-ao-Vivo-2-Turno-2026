@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import StatsBar from "@/components/StatsBar";
+import ToqyStrip from "@/components/ToqyStrip";
 import Heartbeat from "@/components/Heartbeat";
 import ApuracaoClient from "@/components/apuracao/ApuracaoClient";
 import { ELECTION_ISO, SITE_NAME } from "@/lib/env";
@@ -14,6 +15,7 @@ export const dynamic = "force-static";
 export default function Page() {
   return (
     <>
+      <ToqyStrip />
       <StatsBar />
       <Heartbeat electionIso={ELECTION_ISO} />
       <ApuracaoClient />
