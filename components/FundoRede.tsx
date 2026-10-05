@@ -67,7 +67,7 @@ export default function FundoRede() {
           const dy = pts[i].y - pts[j].y;
           const d = Math.hypot(dx, dy);
           if (d < LINK) {
-            ctx.strokeStyle = `rgba(198,242,78,${(1 - d / LINK) * 0.2})`;
+            ctx.strokeStyle = `rgba(91,157,255,${(1 - d / LINK) * 0.2})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(pts[i].x, pts[i].y);
@@ -76,7 +76,7 @@ export default function FundoRede() {
           }
         }
         const tw = 0.35 + 0.35 * Math.sin(t / 900 + i);
-        ctx.fillStyle = `rgba(198,242,78,${tw * 0.75})`;
+        ctx.fillStyle = `rgba(91,157,255,${tw * 0.75})`;
         ctx.beginPath();
         ctx.arc(pts[i].x, pts[i].y, 1.6, 0, 6.283);
         ctx.fill();

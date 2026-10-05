@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import FundoRede from "@/components/FundoRede";
+import ConsentBanner from "@/components/ads/ConsentBanner";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <FundoRede />
         {children}
+        <ConsentBanner />
       </body>
     </html>
   );

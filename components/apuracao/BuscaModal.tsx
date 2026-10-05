@@ -18,11 +18,6 @@ export default function BuscaModal({
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        if (aberto) onClose();
-        else setQ("");
-      }
       if (e.key === "Escape" && aberto) {
         onClose();
       }
@@ -33,18 +28,20 @@ export default function BuscaModal({
 
   if (!aberto) return null;
 
-  const queryNorm = q.trim().toLowerCase();
+  // sem acento e sem diferença de maiúsculas: "sao" encontra "São Paulo"
+  const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const queryNorm = norm(q.trim());
 
   const ufsFiltradas = BR_UFS.filter(
     (u) =>
-      u.nome.toLowerCase().includes(queryNorm) ||
+      norm(u.nome).includes(queryNorm) ||
       u.id.toLowerCase() === queryNorm ||
-      u.regiao.toLowerCase().includes(queryNorm)
+      norm(u.regiao).includes(queryNorm)
   );
 
   const exteriorFiltrado = EXT_CIDADES.filter(
     (c) =>
-      c.nome.toLowerCase().includes(queryNorm) ||
+      norm(c.nome).includes(queryNorm) ||
       c.iso.toLowerCase() === queryNorm
   ).slice(0, 10);
 

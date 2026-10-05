@@ -10,6 +10,7 @@ import PainelUF from "./PainelUF";
 import SponsorSlot from "./SponsorSlot";
 import LiveBox from "./LiveBox";
 import dynamic from "next/dynamic";
+import BuscaModal from "./BuscaModal";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
@@ -41,6 +42,18 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const [modo, setModo] = useState<ModoMapa>("estados");
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [busca, setBusca] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setBusca((b) => !b);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const lastChange = useRef<{ key: string; at: number }>({ key: "", at: Date.now() });
   const [, force] = useState(0);
 
@@ -218,18 +231,21 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
             {erro ? " · reconectando…" : ""}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setBusca(true)} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4" aria-label="Buscar estado ou cidade">
+            Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
+          </button>
           <button
             onClick={() => setUf(uf === "ZZ" ? null : "ZZ")}
             aria-pressed={uf === "ZZ"}
-            className={`h-10 rounded-xl border px-4 text-sm ${uf === "ZZ" ? "border-lime bg-lime text-ink" : "border-line"}`}
+            className={`h-10 whitespace-nowrap rounded-xl border px-3 text-sm sm:px-4 ${uf === "ZZ" ? "border-lime bg-lime text-ink" : "border-line"}`}
           >
             Exterior
           </button>
-          <button onClick={compartilhar} className="h-10 rounded-xl border border-line px-4 text-sm">
+          <button onClick={compartilhar} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4">
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
-          <button onClick={entrarTv} className="h-10 rounded-xl border border-line px-4 text-sm">
+          <button onClick={entrarTv} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4">
             Tela cheia
           </button>
         </div>
@@ -335,6 +351,8 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       <div className="mt-6">
         <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={120} label="Anuncie aqui · faixa grande" />
       </div>
+
+      <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={setUf} />
 
       <footer className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-mute">
         <p className="mb-2">

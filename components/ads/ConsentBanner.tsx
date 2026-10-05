@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 
 const LS = "apuracao:ads-consent";
+const ADS_ON = Boolean(process.env.NEXT_PUBLIC_ADSENSE_CLIENT);
 
 export default function ConsentBanner() {
   const [visivel, setVisivel] = useState(false);
 
   useEffect(() => {
     try {
+      if (!ADS_ON) return;
       const consent = localStorage.getItem(LS);
       if (consent === null) {
         setVisivel(true);
@@ -42,7 +44,7 @@ export default function ConsentBanner() {
             Privacidade e Anúncios
           </h3>
           <p className="mt-1 text-xs text-mute leading-relaxed">
-            Utilizamos cookies para medição de audiência e exibição de anúncios relevantes durante a apuração.
+            Utilizamos cookies para medição de audiência e exibição de anúncios relevantes durante a apuração. <a href="/privacidade" className="underline">Saiba mais</a>.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <button

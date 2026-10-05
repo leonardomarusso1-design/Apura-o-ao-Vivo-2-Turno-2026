@@ -136,6 +136,28 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
     return a && a.validos > 0 ? a.cands[0] : undefined;
   };
 
+  // cada estado se liga aos 2 mais próximos (calculado 1x quando os centros são medidos)
+  const ligacoes = useMemo(() => {
+    const lista = Object.entries(centros);
+    const par = new Set<string>();
+    const out: [Pt, Pt][] = [];
+    for (const [k, a] of lista) {
+      lista
+        .filter(([o]) => o !== k)
+        .map(([o, b]) => ({ o, b, d: Math.hypot(a.x - b.x, a.y - b.y) }))
+        .sort((x, y) => x.d - y.d)
+        .slice(0, 2)
+        .forEach(({ o, b }) => {
+          const id = [k, o].sort().join("-");
+          if (!par.has(id)) {
+            par.add(id);
+            out.push([a, b]);
+          }
+        });
+    }
+    return out;
+  }, [centros]);
+
   const ext = lider("ZZ");
 
   const maxDif = Math.max(
@@ -251,6 +273,16 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
         })}
 
         {/* Rótulos dos estados grandes */}
+        {/* rede de ligações entre os estados (decorativa) */}
+        <g pointerEvents="none" aria-hidden>
+          {ligacoes.map(([a, b], i) => (
+            <line key={i} className="net-line" x1={a.x} y1={a.y} x2={b.x} y2={b.y} style={{ animationDelay: `${(i % 7) * 0.5}s` }} />
+          ))}
+          {Object.values(centros).map((c, i) => (
+            <circle key={i} className="net-dot" cx={c.x} cy={c.y} r="1.8" style={{ ["--d" as string]: `${(i % 9) * 0.35}s` }} />
+          ))}
+        </g>
+
         <g className="hidden sm:block" pointerEvents="none">
           {BR_UFS.filter((u) => !PEQUENOS_NE.includes(u.id.toUpperCase()) && !PEQUENOS_SUL.includes(u.id.toUpperCase())).map((u) => {
             const id = u.id.toUpperCase();

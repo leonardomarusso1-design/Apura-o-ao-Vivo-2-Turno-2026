@@ -43,7 +43,7 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
       </div>
 
       {/* Duelo de Candidatos */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {(top.length ? top : [null, null]).map((c, i) => {
           const isLider = Boolean(c && lider && c.n === lider.n && c.votos > 0);
           const candidatoCor = c ? cor(c.n) : "#7e8d9f";
@@ -51,30 +51,28 @@ export default function Placar({ br, cor }: { br: Area | null; cor: (n: number |
           return (
             <div 
               key={c?.sq ?? i} 
-              className={`flex flex-col ${i === 1 ? "items-end text-right" : "items-start text-left"}`}
+              className={`flex min-w-0 flex-col ${i === 1 ? "items-end text-right" : "items-start text-left"}`}
             >
-              <div className={`flex items-center gap-3 ${i === 1 ? "flex-row-reverse" : ""}`}>
+              <div className={`flex w-full min-w-0 items-center gap-2.5 ${i === 1 ? "flex-row-reverse" : ""}`}>
                 {c ? (
                   <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
                 ) : (
                   <div className="w-[46px] h-[46px] rounded-full bg-white/[0.05] animate-pulse" />
                 )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-sm sm:text-base text-paper truncate max-w-[110px] sm:max-w-[150px]">
-                      {c ? c.nome : "—"}
-                    </span>
+                <div className="min-w-0 flex-1">
+                  <span className="line-clamp-2 break-words text-sm font-semibold leading-tight text-paper sm:text-[15px]">
+                    {c ? c.nome : "—"}
+                  </span>
+                  <span className={`mt-0.5 flex min-h-[2.5rem] flex-wrap content-start items-center gap-1.5 text-xs font-medium text-mute ${i === 1 ? "justify-end" : ""}`}>
+                    {c ? `${c.partido} · ${c.n}` : ""}
                     {isLider && (
-                      <span 
-                        className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded uppercase"
+                      <span
+                        className="rounded px-1.5 text-[9px] font-bold uppercase leading-4"
                         style={{ backgroundColor: `${candidatoCor}25`, color: candidatoCor }}
                       >
                         Líder
                       </span>
                     )}
-                  </div>
-                  <span className="block text-xs text-mute font-medium mt-0.5">
-                    {c ? `${c.partido} · ${c.n}` : ""}
                   </span>
                 </div>
               </div>
