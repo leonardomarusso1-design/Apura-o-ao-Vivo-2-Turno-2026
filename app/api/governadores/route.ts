@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSnapshot } from "@/lib/apuracao/snapshot";
+import { getSnapshot, turnoDe } from "@/lib/apuracao/snapshot";
 import { getGovernadores, type GovData } from "@/lib/apuracao/governadores";
 
 /** Dados fictícios só para o modo demonstração (APURACAO_MOCK=1). */
@@ -23,8 +23,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-export async function GET() {
-  const snap = await getSnapshot();
+export async function GET(req: Request) {
+  const snap = await getSnapshot(turnoDe(req.url));
   // modo demonstração não consulta o TSE
   const data = snap.demo ? mock() : await getGovernadores(snap.previa).catch(() => null);
   return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { mapaMunicipios } from "@/lib/apuracao/municipios";
-import { getSnapshot } from "@/lib/apuracao/snapshot";
+import { getSnapshot, turnoDe } from "@/lib/apuracao/snapshot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,8 @@ export async function GET(req: Request) {
   const uf = sp.get("uf") ?? "";
   const c = Number(sp.get("c") ?? "1");
   if (!/^[a-z]{2}$/i.test(uf) || (c !== 1 && c !== 3 && c !== 5)) return NextResponse.json({ ok: false }, { status: 400 });
-  const snap = c === 1 ? await getSnapshot() : null;
+  const snap = c === 1 ? await getSnapshot(turnoDe(req.url)) : null;
+  if (snap && snap.status === "aguardando" && !snap.demo) return NextResponse.json({ ok: false }, { headers: { "Cache-Control": "public, s-maxage=20" } }); // 2º turno ainda sem dados: não consulta o TSE
   const ele = snap ? snap.eleicao : 6259;
   const ttl = snap && !snap.previa && !snap.demo ? 120 : 1800; // ao vivo: 2 min; resultado fechado: 30 min
   const r = await mapaMunicipios(ele, c, uf, ttl).catch(() => null);

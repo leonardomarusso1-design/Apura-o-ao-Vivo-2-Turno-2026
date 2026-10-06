@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listarMunicipios, resultadoMunicipio } from "@/lib/apuracao/municipios";
-import { getSnapshot } from "@/lib/apuracao/snapshot";
+import { getSnapshot, turnoDe } from "@/lib/apuracao/snapshot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,9 @@ export async function GET(req: Request) {
   }
   const c = Number(sp.get("c") ?? "1");
   if (!/^\d{1,6}$/.test(cd) || (c !== 1 && c !== 3 && c !== 5)) return NextResponse.json({ ok: false }, { status: 400 });
-  const ele = c === 1 ? (await getSnapshot()).eleicao : 6259; // presidente: rodada exibida; demais: eleição estadual 1º turno
+  const snapP = c === 1 ? await getSnapshot(turnoDe(req.url)) : null;
+  if (snapP && snapP.status === "aguardando" && !snapP.demo) return NextResponse.json({ ok: false, res: null });
+  const ele = snapP ? snapP.eleicao : 6259; // presidente: rodada exibida; demais: eleição estadual 1º turno
   const r = await resultadoMunicipio(ele, c, uf, cd);
   return NextResponse.json({ ok: Boolean(r), res: r }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
 }

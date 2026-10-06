@@ -1,30 +1,10 @@
-import type { Metadata } from "next";
-import ToqyStrip from "@/components/ToqyStrip";
-import Heartbeat from "@/components/Heartbeat";
-import ApuracaoClient from "@/components/apuracao/ApuracaoClient";
-import { ELECTION_ISO, SITE_NAME } from "@/lib/env";
-import { getSnapshot, publicSnapshot } from "@/lib/apuracao/snapshot";
-import { projetar } from "@/lib/apuracao/projection";
+import { redirect } from "next/navigation";
+import { getSnapshot } from "@/lib/apuracao/snapshot";
 
-export const metadata: Metadata = {
-  title: `Apuração ao vivo — ${SITE_NAME}`,
-  description: "Mapa, placar, projeção e atualizações da apuração do 2º turno em tempo real, com dados oficiais do TSE.",
-};
+export const dynamic = "force-dynamic";
 
-// Página gerada no servidor e renovada a cada 10 s na CDN: já chega COM os números (sem "carregando…")
-export const revalidate = 10;
-
+/** /apuracao leva para o 2º turno assim que ele tiver dados; até lá, mostra o resultado do 1º turno. */
 export default async function Page() {
-  const snap = await getSnapshot().catch(() => null);
-  const initial = snap ? JSON.parse(JSON.stringify({ ...publicSnapshot(snap), projecao: projetar(snap) })) : null;
-  return (
-    // No computador a apuração cabe numa única tela (sem rolar a página); no celular rola normalmente.
-    <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
-      <ToqyStrip />
-      <Heartbeat electionIso={ELECTION_ISO} />
-      <div className="lg:min-h-0 lg:flex-1">
-        <ApuracaoClient initial={initial} />
-      </div>
-    </div>
-  );
+  const s = await getSnapshot(2).catch(() => null);
+  redirect(s && s.status !== "aguardando" ? "/apuracao/2" : "/apuracao/1");
 }

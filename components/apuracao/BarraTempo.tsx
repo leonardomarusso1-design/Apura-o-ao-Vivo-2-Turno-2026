@@ -23,6 +23,7 @@ export default function BarraTempo({
   online,
   ativo,
   horaHM,
+  aoVivo = true,
 }: {
   pontos: PontoReplay[];
   ri: number | null;
@@ -30,6 +31,7 @@ export default function BarraTempo({
   online: number | null;
   ativo: boolean;
   horaHM: (iso: string) => string;
+  aoVivo?: boolean;
 }) {
   const tem = ativo && pontos.length >= 2;
   return (
@@ -56,7 +58,7 @@ export default function BarraTempo({
         </>
       ) : (
         <span className="min-w-0 flex-1 truncate text-mute">
-          {ativo ? "A linha do tempo da apuração começa a ser gravada no dia 25." : "Dados oficiais do TSE · atualizado automaticamente"}
+          {!aoVivo ? "Resultado final do 1º turno · dados oficiais do TSE" : ativo ? "A linha do tempo da apuração começa a ser gravada no dia 25." : "Dados oficiais do TSE · atualizado automaticamente"}
         </span>
       )}
       {online ? (
@@ -68,6 +70,8 @@ export default function BarraTempo({
         <button onClick={() => setRi(null)} className="h-8 shrink-0 rounded-lg bg-lime px-3 font-semibold text-ink">
           Voltar ao vivo
         </button>
+      ) : !aoVivo ? (
+        <span className="shrink-0 rounded-md border border-line px-2 py-0.5 text-[11px] font-semibold text-mute">Encerrado</span>
       ) : (
         <span className="flex shrink-0 items-center gap-1.5 text-paper">
           <span className="relative flex h-2 w-2">

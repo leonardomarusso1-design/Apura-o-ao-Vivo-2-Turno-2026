@@ -1,5 +1,6 @@
 "use client";
 
+import { qt, useTurno } from "./TurnoContext";
 import { useEffect, useMemo, useState } from "react";
 import type { MunRes, Mun } from "@/lib/apuracao/municipios";
 import Avatar from "./Avatar";
@@ -9,6 +10,7 @@ const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCa
 
 /** Busca por município dentro de um estado (lista oficial do TSE; resultado só do município escolhido). */
 export default function MunicipioBusca({ uf, cargo, cor }: { uf: string; cargo: 1 | 3 | 5; cor: (n: number | undefined) => string }) {
+  const turnoCtx = useTurno();
   const [lista, setLista] = useState<Mun[] | null>(null);
   const [ativo, setAtivo] = useState(false); // só baixa a lista quando a pessoa clica no campo
   const [q, setQ] = useState("");
@@ -35,7 +37,7 @@ export default function MunicipioBusca({ uf, cargo, cor }: { uf: string; cargo: 
     if (!sel) return;
     let vivo = true;
     setRes(null);
-    fetch(`/api/municipio?uf=${uf.toLowerCase()}&cd=${sel.cd}&c=${cargo}`)
+    fetch(`/api/municipio?uf=${uf.toLowerCase()}&cd=${sel.cd}&c=${cargo}&${qt(turnoCtx)}`)
       .then((r) => r.json())
       .then((j: { ok: boolean; res: MunRes | null }) => vivo && setRes(j.ok && j.res ? j.res : "erro"))
       .catch(() => vivo && setRes("erro"));

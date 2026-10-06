@@ -10,6 +10,7 @@ import MunicipioBusca from "./MunicipioBusca";
 import MapaMunicipios from "./MapaMunicipios";
 import MapaBR from "./MapaBR";
 import { mkArea } from "./mapaAreas";
+import { qt, useTurno } from "./TurnoContext";
 import { fmtInt, fmtPct, makeCor } from "./types";
 
 type Resp = { ok: boolean; r2Aberto: boolean; disputas: DisputaGov[] };
@@ -73,6 +74,7 @@ function Cartao({ d, semMapa = false }: { d: DisputaGov; semMapa?: boolean }) {
 }
 
 export default function Governadores() {
+  const turnoCtx = useTurno();
   const [d, setD] = useState<Resp | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const { areas, corMapa } = useMemo(() => {
@@ -91,7 +93,7 @@ export default function Governadores() {
     let t: ReturnType<typeof setTimeout>;
     const load = async () => {
       try {
-        const r = await fetch("/api/governadores");
+        const r = await fetch(`/api/governadores?${qt(turnoCtx)}`);
         if (r.ok && alive) setD((await r.json()) as Resp);
       } catch {
         /* tenta de novo */
@@ -103,7 +105,7 @@ export default function Governadores() {
       alive = false;
       clearTimeout(t);
     };
-  }, []);
+  }, [turnoCtx]);
 
   if (!d) return <div className="h-64 animate-pulse rounded-2xl border border-line bg-panel" />;
   if (!d.ok || d.disputas.length === 0) {

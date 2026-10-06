@@ -1,5 +1,7 @@
 "use client";
 
+import { qt, useTurno } from "./TurnoContext";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EXT_CIDADES, WORLD_BORDERS, WORLD_H, WORLD_LAND, WORLD_W } from "@/lib/exterior-mapa";
 import type { CidadeRes } from "@/lib/apuracao/exterior";
@@ -19,6 +21,7 @@ export default function MapaExterior({
   cor: Cor;
   onVoltar: () => void;
 }) {
+  const turnoCtx = useTurno();
   const [cidades, setCidades] = useState<Record<string, CidadeRes>>({});
   const [sel, setSel] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export default function MapaExterior({
     let t: ReturnType<typeof setTimeout>;
     const load = async () => {
       try {
-        const r = await fetch("/api/exterior");
+        const r = await fetch(`/api/exterior?${qt(turnoCtx)}`);
         if (r.ok) {
           const j = (await r.json()) as { cidades: Record<string, CidadeRes> };
           if (alive) setCidades(j.cidades ?? {});

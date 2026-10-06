@@ -17,6 +17,7 @@ import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
 import type { PontoReplay } from "@/lib/apuracao/types";
+import { TurnoContext } from "./TurnoContext";
 import SeletorCandidato from "./SeletorCandidato";
 import PainelCandidato from "./PainelCandidato";
 import type { ResumoMun } from "./MapaMunicipiosBR";
@@ -91,7 +92,7 @@ function aplicarReplay(live: Payload, p: PontoReplay): Payload {
   };
 }
 
-export default function ApuracaoClient({ initial = null }: { initial?: Payload | null }) {
+export default function ApuracaoClient({ initial = null, turno = 2 }: { initial?: Payload | null; turno?: 1 | 2 }) {
   const [dataLive, setData] = useState<Payload | null>(initial);
   const [pontos, setPontos] = useState<PontoReplay[]>([]);
   const [ri, setRi] = useState<number | null>(null); // null = ao vivo
@@ -139,13 +140,13 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       clearTimeout(t);
     };
   }, []);
-  const gravando = Boolean(dataLive && !dataLive.previa && !dataLive.demo && dataLive.status !== "aguardando");
+  const gravando = Boolean(turno === 2 && dataLive && !dataLive.previa && !dataLive.demo && dataLive.status !== "aguardando");
   useEffect(() => {
     if (!gravando) return;
     let alive = true;
     const load = async () => {
       try {
-        const r = await fetch("/api/historico");
+        const r = await fetch(`/api/historico?t=${turno}`);
         if (!r.ok) return;
         const j = (await r.json()) as { pontos: PontoReplay[] };
         if (alive && Array.isArray(j.pontos)) setPontos(j.pontos);
@@ -161,7 +162,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       alive = false;
       clearInterval(id);
     };
-  }, [gravando]);
+  }, [gravando, turno]);
   const lastChange = useRef<{ key: string; at: number }>({ key: "", at: Date.now() });
   const [, force] = useState(0);
 
@@ -171,7 +172,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
     let timer: ReturnType<typeof setTimeout>;
     const load = async () => {
       try {
-        const r = await fetch("/api/apuracao");
+        const r = await fetch(`/api/apuracao?t=${turno}`);
         if (!r.ok) throw new Error(String(r.status));
         const j = (await r.json()) as Payload;
         if (!alive) return;
@@ -199,7 +200,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       clearInterval(tick);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [turno]);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
@@ -326,9 +327,32 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const abaAtiva = aba === "estaduais" ? "federais" : aba;
   const btnTopo = "h-9 whitespace-nowrap rounded-xl border border-line px-3 text-xs sm:text-sm hover:bg-white/5";
 
+  const aguardandoT2 = Date.now() < new Date(ELECTION_ISO).getTime();
+  const trocaTurno = (
+    <nav className="flex items-center gap-1 rounded-2xl border border-line bg-white/[0.03] p-1" aria-label="Rodada">
+      {(
+        [
+          [1, "1º turno", "/apuracao/1"],
+          [2, "2º turno", "/apuracao/2"],
+        ] as const
+      ).map(([n, nome, href]) => (
+        <a
+          key={n}
+          href={href}
+          aria-current={turno === n ? "page" : undefined}
+          className={`flex h-8 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:text-sm ${turno === n ? "bg-lime text-ink" : "text-mute hover:bg-white/10 hover:text-paper"}`}
+        >
+          {nome}
+          {n === 2 && turno !== 2 && aguardandoT2 ? <span className="rounded bg-amber/20 px-1 text-[9px] font-bold uppercase text-amber">25/10</span> : null}
+        </a>
+      ))}
+    </nav>
+  );
+
   return (
+    <TurnoContext.Provider value={turno}>
     <div className="mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-3 pt-2 lg:h-full lg:min-h-0 lg:px-4">
-      {novo && !diaDaEleicao ? (
+      {novo && !diaDaEleicao && turno === 2 ? (
         <div className="mb-3 rounded-2xl border border-lime/40 bg-panel p-3">
           <p className="text-sm font-semibold">Você está na lista ✓</p>
           <p className="mt-1 text-xs text-mute">
@@ -361,6 +385,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
           <h1 className="font-display text-xl leading-none sm:text-2xl">Apuração 2026</h1>
           <Credito compact />
         </div>
+        {trocaTurno}
         <nav className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-2xl border border-line bg-white/[0.03] p-1" role="tablist" aria-label="Cargo">
           {abas.map(([k, nome]) => (
             <button
@@ -378,7 +403,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
           Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
         </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <span className="tabular hidden items-center gap-1.5 text-xs text-mute xl:flex" aria-live="polite">
+          <span className="tabular hidden items-center gap-1.5 text-xs text-mute 2xl:flex" aria-live="polite">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             {statusTxt}
             {erro ? " · reconectando…" : ""}
@@ -401,7 +426,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
           </button>
         </div>
       </header>
-      <p className="tabular mb-2 text-[11px] text-mute xl:hidden">{statusTxt}{erro ? " · reconectando…" : ""}</p>
+      <p className="tabular mb-2 text-[11px] text-mute 2xl:hidden">{statusTxt}{erro ? " · reconectando…" : ""}</p>
 
       <main className="min-h-0 flex-1">
         {aba !== "presidente" ? (
@@ -433,11 +458,18 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
             ) : null}
           </div>
         ) : aguardando && !data?.br ? (
-          <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
-            <p className="font-display text-2xl">Aguardando os primeiros votos</p>
+          <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-line bg-panel p-8 text-center" role="status">
+            <p className="font-display text-2xl">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
             <p className="mt-2 text-sm text-mute">
-              A divulgação começa quando as urnas fecham, às 17h (Brasília). Esta página atualiza sozinha.
+              {turno === 2
+                ? "A divulgação começa quando as urnas fecham, em 25 de outubro, às 17h (Brasília). Esta página já está pronta e começa sozinha: não precisa recarregar."
+                : "Os dados do 1º turno aparecem aqui assim que o TSE divulgar."}
             </p>
+            {turno === 2 ? (
+              <a href="/apuracao/1" className="mt-4 inline-flex h-10 items-center rounded-xl bg-lime px-4 text-sm font-semibold text-ink">
+                Ver o resultado do 1º turno
+              </a>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
@@ -450,7 +482,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                 </p>
               ) : null}
               <div className="order-1 lg:order-none">
-                <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
+                <Placar br={data?.br ?? null} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
               <div className="order-6 lg:order-none">
                 <Linha pontos={data?.historico ?? []} cor={cor} />
@@ -534,7 +566,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                     sqDe={(n) => data?.br?.cands.find((c) => c.n === n)?.sq}
                   />
                 ) : (
-                  <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo as ModoMapa} candN={candN} turno={data?.turno === 1 ? 1 : 2} fit />
+                  <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo as ModoMapa} candN={candN} turno={turno} fit />
                 )}
                 <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[290px] lg:block">
                   <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={84} label="Anuncie aqui" />
@@ -551,7 +583,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                     br={data?.br ?? null}
                     ufs={data?.ufs ?? {}}
                     cor={cor}
-                    turno={data?.turno === 1 ? 1 : 2}
+                    turno={turno}
                     onVoltar={() => setModo("estados")}
                     onUf={setUf}
                   />
@@ -559,7 +591,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
               ) : null}
               {uf && uf !== "ZZ" ? (
                 <div className="order-3 lg:order-none">
-                  <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={data?.turno === 1 ? 1 : 2} onClose={() => setUf(null)} />
+                  <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={turno} onClose={() => setUf(null)} />
                 </div>
               ) : null}
               <div className="order-4 lg:order-none">
@@ -589,6 +621,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
         setRi={setRi}
         online={online}
         ativo={aba === "presidente"}
+        aoVivo={turno === 2}
         horaHM={horaHM}
       />
 
@@ -607,5 +640,6 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
 
       <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={(u) => { setAba("presidente"); setUf(u); }} />
     </div>
+    </TurnoContext.Provider>
   );
 }

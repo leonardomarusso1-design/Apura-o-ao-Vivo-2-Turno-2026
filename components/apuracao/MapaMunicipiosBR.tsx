@@ -6,6 +6,7 @@ import { UFS } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
 import Avatar from "./Avatar";
 import ZoomBox from "./ZoomBox";
+import { qt, useTurno } from "./TurnoContext";
 
 type Geo = { vb: [number, number, number, number]; m: { i: string; n: string; d: string }[] };
 type Resp = { ok: boolean; pendente?: boolean; itens?: ItemMapa[] };
@@ -169,6 +170,7 @@ export default function MapaMunicipiosBR({
   candN?: number | null;
   sqDe?: (n: number) => number | undefined;
 }) {
+  const turnoCtx = useTurno();
   const [geos, setGeos] = useState<Record<string, Geo>>({});
   const [dados, setDados] = useState<Record<string, ItemMapa[]>>({});
   const [falta, setFalta] = useState(false);
@@ -195,7 +197,7 @@ export default function MapaMunicipiosBR({
         }
         for (let t = 0; t < 8 && vivo; t++) {
           try {
-            const r = await fetch(`/api/municipios-mapa?uf=${l}&c=1`);
+            const r = await fetch(`/api/municipios-mapa?uf=${l}&c=1&${qt(turnoCtx)}`);
             const j = (await r.json()) as Resp;
             if (j.itens) {
               if (vivo) setDados((x) => ({ ...x, [uf]: j.itens! }));
@@ -213,7 +215,7 @@ export default function MapaMunicipiosBR({
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [turnoCtx]);
 
   // Estatísticas: líderes, vantagem total por partido, maior vantagem e faixa do candidato
   const est = useMemo(() => {

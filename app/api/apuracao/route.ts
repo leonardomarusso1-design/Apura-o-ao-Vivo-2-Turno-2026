@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSnapshot, publicSnapshot } from "@/lib/apuracao/snapshot";
+import { getSnapshot, publicSnapshot, turnoDe } from "@/lib/apuracao/snapshot";
 import { projetar } from "@/lib/apuracao/projection";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-export async function GET() {
-  const snap = await getSnapshot();
+export async function GET(req: Request) {
+  const snap = await getSnapshot(turnoDe(req.url));
   return NextResponse.json(
     { ...publicSnapshot(snap), projecao: projetar(snap) },
     {

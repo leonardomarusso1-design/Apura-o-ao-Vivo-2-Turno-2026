@@ -1,5 +1,5 @@
 import { redis, redisEnabled } from "@/lib/redis";
-import { ELEICAO, PREVIA, fetchArea } from "./tse";
+import { ELEICAO, fetchArea } from "./tse";
 import { mockSnapshot } from "./mock";
 import { UFS, type Area, type Evento, type Ponto, type PontoReplay, type Snapshot } from "./types";
 
@@ -215,16 +215,21 @@ async function snapshotFor(ele: number, freshMs: number): Promise<Snapshot> {
   }
 }
 
-export async function getSnapshot(): Promise<Snapshot> {
+/** Presidente 1º turno 2026 (resultado final, fica salvo e sempre disponível em /apuracao/1). */
+export const ELE_T1 = 6257;
+
+/** turno 1 = resultado final do 1º turno; turno 2 (padrão) = a apuração do dia 25, "aguardando" até o TSE publicar. */
+export async function getSnapshot(turno: 1 | 2 = 2): Promise<Snapshot> {
   if (process.env.APURACAO_MOCK === "1") return mockSnapshot();
-
-  const principal = await snapshotFor(ELEICAO, FRESH_MS);
-  if (principal.status !== "aguardando" || PREVIA === null) return principal;
-
-  // 2º turno ainda sem dados: mostra a rodada anterior como prévia (com aviso na tela)
-  const previa = await snapshotFor(PREVIA, FRESH_PREVIA_MS);
-  return previa.br ? { ...previa, previa: true } : principal;
+  if (turno === 1) {
+    const s = await snapshotFor(ELE_T1, FRESH_PREVIA_MS);
+    return s.br ? { ...s, previa: true } : s;
+  }
+  return snapshotFor(ELEICAO, FRESH_MS);
 }
+
+/** Lê ?t=1|2 da URL (qualquer outra coisa = 2º turno). */
+export const turnoDe = (url: string): 1 | 2 => (new URL(url).searchParams.get("t") === "1" ? 1 : 2);
 
 /** Versão pública: remove campos internos (etags). */
 export function publicSnapshot(s: Snapshot): Omit<Snapshot, "etags"> {

@@ -5,6 +5,7 @@ import type { ItemMapa } from "@/lib/apuracao/municipios";
 import { fmtInt, fmtPct, makeCor } from "./types";
 import Avatar from "./Avatar";
 import ZoomBox from "./ZoomBox";
+import { qt, useTurno } from "./TurnoContext";
 
 type Geo = { vb: [number, number, number, number]; m: { i: string; n: string; d: string }[] };
 type Resp = { ok: boolean; pendente?: boolean; itens?: ItemMapa[] };
@@ -12,6 +13,7 @@ const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCa
 
 /** Mapa de municípios de um estado: cada cidade colorida pelo líder (cor do bloco do partido). */
 export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false }: { uf: string; cargo: 1 | 3 | 5; inicial?: boolean; fit?: boolean }) {
+  const turnoCtx = useTurno();
   const [aberto, setAberto] = useState(inicial);
   const [geo, setGeo] = useState<Geo | null | "falta">(null);
   const [dados, setDados] = useState<ItemMapa[] | null>(null);
@@ -41,7 +43,7 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
     if (!aberto) return;
     let vivo = true;
     let t: ReturnType<typeof setTimeout> | undefined;
-    fetch(`/api/municipios-mapa?uf=${uf.toLowerCase()}&c=${cargo}`)
+    fetch(`/api/municipios-mapa?uf=${uf.toLowerCase()}&c=${cargo}&${qt(turnoCtx)}`)
       .then((r) => r.json() as Promise<Resp>)
       .then((j) => {
         if (!vivo) return;
@@ -53,7 +55,7 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
       vivo = false;
       if (t) clearTimeout(t);
     };
-  }, [aberto, uf, cargo, tent]);
+  }, [aberto, uf, cargo, tent, turnoCtx]);
 
   const { porId, porNome, cor } = useMemo(() => {
     const id = new Map<string, ItemMapa>();
