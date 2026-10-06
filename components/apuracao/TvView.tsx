@@ -52,6 +52,8 @@ export default function TvView({
   const [editor, setEditor] = useState(false);
   const [campo, setCampo] = useState("");
   const [host, setHost] = useState("");
+  // ?obs=1: versão para o OBS (sem o vídeo/chat embutidos, que repetiriam a própria live; deixa os espaços vazios para câmera e chat)
+  const [obs] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("obs") === "1");
   const [modo, setModo] = useState<ModoTv>("estados");
   const [candN, setCandN] = useState<number | null>(null);
   const [ufTv, setUfTv] = useState<string | null>(uf);
@@ -93,7 +95,7 @@ export default function TvView({
     };
   }, []);
 
-  const liveId = manualId ?? autoId;
+  const liveId = obs ? null : (manualId ?? autoId);
   const salvar = (id: string | null) => {
     setManualId(id);
     try {
@@ -112,7 +114,7 @@ export default function TvView({
   const encerrado = Boolean(br && br.pctApurado >= 99.99) || data.status === "finalizado" || data.previa;
   const atualizado = br?.geracao ? `Geração do TSE: ${br.geracao.slice(11)}` : "";
 
-  const c = Boolean(liveId); // com live, o placar encolhe para dar lugar ao vídeo
+  const c = Boolean(liveId) || obs; // com live, o placar encolhe para dar lugar ao vídeo
   const tamPct = c ? "text-[clamp(2rem,3.4vw,3.2rem)]" : "text-[clamp(3rem,9vw,8rem)]";
   const tamCand = c ? "text-[clamp(1.6rem,2.6vw,2.6rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
@@ -290,6 +292,7 @@ export default function TvView({
         </div>
         <div className="flex items-center gap-3 text-xl">
           <Hora />
+          {obs ? null : <>
           {liveId ? (
             <button onClick={() => setChat((v) => !v)} className={botao} aria-pressed={chat}>
               Chat {chat ? "ligado" : "desligado"}
@@ -304,6 +307,7 @@ export default function TvView({
           <button onClick={onExit} className={botao}>
             Sair
           </button>
+          </>}
         </div>
       </header>
 
@@ -348,22 +352,28 @@ export default function TvView({
         </div>
       ) : null}
 
-      {liveId ? (
+      {c ? (
         <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,27%)_minmax(0,1fr)]">
           <div className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
             {placarCard}
-            <div className="aspect-video w-full shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
-                title="Live do YouTube"
-                className="h-full w-full"
-                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
-            </div>
-            <BannerTv p={patro} fill={!(chat && host)} slim />
-            {chat && host ? (
+            {liveId ? (
+              <div className="aspect-video w-full shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
+                  title="Live do YouTube"
+                  className="h-full w-full"
+                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              </div>
+            ) : obs ? (
+              <div className="aspect-video w-full shrink-0" aria-hidden />
+            ) : null}
+            <BannerTv p={patro} fill={!obs && !(chat && host && Boolean(liveId))} slim />
+            {obs ? (
+              <div className="hidden min-h-[160px] flex-1 lg:block" aria-hidden />
+            ) : chat && host && liveId ? (
               <div className="hidden min-h-[160px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                 <iframe
                   src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}

@@ -211,9 +211,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
       const saved = localStorage.getItem(LS_REF);
       setRefCode(saved && saved !== "-" ? saved : null);
       setNovo(q.get("novo") === "1" || Boolean(saved));
+      if (q.get("tv") === "1" || q.get("obs") === "1") setTv(true); // link direto para o OBS
       if (saved) marcarInscrito();
     } catch {
       setNovo(q.get("novo") === "1");
+      if (q.get("tv") === "1" || q.get("obs") === "1") setTv(true);
     }
   }, []);
 
