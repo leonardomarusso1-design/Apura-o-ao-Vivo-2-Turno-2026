@@ -6,7 +6,7 @@ import { idDeLive } from "@/lib/live-id";
 import MapaBR, { type ModoMapa } from "./MapaBR";
 import MapaMunicipios from "./MapaMunicipios";
 import type { ResumoMun } from "./MapaMunicipiosBR";
-import { BannerTv, EditorPatro, FAIXA_PADRAO, usePatro } from "./TvPatrocinio";
+import { BannerTv, FAIXA_PADRAO, usePatro } from "./TvPatrocinio";
 import Ticker from "./Ticker";
 import Legenda from "./Legenda";
 import Avatar from "./Avatar";
@@ -61,8 +61,7 @@ export default function TvView({
   const [candN, setCandN] = useState<number | null>(null);
   const [ufTv, setUfTv] = useState<string | null>(uf);
   const [resumo, setResumo] = useState<ResumoMun[]>([]);
-  const [patro, setPatro] = usePatro();
-  const [editPatro, setEditPatro] = useState(false);
+  const patro = usePatro();
 
   useEffect(() => {
     setHost(window.location.hostname);
@@ -306,16 +305,7 @@ export default function TvView({
         </div>
         <div className="flex items-center gap-3 text-xl">
           <Hora />
-          {obs ? (
-            // invisível na transmissão: só aparece quando você passa o mouse aqui (janela "Interagir" do OBS)
-            <button
-              onClick={() => setEditPatro((v) => !v)}
-              className={`${botao} opacity-0 transition-opacity hover:opacity-100 focus:opacity-100`}
-              aria-expanded={editPatro}
-            >
-              Patrocínio
-            </button>
-          ) : <>
+          {obs ? null : <>
           {liveId ? (
             <button onClick={() => setChat((v) => !v)} className={botao} aria-pressed={chat}>
               Chat {chat ? "ligado" : "desligado"}
@@ -324,9 +314,6 @@ export default function TvView({
           <button onClick={() => setEditor((v) => !v)} className={botao} aria-expanded={editor}>
             {liveId ? "Trocar live" : "Adicionar live"}
           </button>
-          <button onClick={() => setEditPatro((v) => !v)} className={botao} aria-expanded={editPatro}>
-            Patrocínio
-          </button>
           <button onClick={onExit} className={botao}>
             Sair
           </button>
@@ -334,10 +321,8 @@ export default function TvView({
         </div>
       </header>
 
-      {editPatro || editor ? (
+      {editor ? (
         <div className="absolute inset-x-3 top-16 z-20 max-h-[75vh] overflow-y-auto rounded-2xl shadow-2xl shadow-black/70 sm:inset-x-5 sm:top-[72px]">
-      {editPatro ? <EditorPatro p={patro} onChange={setPatro} onClose={() => setEditPatro(false)} /> : null}
-
       {editor ? (
         <form
           className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-panel p-3 text-sm"
