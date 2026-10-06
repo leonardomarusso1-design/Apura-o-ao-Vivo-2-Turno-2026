@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Live = { live: boolean; videoId: string | null };
-const HANDLE = "BNTVBrasil";
+type Live = { live: boolean; videoId: string | null; canal?: string | null; canalUrl?: string | null };
 
 /** Quadradinho da live do canal parceiro: só aparece quando está ao vivo, começa mudo. Clique no vídeo p/ som. */
 export default function LiveBox() {
@@ -39,13 +38,14 @@ export default function LiveBox() {
   }, []);
 
   if (!s.live || !s.videoId || fechado || !/^[\w-]{11}$/.test(s.videoId)) return null;
+  const canal = s.canal?.trim() || "";
   const src = `https://www.youtube-nocookie.com/embed/${s.videoId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
   return (
     <div className="rounded-2xl border border-line bg-panel p-3">
       <div className="mb-2 flex items-center justify-between text-[11px]">
         <span className="flex items-center gap-1.5 uppercase tracking-widest text-mute">
           <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-red-500" />
-          Ao vivo · @{HANDLE}
+          Ao vivo{canal ? ` · ${canal}` : ""}
         </span>
         <button onClick={() => setFechado(true)} aria-label="Fechar live" className="px-1 text-mute">
           ✕
@@ -54,7 +54,7 @@ export default function LiveBox() {
       <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
         {pronto ? <iframe
           src={src}
-          title={`Live do canal ${HANDLE}`}
+          title={canal ? `Live do canal ${canal}` : "Transmissão ao vivo"}
           className="h-full w-full"
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
@@ -63,7 +63,7 @@ export default function LiveBox() {
         /> : <div className="h-full w-full animate-pulse bg-line" />}
       </div>
       <a
-        href={`https://www.youtube.com/@${HANDLE}/live`}
+        href={`https://www.youtube.com/watch?v=${s.videoId}`}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2 block text-center text-[11px] text-mute underline"

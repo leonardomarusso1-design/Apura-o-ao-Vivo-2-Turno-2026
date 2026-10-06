@@ -7,7 +7,37 @@ const CHANNEL = process.env.LIVE_CHANNEL_ID ?? "UCxz5GwRSk1EU7UgcMlXotdA";
 const KEY = "live:state";
 const TTL = 60;
 
-type Live = { live: boolean; videoId: string | null };
+type Live = { live: boolean; videoId: string | null; canal?: string | null; canalUrl?: string | null };
+type Meta = { canal: string | null; canalUrl: string | null };
+
+/** Nome e link do canal dono do vídeo (oEmbed público do YouTube). Guardado por vídeo, para o rótulo acompanhar a live exibida. */
+async function meta(videoId: string): Promise<Meta> {
+  const k = `live:meta:${videoId}`;
+  const c = await redis<string>(["GET", k]);
+  if (c) {
+    try {
+      return JSON.parse(c) as Meta;
+    } catch {
+      /* refaz */
+    }
+  }
+  let m: Meta = { canal: null, canalUrl: null };
+  try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (r.ok) {
+      const j = (await r.json()) as { author_name?: string; author_url?: string };
+      const url = typeof j.author_url === "string" && j.author_url.startsWith("https://www.youtube.com/") ? j.author_url : null;
+      m = { canal: typeof j.author_name === "string" ? j.author_name.slice(0, 60) : null, canalUrl: url };
+    }
+  } catch {
+    /* sem nome: o rótulo fica genérico */
+  }
+  await redis(["SET", k, JSON.stringify(m), "EX", m.canal ? 86_400 : 120]);
+  return m;
+}
 
 /** Descobre se o canal está ao vivo. 1 requisição ao YouTube por minuto no máximo (cache Redis + CDN). */
 /** Método oficial (recomendado): YOUTUBE_API_KEY. Custa ~2 unidades de cota por checagem (limite grátis: 10.000/dia). */
@@ -71,7 +101,9 @@ async function detect(): Promise<Live> {
 export async function GET() {
   // Atalho manual: LIVE_VIDEO_ID=<id do vídeo> força a exibição (útil se a detecção falhar)
   const manual = process.env.LIVE_VIDEO_ID;
-  if (manual && /^[\w-]{11}$/.test(manual)) return NextResponse.json({ live: true, videoId: manual });
+  if (manual && /^[\w-]{11}$/.test(manual)) {
+    return NextResponse.json({ live: true, videoId: manual, ...(await meta(manual)) }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
+  }
   let out: Live | null = null;
   const cached = await redis<string>(["GET", KEY]);
   if (cached) {
@@ -86,5 +118,6 @@ export async function GET() {
     out = await detect();
     await redis(["SET", KEY, JSON.stringify(out), "EX", TTL]);
   }
-  return NextResponse.json(out, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
+  const extra = out.live && out.videoId ? await meta(out.videoId) : {};
+  return NextResponse.json({ ...out, ...extra }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
 }
