@@ -113,11 +113,11 @@ export default function TvView({
   const atualizado = br?.geracao ? `Geração do TSE: ${br.geracao.slice(11)}` : "";
 
   const c = Boolean(liveId); // com live, o placar encolhe para dar lugar ao vídeo
-  const tamPct = c ? "text-[clamp(2.4rem,4.2vw,4rem)]" : "text-[clamp(3rem,9vw,8rem)]";
-  const tamCand = c ? "text-[clamp(2rem,3.2vw,3.2rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
+  const tamPct = c ? "text-[clamp(2rem,3.4vw,3.2rem)]" : "text-[clamp(3rem,9vw,8rem)]";
+  const tamCand = c ? "text-[clamp(1.6rem,2.6vw,2.6rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
   const placarCard = (
-    <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-3 p-4" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
+    <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-2 p-3" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
       <div className="text-center">
         <p className={`tabular font-display ${tamPct} font-bold leading-none`}>
           {br ? <Num v={br.pctApurado} d={2} /> : "0,00"}
@@ -132,7 +132,7 @@ export default function TvView({
       <div className="grid grid-cols-2 gap-3">
         {dupla.map((k, i) => (
           <div key={k.sq} className={`flex min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end text-right" : "items-start text-left"}`}>
-            <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 52 : 72} eager />
+            <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 40 : 72} eager />
             <p className={`w-full truncate font-semibold uppercase tracking-wide ${c ? "text-sm sm:text-base" : "text-lg sm:text-2xl"}`} style={{ color: cor(k.n) }}>
               {k.nome}
               {lider && k.n === lider.n && k.votos > 0 ? <span className="ml-2 align-middle text-[10px] text-mute">LÍDER</span> : null}
@@ -362,9 +362,9 @@ export default function TvView({
                 referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
-            <BannerTv p={patro} fill={!(chat && host)} />
+            <BannerTv p={patro} fill={!(chat && host)} slim />
             {chat && host ? (
-              <div className="hidden min-h-[120px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
+              <div className="hidden min-h-[160px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                 <iframe
                   src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
                   title="Chat da live"

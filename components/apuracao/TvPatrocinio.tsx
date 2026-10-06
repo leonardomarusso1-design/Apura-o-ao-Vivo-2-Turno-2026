@@ -51,11 +51,11 @@ export function usePatro(): [Patro, (p: Patro) => void] {
 }
 
 /** Espaço do banner. Sem nada cadastrado, vira o convite para anunciar (é a venda do espaço). */
-export function BannerTv({ p, fill = false }: { p: Patro; fill?: boolean }) {
+export function BannerTv({ p, fill = false, slim = false }: { p: Patro; fill?: boolean; slim?: boolean }) {
   return (
     <div
       className={`flex items-center justify-center overflow-hidden rounded-3xl border border-line bg-panel ${
-        fill ? "min-h-[72px] max-h-[200px] flex-1" : "h-[clamp(72px,11vh,130px)] shrink-0"
+        fill ? "min-h-[72px] max-h-[200px] flex-1" : slim ? "h-[clamp(60px,8vh,84px)] shrink-0" : "h-[clamp(72px,11vh,130px)] shrink-0"
       }`}
       aria-label="Publicidade"
     >
@@ -67,8 +67,8 @@ export function BannerTv({ p, fill = false }: { p: Patro; fill?: boolean }) {
       ) : (
         <div className="px-4 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-lime">Feito pelo criador deste site</p>
-          <p className="mt-1 font-display text-[clamp(1.25rem,2.4vw,2.25rem)] font-bold leading-tight">TOQY</p>
-          <p className="text-sm text-mute">Seu link na bio e cartão digital em minutos · toqy.com.br</p>
+          <p className={`font-display font-bold leading-tight ${slim ? "text-xl" : "mt-1 text-[clamp(1.25rem,2.4vw,2.25rem)]"}`}>TOQY <span className="text-xs font-normal text-mute">toqy.com.br</span></p>
+          {slim ? null : <p className="text-sm text-mute">Seu link na bio e cartão digital em minutos · toqy.com.br</p>}
         </div>
       )}
     </div>
