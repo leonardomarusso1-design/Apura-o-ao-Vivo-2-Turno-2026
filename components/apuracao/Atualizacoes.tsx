@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Mural from "./Mural";
 import type { Evento } from "@/lib/apuracao/types";
 import UfIcone from "./UfIcone";
 import Bandeira from "./Bandeira";
@@ -68,18 +69,21 @@ function Noticias() {
   );
 }
 
-export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor: (n: number | undefined) => string }) {
-  const [aba, setAba] = useState<"tse" | "noticias">("tse");
+export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: { eventos: Evento[]; cor: (n: number | undefined) => string; mural?: boolean; pct?: number }) {
+  const [aba, setAba] = useState<"tse" | "noticias" | "mural">("tse");
   return (
     <section className="glass-panel rise rounded-2xl p-4 sm:p-5" aria-label="Últimas atualizações">
       <div className="mb-3 flex items-center justify-between border-b border-white/[0.06] pb-2.5">
         <div className="flex items-center gap-1" role="tablist" aria-label="Atualizações">
           {(
             [
-              ["tse", "Tempo real TSE"],
+              ["tse", "TSE"],
               ["noticias", "Notícias"],
+              ["mural", "Mural"],
             ] as const
-          ).map(([k, nome]) => (
+          )
+            .filter(([k]) => k !== "mural" || mural)
+            .map(([k, nome]) => (
             <button
               key={k}
               role="tab"
@@ -100,7 +104,9 @@ export default function Atualizacoes({ eventos, cor }: { eventos: Evento[]; cor:
         {aba === "tse" ? <span className="tabular text-[10px] font-medium text-mute">{eventos.length} avisos</span> : null}
       </div>
 
-      {aba === "noticias" ? (
+      {aba === "mural" && mural ? (
+        <Mural pct={pct} />
+      ) : aba === "noticias" ? (
         <Noticias />
       ) : (
       <ul className="h-72 xl:h-[25rem] space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs">
