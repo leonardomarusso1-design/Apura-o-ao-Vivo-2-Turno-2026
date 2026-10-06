@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import ToqyStrip from "@/components/ToqyStrip";
 import Heartbeat from "@/components/Heartbeat";
 import JsonLdScript from "@/components/JsonLdScript";
@@ -11,13 +12,23 @@ import { projetar } from "@/lib/apuracao/projection";
 const pct = (n: number, d = 1) => n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 
 /** Página de uma rodada (servidor): já chega com os números. */
+// A leitura do TSE usa fetch sem cache, o que tornaria a página dinâmica (sem CDN). Guardar o resultado por 10 s
+// mantém a página estática (ISR): o CDN responde a maioria das visitas e o servidor roda ~1x a cada 10 s.
+const lerInicial = unstable_cache(
+  async (t: 1 | 2) => {
+    const snap = await getSnapshot(t).catch(() => null);
+    return snap ? (JSON.parse(JSON.stringify({ ...publicSnapshot(snap), projecao: projetar(snap) })) as ReturnType<typeof publicSnapshot> & { projecao: ReturnType<typeof projetar> }) : null;
+  },
+  ["apuracao-pagina-v1"],
+  { revalidate: 10 },
+);
+
 export default async function PaginaApuracao({ turno }: { turno: 1 | 2 }) {
-  const snap = await getSnapshot(turno).catch(() => null);
+  const initial = await lerInicial(turno);
   const pixAtivo = Boolean(PIX_PAYLOAD);
-  const initial = snap ? JSON.parse(JSON.stringify({ ...publicSnapshot(snap), projecao: projetar(snap) })) : null;
 
   // Resumo em texto para quem não roda JavaScript (buscadores, leitores de tela, assistentes de IA).
-  const br = snap?.br ?? null;
+  const br = initial?.br ?? null;
   const top = br?.cands.slice(0, 2) ?? [];
   const resumo =
     br && top.length === 2 && br.pctApurado > 0
@@ -31,7 +42,7 @@ export default async function PaginaApuracao({ turno }: { turno: 1 | 2 }) {
   const grafo = {
     "@context": "https://schema.org",
     "@graph": [
-      paginaWeb({ path, nome, descricao: resumo, modificadoEm: snap?.geradoEm }),
+      paginaWeb({ path, nome, descricao: resumo, modificadoEm: initial?.geradoEm }),
       breadcrumb([
         { nome: SITE_NAME, path: "/" },
         { nome, path },

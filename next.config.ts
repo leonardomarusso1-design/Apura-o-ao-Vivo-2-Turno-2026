@@ -62,8 +62,6 @@ const config: NextConfig = {
   async headers() {
     return [
       { source: "/flags/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
-      // Páginas da apuração renderizam no servidor com dado ao vivo: o CDN guarda 10 s (stale-while-revalidate 30 s) e absorve o pico.
-      { source: "/apuracao/:turno(1|2)", headers: [{ key: "Cache-Control", value: "public, max-age=0, s-maxage=10, stale-while-revalidate=30" }] },
       { source: "/candidatos/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] },
       {
         source: "/(.*)",
