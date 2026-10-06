@@ -1,13 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { idDeLive } from "@/lib/live-id";
-import MapaBR from "./MapaBR";
+import MapaBR, { type ModoMapa } from "./MapaBR";
+import MapaMunicipios from "./MapaMunicipios";
+import type { ResumoMun } from "./MapaMunicipiosBR";
+import { BannerTv, EditorPatro, usePatro } from "./TvPatrocinio";
 import Ticker from "./Ticker";
 import Legenda from "./Legenda";
 import Avatar from "./Avatar";
 import Num from "./Num";
 import { fmtInt, fmtPct, type Payload } from "./types";
+
+const MapaMunicipiosBR = dynamic(() => import("./MapaMunicipiosBR"), {
+  ssr: false,
+  loading: () => <div className="h-full min-h-[200px] animate-pulse rounded-2xl bg-panel" />,
+});
+
+type ModoTv = "estados" | "municipios" | "vantagem" | "apurado" | "cand";
 
 function Hora() {
   const [t, setT] = useState("");
@@ -41,6 +52,12 @@ export default function TvView({
   const [editor, setEditor] = useState(false);
   const [campo, setCampo] = useState("");
   const [host, setHost] = useState("");
+  const [modo, setModo] = useState<ModoTv>("estados");
+  const [candN, setCandN] = useState<number | null>(null);
+  const [ufTv, setUfTv] = useState<string | null>(uf);
+  const [resumo, setResumo] = useState<ResumoMun[]>([]);
+  const [patro, setPatro] = usePatro();
+  const [editPatro, setEditPatro] = useState(false);
 
   useEffect(() => {
     setHost(window.location.hostname);
@@ -99,8 +116,8 @@ export default function TvView({
   const tamPct = c ? "text-[clamp(2.4rem,4.2vw,4rem)]" : "text-[clamp(3rem,9vw,8rem)]";
   const tamCand = c ? "text-[clamp(2rem,3.2vw,3.2rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
-  const placar = (
-    <section className={`flex min-h-0 flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-3 p-4" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
+  const placarCard = (
+    <section className={`flex min-h-0 flex-1 flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-3 p-4" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
       <div className="text-center">
         <p className={`tabular font-display ${tamPct} font-bold leading-none`}>
           {br ? <Num v={br.pctApurado} d={2} /> : "0,00"}
@@ -149,12 +166,106 @@ export default function TvView({
     </section>
   );
 
+  const placar = (
+    <div className="flex min-h-0 flex-col gap-3">
+      {placarCard}
+      <BannerTv p={patro} />
+    </div>
+  );
+
+  const escolherUf = (u: string) => {
+    if (u === "ZZ") return; // exterior não tem mapa de municípios
+    setUfTv(u);
+    onSelect(u);
+  };
+  const muni = modo === "municipios" || modo === "vantagem" || (modo === "cand" && candN != null);
+  const abas: [ModoTv, string][] = [
+    ["estados", "Estados"],
+    ["municipios", "Municípios"],
+    ["vantagem", "Vantagem"],
+    ["apurado", "Apurado"],
+  ];
+  const aba = (ativo: boolean) =>
+    `h-9 shrink-0 rounded-lg px-3 text-sm transition ${ativo ? "bg-white/10 text-paper ring-1 ring-white/25" : "text-mute hover:text-paper"}`;
+
   const mapa = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-line bg-panel p-2">
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <MapaBR ufs={data.ufs} cor={cor} selecionada={uf} onSelect={onSelect} tv />
+      <div className="mb-1 flex flex-wrap items-center gap-1" role="tablist" aria-label="Modo do mapa">
+        {abas.map(([m, nome]) => (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={modo === m && !ufTv}
+            onClick={() => {
+              setModo(m);
+              setUfTv(null);
+            }}
+            className={aba(modo === m && !ufTv)}
+          >
+            {nome}
+          </button>
+        ))}
+        {dupla.map((k) => (
+          <button
+            key={k.sq}
+            role="tab"
+            aria-selected={modo === "cand" && candN === k.n && !ufTv}
+            onClick={() => {
+              setModo("cand");
+              setCandN(k.n);
+              setUfTv(null);
+            }}
+            className={aba(modo === "cand" && candN === k.n && !ufTv)}
+            style={modo === "cand" && candN === k.n && !ufTv ? { color: cor(k.n) } : undefined}
+          >
+            {k.nome.split(" ")[0]}
+          </button>
+        ))}
+        {muni && !ufTv && resumo.length ? (
+          <ul className="tabular ml-auto flex items-center gap-3 text-xs text-mute" aria-label="Quem lidera">
+            {resumo.slice(0, 2).map((l) => (
+              <li key={l.n} className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: cor(l.n) }} />
+                <span className="font-semibold" style={{ color: cor(l.n) }}>
+                  {l.partido}
+                </span>
+                <strong className="text-paper">{l.rot ?? fmtInt(l.qt)}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
-      <Legenda cands={br?.cands ?? []} />
+      <div className="relative min-h-0 flex-1">
+        {ufTv ? (
+          <div className="flex h-full flex-col">
+            <div>
+              <button
+                onClick={() => setUfTv(null)}
+                className="h-9 rounded-lg border border-line px-3 text-sm hover:bg-white/5"
+              >
+                ← Brasil
+              </button>
+            </div>
+            <div className="min-h-0 flex-1">
+              <MapaMunicipios uf={ufTv} cargo={1} inicial fit />
+            </div>
+          </div>
+        ) : muni ? (
+          <MapaMunicipiosBR
+            cor={cor}
+            onSelectUf={escolherUf}
+            onResumo={setResumo}
+            modo={modo === "cand" ? "candidato" : (modo as "municipios" | "vantagem")}
+            candN={candN}
+            sqDe={(n) => br?.cands.find((c) => c.n === n)?.sq}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <MapaBR ufs={data.ufs} cor={cor} selecionada={ufTv} onSelect={escolherUf} tv modo={modo as ModoMapa} />
+          </div>
+        )}
+      </div>
+      {!muni && !ufTv ? <Legenda cands={br?.cands ?? []} /> : null}
     </div>
   );
 
@@ -187,11 +298,16 @@ export default function TvView({
           <button onClick={() => setEditor((v) => !v)} className={botao} aria-expanded={editor}>
             {liveId ? "Trocar live" : "Adicionar live"}
           </button>
+          <button onClick={() => setEditPatro((v) => !v)} className={botao} aria-expanded={editPatro}>
+            Patrocínio
+          </button>
           <button onClick={onExit} className={botao}>
             Sair
           </button>
         </div>
       </header>
+
+      {editPatro ? <EditorPatro p={patro} onChange={setPatro} onClose={() => setEditPatro(false)} /> : null}
 
       {editor ? (
         <form
@@ -231,7 +347,7 @@ export default function TvView({
       {liveId ? (
         <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,30%)_minmax(0,1fr)]">
           {placar}
-          <div className="grid h-full min-h-0 gap-3 lg:grid-rows-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <div className="grid h-full min-h-0 gap-3 lg:grid-rows-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
             <div className="flex min-h-0 gap-3">
               <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-3xl border border-line bg-black p-1.5">
                 <div className="aspect-video max-h-full w-full max-w-full overflow-hidden rounded-2xl bg-black lg:h-full lg:w-auto">
@@ -246,7 +362,7 @@ export default function TvView({
                 </div>
               </div>
               {chat && host ? (
-                <div className="hidden min-h-0 w-[clamp(260px,22vw,380px)] shrink-0 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
+                <div className="hidden min-h-0 w-[clamp(240px,17vw,320px)] shrink-0 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                   <iframe
                     src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
                     title="Chat da live"
@@ -267,7 +383,7 @@ export default function TvView({
       )}
 
       <div className="grid gap-2">
-        <Ticker eventos={data.eventos} />
+        <Ticker eventos={data.eventos} patrocinios={patro.faixas} />
         <p className="text-center text-[11px] text-mute">
           Dados oficiais do TSE. {atualizado ? `${atualizado}. ` : ""}
           {br ? `${fmtPct(br.pctApurado, 2)}% das seções totalizadas. ` : ""}Site independente, sem vínculo com o TSE.
