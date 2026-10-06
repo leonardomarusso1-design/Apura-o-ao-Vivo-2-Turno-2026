@@ -364,7 +364,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
         <div className="mb-3 rounded-2xl border border-lime/40 bg-panel p-3">
           <p className="text-sm font-semibold">Você está na lista ✓</p>
           <p className="mt-1 text-xs text-mute">
-            No dia 25 avisamos você por e-mail e WhatsApp quando a apuração começar. Por enquanto, explore.
+            No dia 25 avisamos você por e-mail quando a apuração começar. Por enquanto, explore.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <a

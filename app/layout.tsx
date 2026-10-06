@@ -3,6 +3,7 @@ import "./globals.css";
 import FundoRede from "@/components/FundoRede";
 import JsonLdScript from "@/components/JsonLdScript";
 import Analytics from "@/components/Analytics";
+import StatsBar from "@/components/StatsBar";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 import { DESCRICAO_SITE, grafoSite } from "@/lib/seo";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <JsonLdScript dados={grafoSite()} />
         <FundoRede />
+        <StatsBar />
         {children}
         <Analytics />
       </body>

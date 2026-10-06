@@ -63,7 +63,7 @@ export default async function PaginaApuracao({ turno }: { turno: 1 | 2 }) {
 
   return (
     // No computador a apuração cabe numa única tela (sem rolar a página); no celular rola normalmente.
-    <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
+    <div className="flex min-h-dvh flex-col lg:h-[calc(100dvh-2.5rem)] lg:overflow-hidden">
       <JsonLdScript dados={grafo} />
       <p className="sr-only">{resumo}</p>
       <ToqyStrip />

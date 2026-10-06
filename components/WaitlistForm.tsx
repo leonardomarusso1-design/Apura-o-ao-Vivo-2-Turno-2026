@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { marcarInscrito } from "@/lib/inscrito";
-import { useRouter } from "next/navigation";
 import { CONSENT_TEXT } from "@/lib/env";
 
 type State =
   | { kind: "idle" }
   | { kind: "loading" }
   | { kind: "error"; msg: string }
-  | { kind: "already" };
+  | { kind: "already" }
+  | { kind: "done" };
 
 export const LS_REF = "apuracao:ref";
 const SITEKEY = process.env.NEXT_PUBLIC_TURNSTILE_SITEKEY;
@@ -32,7 +32,6 @@ function maskPhone(v: string): string {
 }
 
 export default function WaitlistForm() {
-  const router = useRouter();
   const [state, setState] = useState<State>({ kind: "idle" });
   const [phone, setPhone] = useState("");
   const [incomingRef, setIncomingRef] = useState<string | null>(null);
@@ -108,24 +107,29 @@ export default function WaitlistForm() {
         /* ignore */
       }
       marcarInscrito();
-      // Leva a pessoa para ver o site funcionando (evita sensação de golpe)
-      router.push("/apuracao?novo=1");
+      // Em vez de redirecionar, a pessoa escolhe o que fazer enquanto espera (1º turno ou jogo)
+      setState({ kind: "done" });
     } catch {
       setState({ kind: "error", msg: "Sem conexão. Tente de novo." });
     }
   }
 
-  if (state.kind === "already") {
+  if (state.kind === "already" || state.kind === "done") {
+    const feito = state.kind === "done";
     return (
-      <div className="rounded-2xl border border-lime/40 bg-panel p-5 sm:p-6">
-        <p className="font-display text-2xl">Você já está na lista.</p>
-        <p className="mt-1 text-sm text-mute">Avisamos no dia 25. Quer ver como a apuração vai funcionar?</p>
-        <a
-          href="/apuracao"
-          className="mt-4 inline-flex h-12 items-center justify-center rounded-xl bg-lime px-5 font-semibold text-ink"
-        >
-          Ver a apuração
-        </a>
+      <div className="rounded-2xl border border-lime/40 bg-panel p-5 sm:p-6" role="status">
+        <p className="font-display text-2xl">{feito ? "Pronto, você está na lista ✓" : "Você já está na lista."}</p>
+        <p className="mt-1 text-sm text-mute">
+          {feito ? "Avisamos por e-mail no dia 25, quando a apuração começar." : "Avisamos por e-mail no dia 25."} Enquanto espera, escolha:
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <a href="/apuracao/1" className="flex h-12 items-center justify-center rounded-xl bg-lime px-4 font-semibold text-ink">
+            📊 Ver o 1º turno
+          </a>
+          <a href="/jogo" className="flex h-12 items-center justify-center rounded-xl border border-lime/60 px-4 font-semibold text-paper">
+            🎮 Jogar e entrar no ranking
+          </a>
+        </div>
       </div>
     );
   }

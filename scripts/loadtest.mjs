@@ -1,7 +1,10 @@
 // Teste de carga simples. Use SÓ no seu próprio site e aumente aos poucos.
 // Uso:  node scripts/loadtest.mjs https://apuracaoaovivo2026.com.br/apuracao/2 [simultaneos=50] [segundos=30]
+// 4º argumento (opcional): pausa média, em ms, entre as requisições de cada "visitante" (simula gente de verdade e evita o bloqueio por excesso de requisições do mesmo IP).
+//   Ex.: node scripts/loadtest.mjs https://www.apuracaoaovivo2026.com.br/apuracao/2 150 30 1500
 // Exemplo de rampa:  50 -> 150 -> 300. Pare se a taxa de erro passar de 1% ou o p95 passar de 2 s.
-const [url, c = "50", s = "30"] = process.argv.slice(2);
+const [url, c = "50", s = "30", pausa = "0"] = process.argv.slice(2);
+const pausaMs = Math.max(0, Number(pausa) || 0);
 if (!url || !/^https:\/\//.test(url)) {
   console.error("Informe uma URL https. Ex.: node scripts/loadtest.mjs https://seusite.com.br/apuracao/2 50 30");
   process.exit(1);
@@ -11,6 +14,7 @@ const fim = Date.now() + (Number(s) || 30) * 1000;
 const tempos = [];
 const status = {};
 const cache = {};
+const bloqueio = {};
 let bytes = 0;
 
 async function worker() {
@@ -21,12 +25,15 @@ async function worker() {
       const buf = await r.arrayBuffer();
       bytes += buf.byteLength;
       status[r.status] = (status[r.status] ?? 0) + 1;
+      const mit = r.headers.get("x-vercel-mitigated");
+      if (mit) bloqueio[mit] = (bloqueio[mit] ?? 0) + 1;
       const k = r.headers.get("x-vercel-cache") ?? "?";
       cache[k] = (cache[k] ?? 0) + 1;
     } catch {
       status.erro = (status.erro ?? 0) + 1;
     }
     tempos.push(performance.now() - t0);
+    if (pausaMs) await new Promise((r) => setTimeout(r, pausaMs * (0.5 + Math.random())));
   }
 }
 
@@ -42,4 +49,5 @@ console.log(`Requisições: ${total} (${(total / dur).toFixed(1)}/s) | MB baixad
 console.log(`Tempo (ms): p50 ${p(0.5)} | p95 ${p(0.95)} | p99 ${p(0.99)} | máx ${Math.round(tempos[total - 1] ?? 0)}`);
 console.log("Status:", status);
 console.log("Cache da Vercel:", cache, "(HIT é o esperado em páginas estáticas)");
+if (Object.keys(bloqueio).length) console.log("Bloqueio da Vercel (x-vercel-mitigated):", bloqueio);
 console.log(`Fora de 200: ${ruins} (${((ruins / Math.max(1, total)) * 100).toFixed(2)}%)`);

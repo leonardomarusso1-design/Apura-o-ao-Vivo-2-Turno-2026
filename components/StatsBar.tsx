@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 type Stats = { waiting: number | null; online: number | null };
 
+// Só mostra o contador a partir deste número (número pequeno enfraquece a prova social). Padrão: 1.
+const MIN_MOSTRAR = Number(process.env.NEXT_PUBLIC_MIN_ESPERANDO ?? "1") || 1;
+
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 
 export default function StatsBar() {
@@ -43,10 +46,10 @@ export default function StatsBar() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
           <span className="truncate text-mute font-medium">
-            {stats?.waiting != null ? (
+            {stats?.waiting != null && stats.waiting >= MIN_MOSTRAR ? (
               <>
                 <strong className="tabular font-semibold text-paper">{fmt(stats.waiting)}</strong>{" "}
-                eleitores cadastrados para o 2º turno
+                {stats.waiting === 1 ? "pessoa esperando" : "pessoas esperando"} o dia 25
               </>
             ) : (
               <span>Conectado à apuração oficial</span>

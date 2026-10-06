@@ -1,4 +1,3 @@
-import StatsBar from "@/components/StatsBar";
 import ToqyStrip from "@/components/ToqyStrip";
 import Countdown from "@/components/Countdown";
 import WaitlistForm from "@/components/WaitlistForm";
@@ -15,7 +14,6 @@ export default function Home() {
   return (
     <>
       <ToqyStrip />
-      <StatsBar />
       <Heartbeat electionIso={ELECTION_ISO} />
       <main id="conteudo" className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:pt-14">
         <p className="text-[11px] uppercase tracking-widest text-lime">{SITE_NAME} · 2º turno · 25 de outubro</p>
