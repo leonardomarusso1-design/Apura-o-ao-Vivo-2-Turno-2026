@@ -6,7 +6,7 @@ import { idDeLive } from "@/lib/live-id";
 import MapaBR, { type ModoMapa } from "./MapaBR";
 import MapaMunicipios from "./MapaMunicipios";
 import type { ResumoMun } from "./MapaMunicipiosBR";
-import { BannerTv, EditorPatro, usePatro } from "./TvPatrocinio";
+import { BannerTv, EditorPatro, FAIXA_PADRAO, usePatro } from "./TvPatrocinio";
 import Ticker from "./Ticker";
 import Legenda from "./Legenda";
 import Avatar from "./Avatar";
@@ -117,7 +117,7 @@ export default function TvView({
   const tamCand = c ? "text-[clamp(2rem,3.2vw,3.2rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
   const placarCard = (
-    <section className={`flex min-h-0 flex-1 flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-3 p-4" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
+    <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-3 p-4" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
       <div className="text-center">
         <p className={`tabular font-display ${tamPct} font-bold leading-none`}>
           {br ? <Num v={br.pctApurado} d={2} /> : "0,00"}
@@ -169,7 +169,7 @@ export default function TvView({
   const placar = (
     <div className="flex min-h-0 flex-col gap-3">
       {placarCard}
-      <BannerTv p={patro} />
+      {c && !chat ? <div className="lg:hidden"><BannerTv p={patro} /></div> : <BannerTv p={patro} fill={c} />}
     </div>
   );
 
@@ -307,6 +307,8 @@ export default function TvView({
         </div>
       </header>
 
+      {editPatro || editor ? (
+        <div className="absolute inset-x-3 top-16 z-20 max-h-[75vh] overflow-y-auto rounded-2xl shadow-2xl shadow-black/70 sm:inset-x-5 sm:top-[72px]">
       {editPatro ? <EditorPatro p={patro} onChange={setPatro} onClose={() => setEditPatro(false)} /> : null}
 
       {editor ? (
@@ -343,26 +345,26 @@ export default function TvView({
           <span className="w-full text-[11px] text-mute">Vale só neste aparelho. A live precisa permitir incorporação. Clique no vídeo para ligar o som.</span>
         </form>
       ) : null}
+        </div>
+      ) : null}
 
       {liveId ? (
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,30%)_minmax(0,1fr)]">
+        <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(280px,24%)_minmax(0,1fr)]">
           {placar}
           <div className="grid h-full min-h-0 gap-3 lg:grid-rows-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
             <div className="flex min-h-0 gap-3">
-              <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center rounded-3xl border border-line bg-black p-1.5">
-                <div className="aspect-video max-h-full w-full max-w-full overflow-hidden rounded-2xl bg-black lg:h-full lg:w-auto">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
-                    title="Live do YouTube"
-                    className="h-full w-full"
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                </div>
+              <div className="aspect-video h-full max-w-[70%] shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
+                  title="Live do YouTube"
+                  className="h-full w-full"
+                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
               </div>
               {chat && host ? (
-                <div className="hidden min-h-0 w-[clamp(240px,17vw,320px)] shrink-0 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
+                <div className="hidden min-h-0 min-w-0 flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                   <iframe
                     src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
                     title="Chat da live"
@@ -370,7 +372,11 @@ export default function TvView({
                     referrerPolicy="strict-origin-when-cross-origin"
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className="hidden min-w-0 flex-1 lg:flex">
+                  <BannerTv p={patro} fill />
+                </div>
+              )}
             </div>
             <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
           </div>
@@ -383,7 +389,7 @@ export default function TvView({
       )}
 
       <div className="grid gap-2">
-        <Ticker eventos={data.eventos} patrocinios={patro.faixas} />
+        <Ticker eventos={data.eventos} patrocinios={patro.faixas.length ? patro.faixas : FAIXA_PADRAO} />
         <p className="text-center text-[11px] text-mute">
           Dados oficiais do TSE. {atualizado ? `${atualizado}. ` : ""}
           {br ? `${fmtPct(br.pctApurado, 2)}% das seções totalizadas. ` : ""}Site independente, sem vínculo com o TSE.

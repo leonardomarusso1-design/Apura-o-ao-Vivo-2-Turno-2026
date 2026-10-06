@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 export type Patro = { img: string; texto: string; faixas: string[] };
 
 const CHAVE = "apuracao:tv:patro";
+
+/** Enquanto não houver patrocinador, a faixa e o banner divulgam o TOQY. */
+export const FAIXA_PADRAO = ["TOQY: crie seu link na bio e seu cartão digital profissional em minutos, em toqy.com.br"];
 const MAX_FAIXAS = 8;
 
 const env = (): Patro => ({
@@ -48,10 +51,12 @@ export function usePatro(): [Patro, (p: Patro) => void] {
 }
 
 /** Espaço do banner. Sem nada cadastrado, vira o convite para anunciar (é a venda do espaço). */
-export function BannerTv({ p }: { p: Patro }) {
+export function BannerTv({ p, fill = false }: { p: Patro; fill?: boolean }) {
   return (
     <div
-      className="flex h-[clamp(84px,15vh,170px)] shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-line bg-panel"
+      className={`flex items-center justify-center overflow-hidden rounded-3xl border border-line bg-panel ${
+        fill ? "min-h-[84px] flex-1" : "h-[clamp(84px,15vh,170px)] shrink-0"
+      }`}
       aria-label="Publicidade"
     >
       {p.img ? (
@@ -60,10 +65,11 @@ export function BannerTv({ p }: { p: Patro }) {
       ) : p.texto ? (
         <p className="px-4 text-center font-display text-[clamp(1rem,2vw,1.75rem)] font-bold leading-tight">{p.texto}</p>
       ) : (
-        <p className="px-4 text-center text-sm text-mute">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.25em]">Publicidade</span>
-          Anuncie aqui · @leomarussobr
-        </p>
+        <div className="px-4 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-lime">Feito pelo criador deste site</p>
+          <p className="mt-1 font-display text-[clamp(1.25rem,2.4vw,2.25rem)] font-bold leading-tight">TOQY</p>
+          <p className="text-sm text-mute">Seu link na bio e cartão digital em minutos · toqy.com.br</p>
+        </div>
       )}
     </div>
   );
