@@ -4,14 +4,17 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // 'unsafe-inline' em script continua porque o Next injeta scripts inline e o nonce obrigaria a renderizar toda página
 // de forma dinâmica (sem cache de CDN). O risco fica baixo porque o site não renderiza HTML de usuário.
+const isPreview = process.env.VERCEL_ENV === "preview";
+const vercelLive = isPreview ? " https://vercel.live" : "";
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com${vercelLive}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob:${vercelLive}`,
   "font-src 'self' data:",
-  "connect-src 'self'",
-  "frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com",
+  `connect-src 'self'${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
+  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com${vercelLive}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
