@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapaBR, { type ModoMapa } from "./MapaBR";
 import Placar from "./Placar";
 import Projecao from "./Projecao";
+import Participacao from "./Participacao";
 import Regioes from "./Regioes";
 import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
@@ -494,7 +495,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
               <div className="order-6 lg:order-none">
                 <Linha pontos={data?.historico ?? []} cor={cor} />
               </div>
-              <div className="order-7 lg:order-none">{data ? <Projecao p={data.projecao} cor={cor} /> : null}</div>
+              <div className="order-7 lg:order-none">
+                {data?.br && data.br.pctApurado >= 99.9 ? <Participacao br={data.br} /> : data ? <Projecao p={data.projecao} cor={cor} /> : null}
+              </div>
             </div>
 
             {/* centro: mapa */}
