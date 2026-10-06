@@ -2,16 +2,17 @@
 
 import { useEffect } from "react";
 
-/** Envia um ping anônimo a cada 1 min (só com a aba visível) para o contador "online agora". */
+/** Envia um ping anônimo a cada 1 min (só com a aba visível) para o contador "online agora". Conta aparelhos únicos nos últimos ~3 min. */
 export default function Heartbeat({ electionIso }: { electionIso: string }) {
   useEffect(() => {
     void electionIso; // o contador "online agora" funciona o tempo todo
+    // Um id por aparelho/navegador (não por aba): abrir várias abas ou recarregar não conta como mais gente.
     let sid = "";
     try {
-      sid = sessionStorage.getItem("apuracao:sid") ?? "";
+      sid = localStorage.getItem("apuracao:did") ?? "";
       if (!sid) {
         sid = crypto.randomUUID();
-        sessionStorage.setItem("apuracao:sid", sid);
+        localStorage.setItem("apuracao:did", sid);
       }
     } catch {
       sid = crypto.randomUUID();
