@@ -35,11 +35,11 @@ export default function Placar({
 
   return (
     <section 
-      className="glass-panel rise rounded-2xl p-4 sm:p-5 relative overflow-hidden transition-all duration-300"
+      className="glass-panel rise relative overflow-hidden rounded-2xl p-3 transition-all duration-300 sm:p-3.5"
       aria-label="Placar nacional"
     >
       {/* Indicador de Status / Liderança sutil no topo do card */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] mb-4">
+      <div className="mb-2.5 flex items-center justify-between border-b border-white/[0.06] pb-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-mute flex items-center gap-1.5">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           Presidência da República
@@ -57,12 +57,12 @@ export default function Placar({
 
       {/* 1º turno encerrado: manchete + data do 2º turno (como no resultado oficial) */}
       {turno === 1 && lider && segundo && br && br.pctApurado >= 99.99 ? (
-        <div className="mb-4">
-          <p className="text-xl font-semibold leading-snug sm:text-2xl">
+        <div className="mb-2.5">
+          <p className="text-base font-semibold leading-snug sm:text-lg">
             <span style={{ color: cor(top[0]?.n) }}>{top[0]?.nome}</span> e{" "}
             <span style={{ color: cor(top[1]?.n) }}>{top[1]?.nome}</span> vão ao 2º turno
           </p>
-          <p className="mt-1 text-xs text-mute">2º turno · Em 25 de outubro</p>
+          <p className="mt-0.5 text-[11px] text-mute">2º turno · Em 25 de outubro</p>
         </div>
       ) : null}
 
@@ -86,12 +86,12 @@ export default function Placar({
             >
               <div className={`flex w-full min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end" : "items-start"}`}>
                 {c ? (
-<Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
+<Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={36} />
                 ) : (
-                  <div className="w-[46px] h-[46px] rounded-full bg-white/[0.05] animate-pulse" />
+                  <div className="w-[36px] h-[36px] rounded-full bg-white/[0.05] animate-pulse" />
                 )}
                 <div className="w-full min-w-0">
-                  <span className="block text-[13px] font-semibold leading-tight text-paper sm:text-[15px]">
+                  <span className="block text-xs font-semibold leading-tight text-paper sm:text-[13px]">
                     {c ? c.nome : "—"}
                   </span>
                   <span className={`mt-0.5 flex flex-wrap content-start items-center gap-1.5 text-xs font-medium text-mute ${i === 1 ? "justify-end" : ""}`}>
@@ -109,13 +109,13 @@ export default function Placar({
               </div>
 
               {/* Porcentagem Grande de Alta Legibilidade */}
-              <div className="tabular mt-3.5 flex items-baseline gap-1 font-bold text-3xl sm:text-4xl lg:text-3xl xl:text-4xl text-white tracking-tight">
+              <div className="tabular mt-2 flex items-baseline gap-1 font-bold text-2xl sm:text-3xl lg:text-2xl xl:text-3xl text-white tracking-tight">
                 {c ? <Num v={c.pct} /> : "––"}
-                <span className="text-base sm:text-lg font-medium text-mute">%</span>
+                <span className="text-sm font-medium text-mute">%</span>
               </div>
 
               {/* Votos absolutos formatados */}
-              <div className="tabular mt-1 text-xs text-mute font-medium">
+              <div className="tabular text-[11px] text-mute font-medium">
                 {c ? `${fmtInt(c.votos)} votos` : ""}
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function Placar({
       </div>
 
       {/* Barra de Progresso Bicolor de Alto Contraste */}
-      <div className="mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-black/40 border border-white/[0.06] p-[1px]" aria-hidden>
+      <div className="mt-2.5 flex h-2 w-full overflow-hidden rounded-full bg-black/40 border border-white/[0.06] p-[1px]" aria-hidden>
         {top.map((c) => (
           <div 
             key={c.sq} 
@@ -140,7 +140,7 @@ export default function Placar({
 
       {/* Margem de Diferença */}
       {br && top.length === 2 && dif > 0 ? (
-        <div className="mt-3.5 flex items-center justify-between text-xs bg-white/[0.03] border border-white/[0.05] rounded-xl px-3 py-2">
+        <div className="mt-2.5 flex items-center justify-between text-[11px] bg-white/[0.03] border border-white/[0.05] rounded-lg px-2.5 py-1.5">
           <span className="text-mute">Diferença</span>
           <span className="tabular font-medium text-paper">
             <strong className="text-white font-semibold">{fmtPct(difPct)} pts</strong>
@@ -151,7 +151,7 @@ export default function Placar({
 
       {/* Demais Candidatos (se houver mais de 2, como na prévia do 1º turno) */}
       {resto.length > 0 ? (
-        <div className="mt-3 border-t border-white/[0.06] pt-3">
+        <div className="mt-2 border-t border-white/[0.06] pt-2">
           <ul className="grid gap-1.5 text-xs text-mute">
             {(todos ? resto : resto.slice(0, 2)).map((c) => (
               <li key={c.sq} className="tabular flex items-center justify-between py-0.5">

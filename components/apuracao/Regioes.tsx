@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { BR_UFS, type Regiao } from "@/lib/br-map";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtPct } from "./types";
@@ -5,6 +8,7 @@ import { fmtPct } from "./types";
 const ORDEM: Regiao[] = ["Sudeste", "Nordeste", "Sul", "Norte", "Centro-Oeste"];
 
 export default function Regioes({ ufs, cor }: { ufs: Record<string, Area>; cor: (n: number | undefined) => string }) {
+  const [aberto, setAberto] = useState(false); // começa fechado: abre pela setinha
   const linhas = ORDEM.map((r) => {
     const ids = BR_UFS.filter((u) => u.regiao === r).map((u) => u.id.toUpperCase());
     const areas = ids.map((i) => ufs[i]).filter(Boolean);
@@ -24,12 +28,24 @@ export default function Regioes({ ufs, cor }: { ufs: Record<string, Area>; cor: 
   });
 
   return (
-    <section className="glass-panel rise rounded-2xl p-3 sm:p-4 [@media(max-height:820px)]:sm:p-3" aria-label="Por região">
-      <div className="mb-2 flex items-center justify-between">
+    <section className="glass-panel rise rounded-2xl p-2.5 sm:p-3" aria-label="Por região">
+      <button
+        type="button"
+        onClick={() => setAberto((x) => !x)}
+        aria-expanded={aberto}
+        aria-controls="regioes-lista"
+        className={`flex w-full items-center justify-between rounded-lg text-left ${aberto ? "mb-2" : ""}`}
+        title={aberto ? "Fechar" : "Ver a votação por região"}
+      >
         <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">Votação por região</h2>
-        <span className="text-[10px] uppercase tracking-widest text-mute">Brasil</span>
-      </div>
-      <ul className="grid gap-1.5">
+        <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-mute">
+          Brasil
+          <span aria-hidden className={`flex h-6 w-6 items-center justify-center rounded-md border border-white/10 text-xs transition-transform ${aberto ? "rotate-180" : ""}`}>
+            ▾
+          </span>
+        </span>
+      </button>
+      <ul id="regioes-lista" hidden={!aberto} className="grid gap-1.5">
         {linhas.map((l) => (
           <li key={l.r} className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-2.5 py-1.5 [@media(max-height:820px)]:py-1" title={l.lider && l.pctApur > 0 ? `${l.lider[1].nome} lidera · ${fmtPct(l.pctApur, 1)}% apurado` : undefined}>
             <div className="flex items-center justify-between gap-2 text-xs">

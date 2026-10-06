@@ -5,8 +5,8 @@ import { sameOrigin } from "@/lib/security";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-/** Janela de 2 min por bucket; o cliente pinga a cada 120s. Os 2 últimos buckets = "online agora". */
-const BUCKET_MS = 120_000;
+/** Janela de 1 min por bucket; o cliente pinga a cada 60s. Os 3 últimos buckets = "online agora". */
+const BUCKET_MS = 60_000;
 
 const LUA =
   "redis.call('PFADD',KEYS[1],ARGV[1]); redis.call('EXPIRE',KEYS[1],ARGV[2]); return 1";

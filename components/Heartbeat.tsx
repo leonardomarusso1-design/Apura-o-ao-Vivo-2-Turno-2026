@@ -2,11 +2,10 @@
 
 import { useEffect } from "react";
 
-/** Envia um ping anônimo a cada 2 min (só com a aba visível) para o contador "online agora". */
+/** Envia um ping anônimo a cada 1 min (só com a aba visível) para o contador "online agora". */
 export default function Heartbeat({ electionIso }: { electionIso: string }) {
   useEffect(() => {
-    // Liga só a partir de 6h antes da votação encerrar (decidido no cliente: a página é estática)
-    if (Date.now() < new Date(electionIso).getTime() - 6 * 3600_000) return;
+    void electionIso; // o contador "online agora" funciona o tempo todo
     let sid = "";
     try {
       sid = sessionStorage.getItem("apuracao:sid") ?? "";
@@ -27,7 +26,7 @@ export default function Heartbeat({ electionIso }: { electionIso: string }) {
       }).catch(() => undefined);
     };
     ping();
-    const id = setInterval(ping, 120_000);
+    const id = setInterval(ping, 60_000);
     return () => clearInterval(id);
   }, [electionIso]);
   return null;

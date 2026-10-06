@@ -134,7 +134,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
       } catch {
         /* mantém */
       }
-      if (alive) t = setTimeout(load, 20_000);
+      if (alive) t = setTimeout(load, 10_000);
     };
     void load();
     return () => {
@@ -405,6 +405,16 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
           Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
         </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          {online ? (
+            <span className="tabular flex h-9 items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 text-xs text-emerald-200" title="Pessoas com o site aberto agora" aria-live="polite">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              <strong className="text-sm text-white">{new Intl.NumberFormat("pt-BR").format(online)}</strong>
+              <span className="hidden sm:inline">online agora</span>
+            </span>
+          ) : null}
           <span className="tabular hidden items-center gap-1.5 text-xs text-mute 2xl:flex" aria-live="polite">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             {statusTxt}
