@@ -478,25 +478,25 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               </div>
             ) : null}
           </div>
-        ) : aguardando && !data?.br ? (
-                    <div className="mx-auto mt-4 grid max-w-4xl gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
-            <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
-            <p className="font-display text-2xl">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
-            <p className="mt-2 text-sm text-mute">
-              {turno === 2
-                ? "A divulgação começa quando as urnas fecham, em 25 de outubro, às 17h (Brasília). Esta página já está pronta e começa sozinha: não precisa recarregar."
-                : "Os dados do 1º turno aparecem aqui assim que o TSE divulgar."}
-            </p>
-            {turno === 2 ? (
-              <a href="/apuracao/1" className="mt-4 inline-flex h-10 items-center rounded-xl bg-lime px-4 text-sm font-semibold text-ink">
-                Ver o resultado do 1º turno
-              </a>
-            ) : null}
-          </div>
-            <Atualizacoes eventos={[]} cor={cor} mural={turno === 2} pct={0} />
-          </div>
         ) : (
-          <div className="flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
+          <div className="flex flex-col gap-3 lg:h-full lg:min-h-0">
+            {aguardando && !data?.br ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line bg-panel px-4 py-2.5" role="status">
+                <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-amber" />
+                <p className="font-display text-base sm:text-lg">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
+                <p className="min-w-0 flex-1 basis-64 text-xs text-mute sm:text-sm">
+                  {turno === 2
+                    ? "A divulgação começa quando as urnas fecham, em 25 de outubro, às 17h (Brasília). O mapa já está aqui e se preenche sozinho: não precisa recarregar."
+                    : "Os dados do 1º turno aparecem aqui assim que o TSE divulgar."}
+                </p>
+                {turno === 2 ? (
+                  <a href="/apuracao/1" className="inline-flex h-9 items-center rounded-lg bg-lime px-3 text-xs font-semibold text-ink">
+                    Ver o 1º turno
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+          <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
             {/* coluna esquerda */}
             <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
               {esperandoVotos ? (
@@ -636,6 +636,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 <ToqyCard />
               </div>
             </div>
+          </div>
           </div>
         )}
       </main>
