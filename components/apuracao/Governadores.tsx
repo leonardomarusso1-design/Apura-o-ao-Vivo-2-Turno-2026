@@ -27,7 +27,7 @@ function cores(cands: CandGov[]): string[] {
   });
 }
 
-function Cartao({ d }: { d: DisputaGov }) {
+function Cartao({ d, semMapa = false }: { d: DisputaGov; semMapa?: boolean }) {
   const usaR2 = Boolean(d.r2 && d.r2.top.length > 0);
   const base = usaR2 ? d.r2! : d.r1;
   const top = base.top.slice(0, 2);
@@ -66,7 +66,7 @@ function Cartao({ d }: { d: DisputaGov }) {
       <p className="tabular mt-3 text-[11px] text-mute">
         {usaR2 ? `Diferença: ${fmtInt(dif)} votos` : `Resultado do 1º turno (${fmtPct(d.r1.pa, 0)}% apurado) · diferença ${fmtInt(dif)} votos`}
       </p>
-      <MapaMunicipios uf={d.uf} cargo={3} />
+      {semMapa ? null : <MapaMunicipios uf={d.uf} cargo={3} />}
       <MunicipioBusca uf={d.uf} cargo={3} cor={(n) => cs[top.findIndex((c) => c.n === n)] ?? "#8a9792"} />
     </article>
   );
@@ -125,61 +125,100 @@ export default function Governadores() {
   const eleitos = d.disputas.filter((x) => !x.segundoTurno).sort((a, b) => a.uf.localeCompare(b.uf));
 
   const escolhido = sel ? d.disputas.find((x) => x.uf === sel) : undefined;
+  const linha = (x: DisputaGov) => {
+    const base = x.r2 && x.r2.top.length ? x.r2 : x.r1;
+    const top = base.top.slice(0, 2);
+    const cs = cores(top);
+    return (
+      <li key={x.uf}>
+        <button onClick={() => setSel(x.uf)} className="flex w-full items-center gap-2 rounded-xl border border-line px-2.5 py-1.5 text-left transition hover:bg-white/5">
+          <Bandeira uf={x.uf} w={22} />
+          <span className="w-6 text-xs font-semibold">{x.uf}</span>
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {top.map((c, i) => (
+              <span key={c.n} className="flex min-w-0 items-center gap-1.5" title={c.nome}>
+                <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cs[i]} size={28} />
+                <span className="tabular text-xs font-bold">{fmtPct(c.pct, 1)}%</span>
+              </span>
+            ))}
+          </span>
+        </button>
+      </li>
+    );
+  };
   return (
-    <div className="grid gap-4">
-      <section className="glass-panel rounded-2xl p-3 sm:p-5" aria-label="Mapa dos governos">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
-          {eleitos.length} eleitos · {segundo.length} no 2º turno
-        </h2>
-        <MapaBR ufs={areas} cor={corMapa} selecionada={sel} onSelect={(u) => setSel(u === sel ? null : u)} />
-        <ul className="mt-2 flex flex-wrap gap-3 text-xs text-mute">
-          {(["esquerda", "centro", "direita", "outros"] as const).map((b) => (
-            <li key={b} className="flex items-center gap-1.5">
-              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
-              {b === "esquerda" ? "Esquerda" : b === "direita" ? "Direita" : b === "centro" ? "Centrão" : "Outros"}
-            </li>
-          ))}
-        </ul>
-        {escolhido ? (
-          <div className="mt-4">
-            <Cartao d={escolhido} />
-          </div>
-        ) : null}
-      </section>
-
-      <section aria-label="Governadores no 2º turno">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-mute">
-          {segundo.length} {segundo.length === 1 ? "estado vai" : "estados vão"} ao 2º turno
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {segundo.map((x) => (
-            <Cartao key={x.uf} d={x} />
-          ))}
+    <div className="grid gap-3 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_440px]">
+      <section className="glass-panel flex min-h-[420px] flex-col rounded-2xl p-3 lg:min-h-0" aria-label="Mapa dos governos">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+            {eleitos.length} eleitos · {segundo.length} no 2º turno
+          </h2>
+          <ul className="flex flex-wrap gap-3 text-xs text-mute">
+            {(["esquerda", "centro", "direita", "outros"] as const).map((b) => (
+              <li key={b} className="flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
+                {b === "esquerda" ? "Esquerda" : b === "direita" ? "Direita" : b === "centro" ? "Centrão" : "Outros"}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative min-h-[340px] flex-1 lg:min-h-0">
+          {escolhido ? (
+            <div className="flex h-full flex-col">
+              <div>
+                <button onClick={() => setSel(null)} className="h-8 rounded-lg border border-line px-3 text-xs hover:bg-white/5">
+                  ← Brasil
+                </button>
+              </div>
+              <div className="min-h-0 flex-1">
+                <MapaMunicipios uf={escolhido.uf} cargo={3} inicial fit />
+              </div>
+            </div>
+          ) : (
+            <MapaBR ufs={areas} cor={corMapa} selecionada={sel} onSelect={(u) => setSel(u === sel ? null : u)} fit />
+          )}
         </div>
       </section>
 
-      {eleitos.length > 0 ? (
-        <section className="glass-panel rounded-2xl p-4" aria-label="Eleitos no 1º turno">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-mute">Eleitos no 1º turno</h2>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {eleitos.map((x) => {
-              const c = x.r1.top[0];
-              if (!c) return null;
-              return (
-                <li key={x.uf} className="flex items-center gap-2 rounded-xl border border-line px-3 py-2 text-sm">
-                  <Bandeira uf={x.uf} w={22} />
-                  <span className="font-semibold">{x.uf}</span>
-                  <span className="min-w-0 flex-1 truncate">{c.nome}</span>
-                  <span className="tabular text-xs text-mute">{fmtPct(c.pct, 1)}%</span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
-      <p className="text-[11px] leading-relaxed text-mute">
-        Vai ao 2º turno o estado em que o líder do 1º turno não passou de 50% dos votos válidos. Dados oficiais do TSE.
-      </p>
+      <aside className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1">
+        {escolhido ? (
+          <Cartao d={escolhido} semMapa />
+        ) : (
+          <>
+            <section aria-label="Governadores no 2º turno" className="glass-panel rounded-2xl p-3">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-mute">
+                {segundo.length} {segundo.length === 1 ? "estado vai" : "estados vão"} ao 2º turno
+              </h2>
+              <ul className="grid gap-1.5">{segundo.map(linha)}</ul>
+            </section>
+            {eleitos.length > 0 ? (
+              <section className="glass-panel rounded-2xl p-3" aria-label="Eleitos no 1º turno">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-mute">Eleitos no 1º turno</h2>
+                <ul className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  {eleitos.map((x) => {
+                    const c = x.r1.top[0];
+                    if (!c) return null;
+                    const cs = cores([c]);
+                    return (
+                      <li key={x.uf}>
+                        <button onClick={() => setSel(x.uf)} className="flex w-full items-center gap-2 rounded-xl border border-line px-2 py-1 text-left text-xs hover:bg-white/5">
+                          <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cs[0]} size={26} />
+                          <span className="font-semibold">{x.uf}</span>
+                          <span className="min-w-0 flex-1 truncate">{c.nome}</span>
+                          <span className="tabular text-mute">{fmtPct(c.pct, 0)}%</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+          </>
+        )}
+        <p className="text-[10px] leading-relaxed text-mute">
+          Vai ao 2º turno o estado em que o líder do 1º turno não passou de 50% dos votos válidos. Dados oficiais do TSE.
+        </p>
+      </aside>
     </div>
   );
 }

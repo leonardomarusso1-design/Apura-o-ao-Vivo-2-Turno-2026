@@ -17,7 +17,9 @@ import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
 import type { PontoReplay } from "@/lib/apuracao/types";
-import Legenda from "./Legenda";
+import SeletorCandidato from "./SeletorCandidato";
+import PainelCandidato from "./PainelCandidato";
+import type { ResumoMun } from "./MapaMunicipiosBR";
 import Linha from "./Linha";
 
 import Credito from "../Credito";
@@ -100,7 +102,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const [refCode, setRefCode] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
   const [modo, setModo] = useState<ModoMapa | "municipios">("estados");
-  const [resumoMun, setResumoMun] = useState<{ partido: string; n: number; qt: number }[]>([]);
+  const [resumoMun, setResumoMun] = useState<ResumoMun[]>([]);
   const [online, setOnline] = useState<number | null>(null);
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
@@ -307,7 +309,13 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
     }
     return [...m.entries()].map(([n, v]) => ({ n, ...v })).sort((a, b) => b.qt - a.qt).slice(0, 2);
   }, [data]);
-  const legenda = modo === "municipios" ? resumoMun : contEstados;
+  const muniModo = modo === "municipios" || modo === "vantagem" || (modo === "candidato" && candN != null);
+  const legenda: ResumoMun[] = muniModo ? resumoMun : contEstados;
+  const escolherCand = (n: number) => {
+    setUf(null);
+    setCandN(n);
+    setModo("candidato");
+  };
 
   const abas = [
     ["presidente", "Presidente"],
@@ -397,11 +405,11 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
 
       <main className="min-h-0 flex-1">
         {aba !== "presidente" ? (
-          <div className="pb-3 lg:h-full lg:overflow-y-auto lg:pr-1">
+          <div className="pb-3 lg:h-full lg:min-h-0 lg:overflow-hidden lg:pb-0">
             {aba === "governadores" ? <Governadores /> : null}
             {aba === "senado" ? <Legislativo cargo={5} /> : null}
             {aba === "federais" || aba === "estaduais" ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3 lg:h-full lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
                 <div className="flex gap-1.5" role="tablist" aria-label="Casa legislativa">
                   {(
                     [
@@ -420,7 +428,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                     </button>
                   ))}
                 </div>
-                <Legislativo cargo={aba === "federais" ? 6 : 7} />
+                <div className="lg:min-h-0"><Legislativo cargo={aba === "federais" ? 6 : 7} /></div>
               </div>
             ) : null}
           </div>
@@ -442,7 +450,7 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                 </p>
               ) : null}
               <div className="order-1 lg:order-none">
-                <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} />
+                <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
               <div className="order-6 lg:order-none">
                 <Linha pontos={data?.historico ?? []} cor={cor} />
@@ -475,25 +483,14 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                       {nome}
                     </button>
                   ))}
-                  <select
-                    aria-label="Mapa de um candidato"
-                    value={modo === "candidato" && candN != null ? String(candN) : ""}
-                    onChange={(e) => {
-                      if (uf) setUf(null);
-                      if (e.target.value) {
-                        setCandN(Number(e.target.value));
-                        setModo("candidato");
-                      } else setModo("estados");
+                  <SeletorCandidato
+                    cands={data?.br?.cands ?? []}
+                    valor={modo === "candidato" ? candN : null}
+                    cor={cor}
+                    onChange={(n) => {
+                      if (n != null) escolherCand(n);
                     }}
-                    className={`h-8 rounded-lg bg-panel px-2 ${modo === "candidato" ? "text-paper ring-1 ring-white/25" : "text-mute"}`}
-                  >
-                    <option value="">Candidato…</option>
-                    {(data?.br?.cands ?? []).map((c) => (
-                      <option key={c.sq} value={c.n}>
-                        {c.nome}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <ul className="tabular ml-auto flex items-center gap-3 text-mute" aria-label="Quem lidera">
                   {legenda.map((l) => (
@@ -502,10 +499,12 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                       <span style={{ color: cor(l.n) }} className="font-semibold">
                         {l.partido}
                       </span>
-                      <strong className="text-paper">{new Intl.NumberFormat("pt-BR").format(l.qt)}</strong>
+                      <strong className="text-paper">{l.rot ?? new Intl.NumberFormat("pt-BR").format(l.qt)}</strong>
                     </li>
                   ))}
-                  <li className="hidden sm:inline">{modo === "municipios" ? "municípios" : "estados"}</li>
+                  <li className="hidden sm:inline">
+                    {modo === "vantagem" ? "de vantagem" : modo === "candidato" ? "municípios à frente" : modo === "municipios" ? "municípios" : "estados"}
+                  </li>
                 </ul>
               </div>
 
@@ -525,8 +524,15 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                       <MapaMunicipios uf={uf} cargo={1} inicial fit />
                     </div>
                   </div>
-                ) : modo === "municipios" ? (
-                  <MapaMunicipiosBR cor={cor} onSelectUf={setUf} onResumo={setResumoMun} />
+                ) : muniModo ? (
+                  <MapaMunicipiosBR
+                    cor={cor}
+                    onSelectUf={setUf}
+                    onResumo={setResumoMun}
+                    modo={modo as "municipios" | "vantagem" | "candidato"}
+                    candN={candN}
+                    sqDe={(n) => data?.br?.cands.find((c) => c.n === n)?.sq}
+                  />
                 ) : (
                   <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo as ModoMapa} candN={candN} turno={data?.turno === 1 ? 1 : 2} fit />
                 )}
@@ -538,6 +544,19 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
 
             {/* coluna direita */}
             <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
+              {modo === "candidato" && candN != null && !uf ? (
+                <div className="order-3 lg:order-none">
+                  <PainelCandidato
+                    n={candN}
+                    br={data?.br ?? null}
+                    ufs={data?.ufs ?? {}}
+                    cor={cor}
+                    turno={data?.turno === 1 ? 1 : 2}
+                    onVoltar={() => setModo("estados")}
+                    onUf={setUf}
+                  />
+                </div>
+              ) : null}
               {uf && uf !== "ZZ" ? (
                 <div className="order-3 lg:order-none">
                   <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={data?.turno === 1 ? 1 : 2} onClose={() => setUf(null)} />

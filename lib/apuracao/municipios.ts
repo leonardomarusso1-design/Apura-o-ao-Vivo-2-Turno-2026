@@ -83,7 +83,7 @@ export async function resultadoMunicipio(ele: number, cargo: 1 | 3 | 5, uf: stri
   }
 }
 
-export type ItemMapa = { cd: string; cdi?: string; nm: string; pa: number; top: { n: number; nome: string; partido: string; pct: number }[] };
+export type ItemMapa = { cd: string; cdi?: string; nm: string; pa: number; vt?: number; top: { n: number; sq?: number; nome: string; partido: string; pct: number; v?: number }[] };
 export type MapaMun = { geradoEm: string; itens: ItemMapa[] };
 const memMapa = new Map<string, MapaMun>();
 
@@ -97,7 +97,7 @@ async function umMunicipio(ele: number, cargo: 1 | 3 | 5, u: string, m: Mun): Pr
     if (!r.ok) return null;
     const a = parseArea(u + m.cd, await r.json());
     if (!a || a.cands.length === 0) return null;
-    return { cd: m.cd, cdi: m.cdi, nm: m.nm, pa: Math.round(a.pctApurado * 10) / 10, top: a.cands.slice(0, 2).map((c) => ({ n: c.n, nome: c.nome, partido: c.partido, pct: c.pct })) };
+    return { cd: m.cd, cdi: m.cdi, nm: m.nm, pa: Math.round(a.pctApurado * 10) / 10, vt: a.validos, top: a.cands.slice(0, 6).map((c) => ({ n: c.n, sq: c.sq, nome: c.nome, partido: c.partido, pct: Math.round(c.pct * 10) / 10, v: c.votos })) };
   } catch {
     return null;
   }
@@ -106,7 +106,7 @@ async function umMunicipio(ele: number, cargo: 1 | 3 | 5, u: string, m: Mun): Pr
 /** Líder de TODOS os municípios de uma UF (para o mapa municipal). Uma coleta compartilhada (lock + cache), nunca por visitante. */
 export async function mapaMunicipios(ele: number, cargo: 1 | 3 | 5, uf: string, ttlSeg: number): Promise<MapaMun | { pendente: true } | null> {
   const u = uf.toLowerCase();
-  const key = `mun:map:v1:${ele}:${cargo}:${u}`;
+  const key = `mun:map:v2:${ele}:${cargo}:${u}`;
   const c = await redis<string>(["GET", key]);
   if (typeof c === "string") {
     try {

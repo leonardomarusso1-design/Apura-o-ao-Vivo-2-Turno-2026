@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ItemMapa } from "@/lib/apuracao/municipios";
-import { fmtPct, makeCor } from "./types";
+import { fmtInt, fmtPct, makeCor } from "./types";
+import Avatar from "./Avatar";
+import ZoomBox from "./ZoomBox";
 
 type Geo = { vb: [number, number, number, number]; m: { i: string; n: string; d: string }[] };
 type Resp = { ok: boolean; pendente?: boolean; itens?: ItemMapa[] };
@@ -14,7 +16,7 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
   const [geo, setGeo] = useState<Geo | null | "falta">(null);
   const [dados, setDados] = useState<ItemMapa[] | null>(null);
   const [tent, setTent] = useState(0);
-  const [hover, setHover] = useState<{ x: number; y: number; it: ItemMapa } | null>(null);
+  const [hover, setHover] = useState<{ x: number; y: number; it: ItemMapa; d: string } | null>(null);
 
   useEffect(() => {
     setAberto(inicial);
@@ -76,7 +78,9 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
   return (
     <div className={`relative ${fit ? "flex h-full flex-col" : "mt-4"}`} onPointerLeave={() => setHover(null)}>
       <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">Municípios · {dados.length}</p>
-      <svg viewBox={geo.vb.join(" ")} className={fit ? "min-h-0 w-full flex-1" : "max-h-[70vh] w-full"} role="img" aria-label={`Mapa dos municípios de ${uf}`}>
+      <div className={fit ? "min-h-0 flex-1" : "h-[60vh] max-h-[520px]"}>
+      <ZoomBox>
+      <svg viewBox={geo.vb.join(" ")} className="h-full w-full" role="img" aria-label={`Mapa dos municípios de ${uf}`}>
         {geo.m.map((g) => {
           const it = achar(g);
           const l = it?.top[0];
@@ -89,28 +93,37 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
               fillOpacity={l ? Math.min(1, 0.45 + dif / 40) : 0.6}
               stroke="#0d1117"
               strokeWidth={0.6}
-              onPointerMove={(e) => it && e.pointerType === "mouse" && setHover({ x: e.clientX, y: e.clientY, it })}
-              onClick={(e) => it && setHover({ x: e.clientX, y: e.clientY, it })}
+              onPointerMove={(e) => it && e.pointerType === "mouse" && setHover({ x: e.clientX, y: e.clientY, it, d: g.d })}
+              onClick={(e) => it && setHover({ x: e.clientX, y: e.clientY, it, d: g.d })}
             />
           );
         })}
+        {hover ? <path d={hover.d} fill="none" stroke="#fff" strokeWidth={1.6} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none" /> : null}
       </svg>
+      </ZoomBox>
+      </div>
       {hover ? (
         <div
-          className="pointer-events-none fixed z-50 max-w-[240px] rounded-lg border border-line bg-ink/95 p-2 text-xs shadow-xl"
-          style={{ left: Math.min(hover.x + 12, (typeof window !== "undefined" ? window.innerWidth : 1000) - 250), top: hover.y + 12 }}
+          className="pointer-events-none fixed z-50 w-[250px] rounded-2xl glass-panel-elevated border border-white/10 p-3 text-xs shadow-2xl"
+          style={{ left: Math.min(hover.x + 14, (typeof window !== "undefined" ? window.innerWidth : 1000) - 262), top: Math.min(hover.y + 14, (typeof window !== "undefined" ? window.innerHeight : 800) - 190) }}
         >
-          <p className="font-semibold">{hover.it.nm}</p>
-          {hover.it.top.map((c) => (
-            <p key={c.n} className="flex items-center justify-between gap-3">
-              <span className="flex min-w-0 items-center gap-1.5">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cor(c.n) }} />
-                <span className="truncate">{c.nome}</span>
-              </span>
-              <span className="tabular">{fmtPct(c.pct, 1)}%</span>
-            </p>
-          ))}
-          <p className="text-mute">{fmtPct(hover.it.pa, 0)}% apurado</p>
+          <p className="border-b border-white/[0.06] pb-2 text-sm font-bold text-white">{hover.it.nm}</p>
+          <div className="mt-2 grid gap-2">
+            {hover.it.top.slice(0, 2).map((c) => (
+              <div key={c.n} className="flex items-center gap-2.5">
+                <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={32} />
+                <span className="min-w-0 flex-1 leading-tight">
+                  <span className="block truncate font-semibold text-paper">{c.nome}</span>
+                  <span className="text-[11px]" style={{ color: cor(c.n) }}>
+                    {c.partido}
+                    {c.v !== undefined ? <span className="text-mute"> · {fmtInt(c.v)} votos</span> : null}
+                  </span>
+                </span>
+                <strong className="tabular text-base text-white">{fmtPct(c.pct, 1)}%</strong>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] text-mute">{fmtPct(hover.it.pa, 0)}% das seções</p>
         </div>
       ) : null}
     </div>

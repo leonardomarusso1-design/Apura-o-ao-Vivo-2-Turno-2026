@@ -11,10 +11,14 @@ export default function Placar({
   br,
   cor,
   turno = 2,
+  onCand,
+  candSel = null,
 }: {
   br: Area | null;
   cor: (n: number | undefined) => string;
   turno?: 1 | 2;
+  onCand?: (n: number) => void;
+  candSel?: number | null;
 }) {
   // Ordena por votos para saber o líder
   const candsPorVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
@@ -75,7 +79,15 @@ export default function Placar({
             >
               <div className={`flex w-full min-w-0 items-center gap-2.5 ${i === 1 ? "flex-row-reverse" : ""}`}>
                 {c ? (
-                  <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
+                  <button
+                    type="button"
+                    onClick={() => onCand?.(c.n)}
+                    aria-label={`Ver o mapa de ${c.nome}`}
+                    title="Ver o mapa deste candidato"
+                    className={`shrink-0 rounded-full transition hover:scale-105 ${candSel === c.n ? "ring-2 ring-white" : ""}`}
+                  >
+                    <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
+                  </button>
                 ) : (
                   <div className="w-[46px] h-[46px] rounded-full bg-white/[0.05] animate-pulse" />
                 )}

@@ -112,146 +112,110 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
       </p>
     );
 
-  const ufsOrd = Object.entries(d.porUf).sort(([a], [b]) => a.localeCompare(b));
+  const blocosAtivos = ORDEM.filter((b) => d.blocos[b] > 0);
+  const detalhe = uf ? d.porUf[uf] : undefined;
+  const lista = uf ? d.eleitos.filter((e) => e.uf === uf) : d.eleitos;
+  const verMunicipios = Boolean(uf && cargo === 5);
   return (
-    <div className="grid gap-4">
-      <section className="glass-panel rounded-2xl p-4 sm:p-5">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">{TITULO[cargo]}</h2>
-        <p className="tabular mt-1 text-xs text-mute">
-          {d.definidas} de {d.vagas} vagas definidas
-        </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {ORDEM.filter((b) => d.blocos[b] > 0).map((b) => (
-            <div key={b} className="rounded-xl border border-line p-3" style={{ borderColor: `${COR_BLOCO[b][0]}66` }}>
-              <p className="text-[11px] uppercase tracking-wide text-mute">{ROTULO[b]}</p>
-              <p className="tabular font-display text-2xl" style={{ color: COR_BLOCO[b][0] }}>
-                {d.blocos[b]}
-              </p>
+    <div className="grid gap-3 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="glass-panel flex min-h-[420px] flex-col rounded-2xl p-3 lg:min-h-0" aria-label="Mapa">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
+            {TITULO[cargo]} <span className="tabular ml-1 font-normal normal-case tracking-normal text-mute">· {d.definidas} de {d.vagas} vagas definidas</span>
+          </h2>
+          <ul className="flex flex-wrap gap-3 text-xs text-mute">
+            {blocosAtivos.map((b) => (
+              <li key={b} className="flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
+                {ROTULO[b]} <strong className="tabular" style={{ color: COR_BLOCO[b][0] }}>{d.blocos[b]}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative min-h-[340px] flex-1 lg:min-h-0">
+          {verMunicipios ? (
+            <div className="flex h-full flex-col">
+              <div>
+                <button onClick={() => setUf(null)} className="h-8 rounded-lg border border-line px-3 text-xs hover:bg-white/5">
+                  ← Brasil
+                </button>
+              </div>
+              <div className="min-h-0 flex-1">
+                <MapaMunicipios uf={uf!} cargo={5} inicial fit />
+              </div>
             </div>
-          ))}
+          ) : (
+            <MapaBR ufs={areas} cor={corBloco} selecionada={uf} onSelect={(x) => setUf(x === uf ? null : x)} fit />
+          )}
         </div>
-        <div className="mx-auto mt-4 max-w-2xl">
-          <Hemiciclo seats={seats} />
-        </div>
-        <p className="mt-1 text-[11px] text-mute">Classificação em blocos é uma simplificação convencional, só para colorir.</p>
+        <p className="mt-1 text-[10px] text-mute">Classificação em blocos é uma simplificação convencional, só para colorir.</p>
       </section>
 
-      <section className="glass-panel rounded-2xl p-3 sm:p-5" aria-label="Mapa">
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
-          {cargo === 5 ? "Senadores eleitos por estado" : "Bloco que mais elegeu em cada estado"}
-        </h3>
-        <MapaBR ufs={areas} cor={corBloco} selecionada={uf} onSelect={(x) => setUf(x === uf ? null : x)} />
-        <ul className="mt-2 flex flex-wrap gap-3 text-xs text-mute">
-          {ORDEM.filter((b) => d.blocos[b] > 0).map((b) => (
-            <li key={b} className="flex items-center gap-1.5">
-              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[b][0] }} />
-              {ROTULO[b]}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="glass-panel rounded-2xl p-4 sm:p-5">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">Cadeiras por partido</h3>
-        <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm sm:grid-cols-3 lg:grid-cols-4">
-          {d.partidos.map((p) => (
-            <li key={p.sg} className="flex items-center justify-between gap-2 border-b border-line/50 py-1">
-              <span className="flex items-center gap-2">
-                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: COR_BLOCO[p.bloco][0] }} />
-                {p.sg}
-              </span>
-              <span className="tabular font-semibold">{p.cadeiras}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="glass-panel rounded-2xl p-4 sm:p-5">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
-          {cargo === 5 ? "Eleitos por estado" : "Resultado por estado"}
-        </h3>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {ufsOrd.map(([id, v]) => (
-            <button
-              key={id}
-              onClick={() => setUf(uf === id ? null : id)}
-              className="rounded-xl border border-line p-3 text-left transition hover:bg-white/5"
-              aria-expanded={uf === id}
-            >
-              <span className="flex items-center justify-between text-sm font-semibold">
-                <span className="flex items-center gap-2">
-                  <Bandeira uf={id} w={22} />
-                  {id}
-                </span>
-                <span className="tabular text-xs text-mute">
-                  {v.definidas}/{v.vagas}
-                </span>
-              </span>
-              <span className="mt-2 flex flex-wrap gap-2">
-                {v.top.map((e) => (
-                  <span key={e.sq || e.n + e.nome} className="flex items-center gap-1.5" title={`${e.nome} · ${fmtInt(e.votos)} votos`}>
-                    <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={30} />
-                    <span className="text-[11px] leading-tight">
-                      <span className="block max-w-[110px] truncate font-medium">{e.nome}</span>
-                      <span className="font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
-                        {e.partido}
-                      </span>
+      <aside className="flex min-h-0 flex-col gap-3 lg:overflow-y-auto lg:pr-1">
+        {uf && detalhe ? (
+          <section className="glass-panel rounded-2xl p-3" aria-label={`${TITULO[cargo]} em ${uf}`}>
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <Bandeira uf={uf} w={26} /> {uf} · {detalhe.definidas} de {detalhe.vagas} vagas
+              </h3>
+              <button onClick={() => setUf(null)} className="h-7 rounded-lg border border-line px-2.5 text-xs hover:bg-white/5">
+                Fechar
+              </button>
+            </div>
+            <ul className="mt-3 grid gap-2.5">
+              {(cargo === 5 ? lista : detalhe.top).map((e) => (
+                <li key={e.sq || e.n + e.nome} className="flex items-center gap-3">
+                  <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={44} />
+                  <span className="min-w-0 flex-1 text-sm">
+                    <span className="block truncate font-semibold">{e.nome}</span>
+                    <span className="text-xs font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
+                      {e.partido}
                     </span>
+                    <span className="tabular block text-xs text-mute">{fmtInt(e.votos)} votos</span>
                   </span>
-                ))}
-              </span>
-            </button>
-          ))}
-        </div>
-        {uf && cargo === 5 ? (
-          <div className="mt-4 rounded-xl border border-line bg-black/20 p-4" aria-label={`Senado em ${uf}`}>
-            <h4 className="flex items-center gap-2 text-sm font-semibold">
-              <Bandeira uf={uf} w={26} /> {uf} · {d.porUf[uf]?.definidas ?? 0} de {d.porUf[uf]?.vagas ?? 0} vagas
-            </h4>
-            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-              {d.eleitos
-                .filter((e) => e.uf === uf)
-                .map((e) => (
-                  <li key={e.sq || e.n} className="flex items-center gap-3">
-                    <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={52} />
-                    <span className="min-w-0 flex-1 text-sm">
-                      <span className="block truncate font-semibold">{e.nome}</span>
-                      <span className="text-xs" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
-                        {e.partido} · {e.st}
-                      </span>
-                      <span className="tabular block text-xs text-mute">
-                        {fmtInt(e.votos)} votos · {e.pct.toFixed(1).replace(".", ",")}%
-                      </span>
-                    </span>
-                  </li>
-                ))}
+                </li>
+              ))}
             </ul>
-            <MapaMunicipios uf={uf} cargo={5} />
-            <MunicipioBusca uf={uf} cargo={5} cor={(n) => COR_BLOCO[bl(d.eleitos.find((e) => e.n === n)?.partido ?? "")][0]} />
-          </div>
+            {cargo === 5 ? <MunicipioBusca uf={uf} cargo={5} cor={(n) => COR_BLOCO[bl(d.eleitos.find((e) => e.n === n)?.partido ?? "")][0]} /> : null}
+          </section>
         ) : null}
-      </section>
 
-      <section className="glass-panel rounded-2xl p-4 sm:p-5">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">
-          {cargo === 5 ? "Senadores eleitos" : "Mais votados do Brasil"}
-        </h3>
-        <ol className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
-          {(uf ? d.eleitos.filter((e) => e.uf === uf) : d.eleitos).map((e, i) => (
-            <li key={e.uf + e.n + e.nome} className="flex items-center gap-2 border-b border-line/50 py-1.5">
-              <span className="tabular w-6 text-xs text-mute">{i + 1}</span>
-              <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={28} />
-              <span className="min-w-0 flex-1 truncate">
-                {e.nome} <span className="text-[11px] text-mute">· {e.uf}</span>
-              </span>
-              <span className="text-[11px] font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
-                {e.partido}
-              </span>
-              <span className="tabular text-xs text-mute">{fmtInt(e.votos)}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+        <section className="glass-panel rounded-2xl p-3">
+          <div className="mx-auto max-w-[340px]">
+            <Hemiciclo seats={seats} />
+          </div>
+          <ul className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px]">
+            {d.partidos.slice(0, 14).map((p) => (
+              <li key={p.sg} className="flex items-center gap-1">
+                <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: COR_BLOCO[p.bloco][0] }} />
+                {p.sg} <strong className="tabular">{p.cadeiras}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="glass-panel min-h-0 rounded-2xl p-3 lg:flex-1 lg:overflow-y-auto">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-paper">
+            {cargo === 5 ? "Senadores eleitos" : "Mais votados do Brasil"}
+            {uf ? ` · ${uf}` : ""}
+          </h3>
+          <ol className="mt-2 grid gap-0.5 text-sm">
+            {lista.slice(0, 40).map((e, i) => (
+              <li key={e.uf + e.n + e.nome} className="flex items-center gap-2 border-b border-line/40 py-1">
+                <span className="tabular w-5 text-[11px] text-mute">{i + 1}</span>
+                <Avatar n={e.n} sq={e.sq} nome={e.nome} cor={COR_BLOCO[bl(e.partido)][0]} size={30} />
+                <span className="min-w-0 flex-1 truncate text-[13px]">
+                  {e.nome} <span className="text-[11px] text-mute">· {e.uf}</span>
+                </span>
+                <span className="text-[11px] font-semibold" style={{ color: COR_BLOCO[bl(e.partido)][0] }}>
+                  {e.partido}
+                </span>
+                <span className="tabular text-[11px] text-mute">{fmtInt(e.votos)}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </aside>
     </div>
   );
 }
