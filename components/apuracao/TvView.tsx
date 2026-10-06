@@ -34,18 +34,21 @@ function Hora() {
 /** Modo TV: poucos números, grandes, para telão ou TV ligada a noite toda. O mapa fica ao lado. */
 export default function TvView({
   data,
+  turno,
   cor,
   uf,
   onSelect,
   onExit,
 }: {
-  data: Payload;
+  data: Payload | null; // null = ainda sem nada do TSE (antes da eleição): mesma tela, mapa vazio
+  turno: 1 | 2;
   cor: (n: number | undefined) => string;
   uf: string | null;
   onSelect: (uf: string) => void;
   onExit: () => void;
 }) {
-  const br = data.br;
+  const br = data?.br ?? null;
+  const ufsTv = data?.ufs ?? {};
   const [autoId, setAutoId] = useState<string | null>(null);
   const [manualId, setManualId] = useState<string | null>(null);
   const [chat, setChat] = useState(true);
@@ -106,12 +109,12 @@ export default function TvView({
     }
   };
 
-  const turnoTxt = data.turno === 1 ? "1º turno" : "2º turno";
+  const turnoTxt = turno === 1 ? "1º turno" : "2º turno";
   const porVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
   const lider = porVotos[0];
   const dupla = (br?.cands.slice(0, 2) ?? []).sort((a, b) => a.n - b.n); // lados fixos, não trocam quando a liderança muda
   const dif = porVotos.length > 1 ? porVotos[0].votos - porVotos[1].votos : 0;
-  const encerrado = Boolean(br && br.pctApurado >= 99.99) || data.status === "finalizado" || data.previa;
+  const encerrado = Boolean(br && br.pctApurado >= 99.99) || data?.status === "finalizado" || Boolean(data?.previa);
   const atualizado = br?.geracao ? `Geração do TSE: ${br.geracao.slice(11)}` : "";
 
   const c = Boolean(liveId) || obs; // com live, o placar encolhe para dar lugar ao vídeo
@@ -121,11 +124,20 @@ export default function TvView({
   const placarCard = (
     <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-2 p-3" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
       <div className="text-center">
-        <p className={`tabular font-display ${tamPct} font-bold leading-none`}>
-          {br ? <Num v={br.pctApurado} d={2} /> : "0,00"}
-          <span className="ml-1 text-[0.4em] text-mute">%</span>
-        </p>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-mute sm:text-sm">das seções totalizadas</p>
+        {br ? (
+          <>
+            <p className={`tabular font-display ${tamPct} font-bold leading-none`}>
+              <Num v={br.pctApurado} d={2} />
+              <span className="ml-1 text-[0.4em] text-mute">%</span>
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-mute sm:text-sm">das seções totalizadas</p>
+          </>
+        ) : (
+          <>
+            <p className={`font-display ${tamPct} font-bold leading-none`}>Aguardando</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-mute sm:text-sm">a divulgação começa em 25/10 às 17h</p>
+          </>
+        )}
         <div className="mx-auto mt-2 h-2 max-w-xl overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full bg-lime transition-all duration-700" style={{ width: `${br?.pctApurado ?? 0}%` }} />
         </div>
@@ -263,7 +275,7 @@ export default function TvView({
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <MapaBR ufs={data.ufs} cor={cor} selecionada={ufTv} onSelect={escolherUf} tv modo={modo as ModoMapa} />
+            <MapaBR ufs={ufsTv} cor={cor} selecionada={ufTv} onSelect={escolherUf} tv modo={modo as ModoMapa} />
           </div>
         )}
       </div>
@@ -277,7 +289,9 @@ export default function TvView({
     <div className="fixed inset-0 z-50 grid h-dvh grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto bg-ink p-3 sm:p-5 lg:overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-          {encerrado ? (
+          {!br ? (
+            <span className="rounded-lg bg-amber/15 px-3 py-1 text-sm font-bold uppercase tracking-widest text-amber">Aguardando</span>
+          ) : encerrado ? (
             <span className="rounded-lg border border-line px-3 py-1 text-sm font-bold uppercase tracking-widest text-mute">Resultado</span>
           ) : (
             <span className="flex items-center gap-2 rounded-lg bg-red-500/15 px-3 py-1 text-sm font-bold uppercase tracking-widest text-red-300">
@@ -394,7 +408,7 @@ export default function TvView({
       )}
 
       <div className="grid gap-2">
-        <Ticker eventos={data.eventos} patrocinios={patro.faixas.length ? patro.faixas : FAIXA_PADRAO} />
+        <Ticker eventos={data?.eventos ?? []} patrocinios={patro.faixas.length ? patro.faixas : FAIXA_PADRAO} />
         <p className="text-center text-[11px] text-mute">
           Dados oficiais do TSE. {atualizado ? `${atualizado}. ` : ""}
           {br ? `${fmtPct(br.pctApurado, 2)}% das seções totalizadas. ` : ""}Site independente, sem vínculo com o TSE.

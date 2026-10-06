@@ -314,8 +314,8 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
     return [...m.entries()].map(([n, v]) => ({ n, ...v })).sort((a, b) => b.qt - a.qt).slice(0, 2);
   }, [data]);
   // Modo TV: o retorno antecipado fica depois de todos os hooks (senão o React quebra ao entrar na tela cheia)
-  if (tv && data?.br) {
-    return <TvView data={data} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
+  if (tv) {
+    return <TvView data={data} turno={turno} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
   }
 
   const muniModo = modo === "municipios" || modo === "vantagem" || (modo === "candidato" && candN != null);
