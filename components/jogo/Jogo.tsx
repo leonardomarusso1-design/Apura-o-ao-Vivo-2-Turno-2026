@@ -17,6 +17,20 @@ type Tiro = { x: number; y: number };
 type Part = { x: number; y: number; vx: number; vy: number; vida: number; cor: string };
 type Aviso = { t: string; x: number; y: number; vida: number };
 type Fase = "pronto" | "jogando" | "pausa" | "fim";
+type BonusKind = "rapido" | "x2" | "x3" | "escudo" | "lento" | "vida" | "limpa";
+type Bonus = { x: number; y: number; vy: number; kind: BonusKind };
+
+const BONUS: Record<BonusKind, { e: string; cor: string; txt: string; peso: number }> = {
+  rapido: { e: "⚡", cor: "#facc15", txt: "Tiro rápido!", peso: 22 },
+  x2: { e: "✌️", cor: "#38bdf8", txt: "Tiro duplo!", peso: 20 },
+  x3: { e: "🔱", cor: "#a78bfa", txt: "Tiro triplo!", peso: 12 },
+  escudo: { e: "🛡️", cor: "#22d3ee", txt: "Escudo!", peso: 20 },
+  lento: { e: "⏳", cor: "#94a3b8", txt: "Câmera lenta!", peso: 14 },
+  vida: { e: "➕", cor: "#f472b6", txt: "+1 vida!", peso: 6 },
+  limpa: { e: "💥", cor: "#f97316", txt: "Limpou a tela!", peso: 6 },
+};
+const DUR = { rapido: 8, multi: 10, escudo: 8, lento: 6 };
+const MAX_VIDAS = 5;
 
 const COR: Record<Cor, [string, string]> = { vermelho: ["#ef4444", "#fca5a5"], verde: ["#22c55e", "#86efac"] };
 
@@ -61,6 +75,9 @@ export default function Jogo() {
     let tiros: Tiro[] = [];
     let parts: Part[] = [];
     let avisos: Aviso[] = [];
+    let bonus: Bonus[] = [];
+    const ef = { rapido: 0, multi: 0, multiN: 2, escudo: 0, lento: 0 };
+    let semBonus = 0;
     let pontos = 0;
     let vidas = 3;
     let combo = 0;
@@ -74,6 +91,7 @@ export default function Jogo() {
     let raf = 0;
 
     const nivel = () => 1 + Math.floor(pontos / 120);
+    const dif = () => Math.min(nivel(), 10); // a dificuldade para de subir no nível 10 (o placar continua)
     const mult = () => (combo >= 20 ? 4 : combo >= 10 ? 3 : combo >= 5 ? 2 : 1);
 
     const explode = (x: number, y: number, cores: string[], n = 14) => {
@@ -91,6 +109,13 @@ export default function Jogo() {
       tiros = [];
       parts = [];
       avisos = [];
+      bonus = [];
+      ef.rapido = 0;
+      ef.multi = 0;
+      ef.multiN = 2;
+      ef.escudo = 0;
+      ef.lento = 0;
+      semBonus = 0;
       pontos = 0;
       vidas = 3;
       combo = 0;
@@ -120,7 +145,7 @@ export default function Jogo() {
     };
 
     const gerar = () => {
-      const n = nivel();
+      const n = dif();
       const r = Math.random();
       const kind: Obj["kind"] = r < 0.62 ? "bloco" : r < 0.8 ? "bomba" : n >= 2 ? "caixa" : "bloco";
       const big = kind === "bloco" && n >= 3 && Math.random() < 0.3;
@@ -131,12 +156,55 @@ export default function Jogo() {
         y: -h,
         w,
         h,
-        vy: 80 + n * 14 + Math.random() * 30,
+        vy: 80 + n * 11 + Math.random() * 30,
         kind,
         cor: Math.random() < 0.5 ? "vermelho" : "verde",
         hp: kind === "caixa" ? 3 : big ? 2 : 1,
         giro: (Math.random() - 0.5) * 0.4,
       });
+    };
+
+    const soltaBonus = (x: number, y: number) => {
+      if (!(Math.random() < 0.1 || semBonus > 12)) return;
+      semBonus = 0;
+      const lista = (Object.keys(BONUS) as BonusKind[]).filter((k) => k !== "vida" || vidas < MAX_VIDAS);
+      let r = Math.random() * lista.reduce((a, k) => a + BONUS[k].peso, 0);
+      let kind = lista[0];
+      for (const k of lista) {
+        r -= BONUS[k].peso;
+        if (r <= 0) {
+          kind = k;
+          break;
+        }
+      }
+      bonus.push({ x: Math.max(20, Math.min(W - 20, x)), y, vy: 95, kind });
+    };
+
+    const pegaBonus = (b: Bonus) => {
+      const info = BONUS[b.kind];
+      avisos.push({ t: `${info.e} ${info.txt}`, x: Math.max(70, Math.min(W - 70, px)), y: PY - 50, vida: 1.1 });
+      explode(b.x, b.y, [info.cor, "#ffffff"], 10);
+      if (navigator.vibrate) navigator.vibrate(15);
+      if (b.kind === "rapido") ef.rapido = DUR.rapido;
+      else if (b.kind === "x2") {
+        ef.multi = DUR.multi;
+        ef.multiN = Math.max(ef.multiN, 2);
+      } else if (b.kind === "x3") {
+        ef.multi = DUR.multi;
+        ef.multiN = 3;
+      } else if (b.kind === "escudo") ef.escudo = DUR.escudo;
+      else if (b.kind === "lento") ef.lento = DUR.lento;
+      else if (b.kind === "vida") vidas = Math.min(MAX_VIDAS, vidas + 1);
+      else {
+        for (const o of objs) {
+          if (o.hp > 0 && o.kind !== "bloco") {
+            o.hp = 0;
+            pontos += 10;
+            explode(o.x + o.w / 2, o.y + o.h / 2, ["#f97316", "#facc15", "#fef08a"], 12);
+          }
+        }
+        tremer = 0.3;
+      }
     };
 
     const passo = (dt: number) => {
@@ -149,19 +217,27 @@ export default function Jogo() {
 
       tTiro -= dt;
       if (tTiro <= 0) {
-        tiros.push({ x: px, y: PY - 26 });
-        tTiro = 0.27;
+        const xs = ef.multi > 0 ? (ef.multiN === 3 ? [-12, 0, 12] : [-7, 7]) : [0];
+        for (const d of xs) tiros.push({ x: px + d, y: PY - 26 });
+        tTiro = ef.rapido > 0 ? 0.12 : 0.27;
       }
+      ef.rapido = Math.max(0, ef.rapido - dt);
+      ef.multi = Math.max(0, ef.multi - dt);
+      ef.escudo = Math.max(0, ef.escudo - dt);
+      ef.lento = Math.max(0, ef.lento - dt);
+      if (ef.multi <= 0) ef.multiN = 2;
+      semBonus += dt;
       tSpawn -= dt;
       if (tSpawn <= 0) {
         gerar();
-        tSpawn = Math.max(0.32, 0.85 - nivel() * 0.05) * (0.8 + Math.random() * 0.4);
+        tSpawn = Math.max(0.5, 0.85 - dif() * 0.04) * (0.8 + Math.random() * 0.4);
       }
 
       for (const s of tiros) s.y -= 560 * dt;
       tiros = tiros.filter((s) => s.y > -20);
 
-      for (const o of objs) o.y += o.vy * dt;
+      const dtO = ef.lento > 0 ? dt * 0.5 : dt;
+      for (const o of objs) o.y += o.vy * dtO;
 
       // tiros x objetos
       for (const s of tiros) {
@@ -174,6 +250,7 @@ export default function Jogo() {
               explode(s.x, o.y + o.h / 2, [COR[o.cor][0], COR[o.cor][1]], o.hp <= 0 ? 12 : 4);
               if (o.hp <= 0) {
                 combo++;
+                soltaBonus(o.x + o.w / 2, o.y + o.h / 2);
                 const ganho = (o.w > 44 ? 20 : 10) * mult();
                 pontos += ganho;
                 avisos.push({ t: `+${ganho}`, x: o.x + o.w / 2, y: o.y, vida: 0.7 });
@@ -201,6 +278,13 @@ export default function Jogo() {
       for (const o of objs) {
         if (o.hp <= 0) continue;
         const bate = o.x < px + PX / 2 && o.x + o.w > px - PX / 2 && o.y + o.h > PY - 22 && o.y < PY + 24;
+        if (bate && o.kind !== "bloco" && ef.escudo > 0) {
+          o.hp = 0;
+          pontos += 5;
+          avisos.push({ t: "+5", x: o.x + o.w / 2, y: o.y, vida: 0.6 });
+          explode(o.x + o.w / 2, o.y + o.h / 2, ["#22d3ee", "#a5f3fc"], 12);
+          continue;
+        }
         if (bate && o.kind !== "bloco" && imune <= 0) {
           o.hp = 0;
           vidas--;
@@ -217,6 +301,15 @@ export default function Jogo() {
         if (o.kind === "bloco" && o.hp > 0 && o.y > H) combo = 0; // bloco que passou
       }
       objs = objs.filter((o) => o.hp > 0 && o.y < H + 10);
+
+      for (const b of bonus) {
+        b.y += b.vy * dt;
+        if (Math.abs(b.x - px) < PX / 2 + 14 && b.y > PY - 40 && b.y < PY + 28) {
+          pegaBonus(b);
+          b.y = H + 100;
+        }
+      }
+      bonus = bonus.filter((b) => b.y < H + 20);
 
       // estrelas a cada PTS_ESTRELA pontos
       const novas = Math.floor(pontos / PTS_ESTRELA);
@@ -327,6 +420,15 @@ export default function Jogo() {
       if (imune > 0 && Math.floor(t * 14) % 2 === 0) return; // pisca quando imune
       c.save();
       c.translate(px, PY);
+      if (ef.escudo > 0 && (ef.escudo > 2 || Math.floor(t * 10) % 2 === 0)) {
+        c.beginPath();
+        c.arc(0, -4, 32, 0, Math.PI * 2);
+        c.fillStyle = "rgba(34,211,238,0.14)";
+        c.fill();
+        c.lineWidth = 3;
+        c.strokeStyle = "rgba(34,211,238,0.85)";
+        c.stroke();
+      }
       c.fillStyle = "#38bdf8"; // corpo
       rr(c, -12, -6, 24, 28, 7);
       c.fill();
@@ -358,6 +460,28 @@ export default function Jogo() {
       if (tremer > 0) c.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
       desenhaFundo();
       for (const o of objs) desenhaObj(o);
+      for (const b of bonus) {
+        const info = BONUS[b.kind];
+        const r = 15 + Math.sin(t * 8) * 1.5;
+        c.beginPath();
+        c.arc(b.x, b.y, r + 5, 0, Math.PI * 2);
+        c.fillStyle = info.cor;
+        c.globalAlpha = 0.25;
+        c.fill();
+        c.globalAlpha = 1;
+        c.beginPath();
+        c.arc(b.x, b.y, r, 0, Math.PI * 2);
+        c.fillStyle = "#0f172a";
+        c.fill();
+        c.lineWidth = 3;
+        c.strokeStyle = info.cor;
+        c.stroke();
+        c.font = "16px system-ui";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillStyle = "#fff";
+        c.fillText(info.e, b.x, b.y + 1);
+      }
       c.fillStyle = "#fde047";
       for (const s of tiros) {
         c.beginPath();
@@ -394,6 +518,22 @@ export default function Jogo() {
         c.fillStyle = "#fde047";
         c.fillText(`combo ${combo}  x${mult()}`, 14, 66);
       }
+      const ativos: [string, number, number, string][] = [];
+      if (ef.rapido > 0) ativos.push(["⚡", ef.rapido, DUR.rapido, "#facc15"]);
+      if (ef.multi > 0) ativos.push([ef.multiN === 3 ? "🔱" : "✌️", ef.multi, DUR.multi, "#a78bfa"]);
+      if (ef.escudo > 0) ativos.push(["🛡️", ef.escudo, DUR.escudo, "#22d3ee"]);
+      if (ef.lento > 0) ativos.push(["⏳", ef.lento, DUR.lento, "#94a3b8"]);
+      ativos.forEach(([e, rest, tot, cor], i) => {
+        const x = 14 + i * 40;
+        c.textAlign = "left";
+        c.font = "16px system-ui";
+        c.fillStyle = "#fff";
+        c.fillText(e, x, 92);
+        c.fillStyle = "rgba(255,255,255,0.15)";
+        c.fillRect(x, 98, 30, 4);
+        c.fillStyle = cor;
+        c.fillRect(x, 98, 30 * (rest / tot), 4);
+      });
       c.textAlign = "center";
       c.font = "16px system-ui";
       c.fillStyle = "#fde047";
@@ -403,7 +543,7 @@ export default function Jogo() {
       c.fillText("❤️".repeat(Math.max(0, vidas)) || "💔", W - 12, 30);
     };
 
-    const sobreposto = (linhas: string[], sub: string) => {
+    const sobreposto = (linhas: string[], sub: string, dica = "") => {
       c.fillStyle = "rgba(2,6,23,0.72)";
       c.fillRect(0, 0, W, H);
       c.textAlign = "center";
@@ -414,6 +554,11 @@ export default function Jogo() {
       c.font = "15px system-ui";
       c.fillStyle = "#cbd5e1";
       c.fillText(sub, W / 2, H / 2 + 50 + (linhas.length - 1) * 30);
+      if (dica) {
+        c.font = "13px system-ui";
+        c.fillStyle = "#94a3b8";
+        c.fillText(dica, W / 2, H / 2 + 80 + (linhas.length - 1) * 30);
+      }
     };
 
     const quadro = (agora: number) => {
@@ -423,7 +568,7 @@ export default function Jogo() {
       if (f === "jogando") passo(dt);
       else t += dt * 0.3;
       desenha();
-      if (f === "pronto") sobreposto(["Atire nos blocos", "e desvie das bombas"], melhor ? `Recorde: ${melhor} · toque para jogar` : "Toque para jogar");
+      if (f === "pronto") sobreposto(["Atire nos blocos", "e desvie das bombas"], melhor ? `Recorde: ${melhor} · toque para jogar` : "Toque para jogar", "Pegue os bônus: ⚡ 🛡️ ✌️ 🔱 ⏳ 💥");
       else if (f === "pausa") sobreposto(["Pausado"], "Toque para continuar");
       else if (f === "fim") sobreposto(["Fim de jogo", `${pontos} pontos`], `⭐ ${estrelas} · recorde ${melhor}`);
       raf = requestAnimationFrame(quadro);

@@ -67,6 +67,7 @@ export async function POST(req: Request) {
         text: c.text,
         headers: {
           "List-Unsubscribe": `<${c.unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
       };
     });
