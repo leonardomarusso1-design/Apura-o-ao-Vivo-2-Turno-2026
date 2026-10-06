@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import FundoRede from "@/components/FundoRede";
 import JsonLdScript from "@/components/JsonLdScript";
+import Analytics from "@/components/Analytics";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 import { DESCRICAO_SITE, grafoSite } from "@/lib/seo";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLdScript dados={grafoSite()} />
         <FundoRede />
         {children}
+        <Analytics />
       </body>
     </html>
   );

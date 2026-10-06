@@ -2,19 +2,26 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// 'unsafe-inline' em script continua porque o Next injeta scripts inline e o nonce obrigaria a renderizar toda página
-// de forma dinâmica (sem cache de CDN). O risco fica baixo porque o site não renderiza HTML de usuário.
+// Ambientes: preview da Vercel libera a barra de comentários; Analytics/Tag Manager só entram na CSP se houver ID configurado.
 const isPreview = process.env.VERCEL_ENV === "preview";
 const vercelLive = isPreview ? " https://vercel.live" : "";
+const usaGoogle = Boolean(process.env.NEXT_PUBLIC_GA_ID || process.env.NEXT_PUBLIC_GTM_ID);
+const gScript = usaGoogle ? " https://www.googletagmanager.com" : "";
+const gConnect = usaGoogle
+  ? " https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net"
+  : "";
+const gImg = usaGoogle ? " https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com" : "";
 
+// 'unsafe-inline' em script continua porque o Next injeta scripts inline e o nonce obrigaria a renderizar toda página
+// de forma dinâmica (sem cache de CDN). O risco fica baixo porque o site não renderiza HTML de usuário.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com${vercelLive}`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com${gScript}${vercelLive}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${vercelLive}`,
+  `img-src 'self' data: blob:${gImg}${vercelLive}`,
   "font-src 'self' data:",
-  `connect-src 'self'${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
-  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com${vercelLive}`,
+  `connect-src 'self'${gConnect}${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
+  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com${vercelLive}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -22,13 +29,35 @@ const csp = [
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
+// Domínio principal (de NEXT_PUBLIC_SITE_URL). Só redireciona o endereço antigo quando o principal NÃO é vercel.app nem localhost.
+function hostPrincipal(): string | null {
+  try {
+    const h = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "").hostname;
+    return h && h !== "localhost" && !h.endsWith(".vercel.app") ? h : null;
+  } catch {
+    return null;
+  }
+}
+const ANTIGOS = (process.env.LEGACY_HOSTS ?? "apuracaoaovivo2026.vercel.app")
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean);
+
 const config: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  async redirects() {
+    const principal = hostPrincipal();
+    if (!principal || process.env.VERCEL_ENV !== "production") return [];
+    return ANTIGOS.filter((h) => h !== principal).map((h) => ({
+      source: "/:path*",
+      has: [{ type: "host" as const, value: h }],
+      destination: `https://${principal}/:path*`,
+      permanent: true,
+    }));
+  },
   async rewrites() {
-    return [
-      { source: "/.well-known/security.txt", destination: "/security.txt" },
-    ];
+    return [{ source: "/.well-known/security.txt", destination: "/security.txt" }];
   },
   async headers() {
     return [

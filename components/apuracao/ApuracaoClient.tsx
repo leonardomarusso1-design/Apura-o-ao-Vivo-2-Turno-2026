@@ -25,6 +25,7 @@ import type { ResumoMun } from "./MapaMunicipiosBR";
 import Linha from "./Linha";
 
 import Credito from "../Credito";
+import { track } from "@/lib/track";
 import { SITE_URL, ELECTION_ISO } from "@/lib/env";
 import { marcarInscrito } from "@/lib/inscrito";
 
@@ -434,14 +435,14 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             Exterior
           </button>
           {pixAtivo ? (
-            <button onClick={() => setApoie(true)} className={`${btnTopo} !border-lime/60 text-lime`}>
+            <button onClick={() => { track("apoie_abrir"); setApoie(true); }} className={`${btnTopo} !border-lime/60 text-lime`}>
               Apoie
             </button>
           ) : null}
-          <button onClick={compartilhar} className={btnTopo}>
+          <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnTopo}>
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
-          <button onClick={entrarTv} className={btnTopo}>
+          <button onClick={() => { track("modo_tv", { turno }); void entrarTv(); }} className={btnTopo}>
             Tela cheia
           </button>
         </div>

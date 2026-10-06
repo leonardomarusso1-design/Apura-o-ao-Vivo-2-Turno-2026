@@ -23,6 +23,13 @@ export default function Privacidade() {
       <p className="mt-3">
         Usamos métricas agregadas e anônimas de acesso (quantidade de pessoas online) para exibir audiência.
       </p>
+      {process.env.NEXT_PUBLIC_GA_ID || process.env.NEXT_PUBLIC_GTM_ID ? (
+        <p className="mt-3">
+          Também usamos o Google Analytics para medir o uso do site (páginas vistas, aparelho, cidade aproximada e cliques em botões). O Google pode gravar
+          cookies para isso. Anúncios e personalização ficam desligados, e esses dados não são ligados ao seu e-mail ou WhatsApp. Você pode bloquear esses
+          cookies no navegador.
+        </p>
+      ) : null}
       <p className="mt-6">
         <a href="/" className="underline">
           Voltar
