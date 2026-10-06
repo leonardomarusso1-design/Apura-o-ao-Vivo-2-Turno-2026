@@ -53,7 +53,7 @@ const PERGUNTAS: { q: string; a: string }[] = [
   },
   {
     q: "O que é o Mural?",
-    a: "Um espaço com reações em emoji e um palpite sobre a hora em que a apuração chega a 90%. Cada pessoa tem uma reação e um palpite. O Mural não pergunta nem mostra intenção de voto em candidato.",
+    a: "Um espaço com dois corações (verde e vermelho) e uma pergunta sobre onde você está assistindo: TV, celular ou computador. Cada pessoa tem um coração e uma resposta. O site soma os corações e não divulga o resultado por cor. O Mural não pergunta nem mostra intenção de voto em candidato.",
   },
   {
     q: "O site guarda em quem eu votei?",

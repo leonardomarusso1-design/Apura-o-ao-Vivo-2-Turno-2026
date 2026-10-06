@@ -496,6 +496,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                     Ver o 1º turno
                   </a>
                 ) : null}
+                {turno === 2 ? (
+                  <a href="/jogo" className="inline-flex h-9 items-center rounded-lg border border-line px-3 text-xs font-semibold text-paper hover:bg-white/5">
+                    🎮 Jogar enquanto espera
+                  </a>
+                ) : null}
               </div>
             ) : null}
           <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">

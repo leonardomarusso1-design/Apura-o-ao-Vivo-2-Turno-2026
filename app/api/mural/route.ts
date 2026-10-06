@@ -7,11 +7,15 @@ import { forbidden, readJson, sameOrigin } from "@/lib/security";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Mural sem texto livre: reações em emoji e um palpite sobre o ANDAMENTO da apuração (não sobre candidato). */
-const REACOES = ["aplauso", "uau", "triste", "fogo"] as const;
-const FAIXAS = ["f1", "f2", "f3", "f4", "f5", "f6"] as const;
-const K_R = "mural:reacoes:v1";
-const K_P = "mural:palpite:v1";
+/**
+ * Mural sem texto livre: dois corações (verde e vermelho) e uma pergunta sobre ONDE a pessoa assiste.
+ * Os corações são guardados por cor, mas a API só devolve o TOTAL: o site não divulga resultado por cor,
+ * para não funcionar como pesquisa eleitoral (que exige registro no TSE).
+ */
+const REACOES = ["verde", "vermelho"] as const;
+const FAIXAS = ["tv", "cel", "pc"] as const;
+const K_R = "mural:coracoes:v1";
+const K_P = "mural:onde:v1";
 
 const mem = { r: {} as Record<string, number>, p: {} as Record<string, number>, quem: new Set<string>(), minha: new Map<string, string>() };
 
@@ -26,7 +30,7 @@ async function ler() {
   const R = r === null ? mem.r : parse(r);
   const P = p === null ? mem.p : parse(p);
   return {
-    reacoes: Object.fromEntries(REACOES.map((k) => [k, R[k] ?? 0])),
+    reacoes: { total: REACOES.reduce((soma, k) => soma + Math.max(0, R[k] ?? 0), 0) },
     palpites: Object.fromEntries(FAIXAS.map((k) => [k, P[k] ?? 0])),
   };
 }
@@ -45,7 +49,7 @@ export async function POST(req: Request) {
   const cid = typeof b.cid === "string" && /^[a-z0-9-]{12,40}$/.test(b.cid) ? b.cid : null;
   if (b.tipo === "reacao" && REACOES.includes(b.k as (typeof REACOES)[number])) {
     // uma reação por pessoa (id do navegador, ou a rede como alternativa): trocar move o voto, repetir a mesma tira
-    const id = `mural:r:${cid ?? quem}`;
+    const id = `mural:c:${cid ?? quem}`;
     const k = b.k!;
     let prev = await redis<string>(["GET", id]);
     if (prev === null && !process.env.UPSTASH_REDIS_REST_URL) prev = mem.minha.get(id) ?? null;
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
     }
   } else if (b.tipo === "palpite" && FAIXAS.includes(b.k as (typeof FAIXAS)[number])) {
     // um palpite por pessoa (aproximado por rede/IP: o navegador também guarda a marca)
-    const got = await redis<string>(["SET", `mural:quem:${quem}`, "1", "NX", "EX", 60 * 60 * 24 * 7]);
+    const got = await redis<string>(["SET", `mural:onde:quem:${quem}`, "1", "NX", "EX", 60 * 60 * 24 * 7]);
     const ja = got === null ? mem.quem.has(quem) : got !== "OK";
     if (ja) return NextResponse.json({ ok: false, erro: "ja-votou", ...(await ler()) });
     if (got === null) mem.quem.add(quem);
