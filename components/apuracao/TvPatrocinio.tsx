@@ -55,7 +55,7 @@ export function BannerTv({ p, fill = false, slim = false }: { p: Patro; fill?: b
   return (
     <div
       className={`flex items-center justify-center overflow-hidden rounded-3xl border border-line bg-panel ${
-        fill ? "min-h-[72px] max-h-[200px] flex-1" : slim ? "h-[clamp(60px,8vh,84px)] shrink-0" : "h-[clamp(72px,11vh,130px)] shrink-0"
+        fill ? "min-h-[72px] max-h-[200px] flex-1" : slim ? "h-[clamp(48px,6vh,64px)] shrink-0" : "h-[clamp(72px,11vh,130px)] shrink-0"
       }`}
       aria-label="Publicidade"
     >

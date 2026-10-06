@@ -118,11 +118,11 @@ export default function TvView({
   const atualizado = br?.geracao ? `Geração do TSE: ${br.geracao.slice(11)}` : "";
 
   const c = Boolean(liveId) || obs; // com live, o placar encolhe para dar lugar ao vídeo
-  const tamPct = c ? "text-[clamp(2rem,3.4vw,3.2rem)]" : "text-[clamp(3rem,9vw,8rem)]";
-  const tamCand = c ? "text-[clamp(1.6rem,2.6vw,2.6rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
+  const tamPct = c ? "text-[clamp(1.8rem,2.8vw,2.6rem)]" : "text-[clamp(3rem,9vw,8rem)]";
+  const tamCand = c ? "text-[clamp(1.4rem,2.1vw,2.1rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
   const placarCard = (
-    <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-2 p-3" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
+    <section className={`flex min-h-0 ${c ? "flex-none" : "flex-1"} flex-col justify-center rounded-3xl border border-line bg-panel ${c ? "gap-1.5 p-2.5" : "gap-5 p-5 sm:p-8"}`} aria-label="Placar">
       <div className="text-center">
         {br ? (
           <>
@@ -138,7 +138,7 @@ export default function TvView({
             <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-mute sm:text-sm">a divulgação começa em 25/10 às 17h</p>
           </>
         )}
-        <div className="mx-auto mt-2 h-2 max-w-xl overflow-hidden rounded-full bg-white/10">
+        <div className="mx-auto mt-1.5 h-1.5 max-w-xl overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full bg-lime transition-all duration-700" style={{ width: `${br?.pctApurado ?? 0}%` }} />
         </div>
       </div>
@@ -146,8 +146,8 @@ export default function TvView({
       <div className="grid grid-cols-2 gap-3">
         {dupla.map((k, i) => (
           <div key={k.sq} className={`flex min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end text-right" : "items-start text-left"}`}>
-            <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 40 : 72} eager />
-            <p className={`w-full truncate font-semibold uppercase tracking-wide ${c ? "text-sm sm:text-base" : "text-lg sm:text-2xl"}`} style={{ color: cor(k.n) }}>
+            <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 32 : 72} eager />
+            <p className={`w-full truncate font-semibold uppercase tracking-wide ${c ? "text-xs sm:text-sm" : "text-lg sm:text-2xl"}`} style={{ color: cor(k.n) }}>
               {k.nome}
               {lider && k.n === lider.n && k.votos > 0 ? <span className="ml-2 align-middle text-[10px] text-mute">LÍDER</span> : null}
             </p>
@@ -155,7 +155,7 @@ export default function TvView({
               <Num v={k.pct} d={2} />
               <span className="text-[0.4em] text-mute">%</span>
             </p>
-            <p className={`tabular text-mute ${c ? "text-sm" : "text-base sm:text-xl"}`}>
+            <p className={`tabular text-mute ${c ? "text-xs" : "text-base sm:text-xl"}`}>
               <Num v={k.votos} d={0} /> votos
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function TvView({
       </div>
 
       {dupla.length === 2 ? (
-        <div className="flex h-3 w-full overflow-hidden rounded-full bg-black/40" aria-hidden>
+        <div className={`flex w-full overflow-hidden rounded-full bg-black/40 ${c ? "h-2" : "h-3"}`} aria-hidden>
           {dupla.map((k) => (
             <div key={k.sq} className="h-full transition-all duration-700" style={{ width: `${k.pct}%`, background: cor(k.n) }} />
           ))}
@@ -171,7 +171,7 @@ export default function TvView({
       ) : null}
 
       {dif > 0 ? (
-        <p className={`tabular text-center ${c ? "text-base" : "text-lg sm:text-2xl"}`}>
+        <p className={`tabular text-center ${c ? "text-sm" : "text-lg sm:text-2xl"}`}>
           <span className="text-mute">Diferença </span>
           <strong>{fmtInt(dif)}</strong>
           <span className="text-mute"> votos</span>
@@ -386,9 +386,9 @@ export default function TvView({
             ) : null}
             <BannerTv p={patro} fill={!obs && !(chat && host && Boolean(liveId))} slim />
             {obs ? (
-              <div className="hidden min-h-[160px] flex-1 lg:block" aria-hidden />
+              <div className="hidden min-h-[200px] flex-1 lg:block" aria-hidden />
             ) : chat && host && liveId ? (
-              <div className="hidden min-h-[160px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
+              <div className="hidden min-h-[200px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                 <iframe
                   src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
                   title="Chat da live"
