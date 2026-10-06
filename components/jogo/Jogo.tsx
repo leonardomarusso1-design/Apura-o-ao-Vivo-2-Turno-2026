@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SITE_URL } from "@/lib/env";
+import { erroNome } from "@/lib/jogo";
+import { ativarAudio, setMudo, tocar } from "@/lib/jogo-som";
 
 /** Joguinho da espera: atire nos blocos, desvie de bombas e caixas. Canvas puro, sem som, sem bibliotecas. */
 const W = 360;
@@ -9,6 +11,9 @@ const H = 640;
 const PX = 28; // largura do bonequinho
 const PY = H - 78;
 const LS_BEST = "apuracao:jogo:melhor";
+const LS_NOME = "apuracao:jogo:nome";
+const LS_TK = "apuracao:jogo:tk";
+const LS_SOM = "apuracao:jogo:som";
 const PTS_ESTRELA = 150;
 
 type Cor = "vermelho" | "verde";
@@ -16,6 +21,24 @@ type Obj = { x: number; y: number; w: number; h: number; vy: number; kind: "bloc
 type Tiro = { x: number; y: number };
 type Part = { x: number; y: number; vx: number; vy: number; vida: number; cor: string };
 type Aviso = { t: string; x: number; y: number; vida: number };
+type Linha = { n: string; p: number };
+type Resp = { status: number; j: { ok?: boolean; msg?: string; erro?: string; melhor?: number; rank?: number | null; top?: Linha[] } };
+
+async function api(body: Record<string, unknown>): Promise<Resp> {
+  try {
+    const r = await fetch("/api/jogo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return { status: r.status, j: (await r.json().catch(() => ({}))) as Resp["j"] };
+  } catch {
+    return { status: 0, j: { ok: false, msg: "Sem conexão. Tente de novo." } };
+  }
+}
+
+const novoTk = () => {
+  const a = new Uint8Array(16);
+  crypto.getRandomValues(a);
+  return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+};
+
 type Fase = "pronto" | "jogando" | "pausa" | "fim";
 type BonusKind = "rapido" | "x2" | "x3" | "escudo" | "lento" | "vida" | "limpa";
 type Bonus = { x: number; y: number; vy: number; kind: BonusKind };
@@ -52,6 +75,148 @@ export default function Jogo() {
   const [fim, setFim] = useState<{ pontos: number; estrelas: number; melhor: number } | null>(null);
   const [copiado, setCopiado] = useState(false);
   const iniciar = useRef<() => void>(() => {});
+  const nomeRef = useRef<string | null>(null);
+  const tkRef = useRef("");
+  const semRanking = useRef(false);
+  const abrirNome = useRef<() => void>(() => {});
+  const aoIniciar = useRef<() => void>(() => {});
+  const aoTerminar = useRef<(p: number) => void>(() => {});
+  const [nome, setNome] = useState<string | null>(null);
+  const [pedirNome, setPedirNome] = useState(false);
+  const [campo, setCampo] = useState("");
+  const [erroEntrada, setErroEntrada] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [top, setTop] = useState<Linha[] | null>(null);
+  const [meu, setMeu] = useState<{ melhor: number; rank: number | null } | null>(null);
+  const [somOn, setSomOn] = useState(true);
+  abrirNome.current = () => setPedirNome(true);
+
+  // ranking: lê agora e a cada 8 s (com a aba visível)
+  useEffect(() => {
+    let vivo = true;
+    let t: ReturnType<typeof setTimeout>;
+    const ler = async () => {
+      try {
+        if (!document.hidden) {
+          const r = await fetch("/api/jogo");
+          if (r.ok && vivo) setTop(((await r.json()) as { top: Linha[] }).top);
+        }
+      } catch {
+        /* mantém */
+      }
+      if (vivo) t = setTimeout(ler, 8000);
+    };
+    void ler();
+    return () => {
+      vivo = false;
+      clearTimeout(t);
+    };
+  }, []);
+
+  // usuário e som guardados neste aparelho
+  useEffect(() => {
+    try {
+      const n = localStorage.getItem(LS_NOME);
+      let tk = localStorage.getItem(LS_TK);
+      if (!tk) {
+        tk = novoTk();
+        localStorage.setItem(LS_TK, tk);
+      }
+      tkRef.current = tk;
+      const m = localStorage.getItem(LS_SOM) !== "0";
+      setSomOn(m);
+      setMudo(!m);
+      if (n) {
+        nomeRef.current = n;
+        setNome(n);
+        void api({ acao: "entrar", nome: n, tk }).then((r) => {
+          if (r.j.ok) setMeu({ melhor: r.j.melhor ?? 0, rank: r.j.rank ?? null });
+          else if (r.status === 409 || r.status === 400 || r.status === 403) {
+            nomeRef.current = null;
+            setNome(null);
+            try {
+              localStorage.removeItem(LS_NOME);
+            } catch {
+              /* ignora */
+            }
+          }
+        });
+      }
+    } catch {
+      /* sem armazenamento: joga sem ranking */
+    }
+  }, []);
+
+  aoIniciar.current = () => {
+    if (nomeRef.current) void api({ acao: "inicio", nome: nomeRef.current, tk: tkRef.current });
+  };
+  aoTerminar.current = (pontos: number) => {
+    if (!nomeRef.current || pontos < 1) return;
+    void api({ acao: "pontos", nome: nomeRef.current, tk: tkRef.current, pontos }).then((r) => {
+      if (r.j.ok) {
+        setMeu({ melhor: r.j.melhor ?? 0, rank: r.j.rank ?? null });
+        if (r.j.top) setTop(r.j.top);
+      }
+    });
+  };
+
+  const entrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = campo.trim();
+    const msg = erroNome(n);
+    if (msg) {
+      setErroEntrada(msg);
+      return;
+    }
+    setEnviando(true);
+    setErroEntrada("");
+    const r = await api({ acao: "entrar", nome: n, tk: tkRef.current });
+    setEnviando(false);
+    if (!r.j.ok) {
+      setErroEntrada(r.j.msg ?? "Não foi possível entrar.");
+      return;
+    }
+    nomeRef.current = n;
+    setNome(n);
+    setMeu({ melhor: r.j.melhor ?? 0, rank: r.j.rank ?? null });
+    try {
+      localStorage.setItem(LS_NOME, n);
+    } catch {
+      /* ignora */
+    }
+    setPedirNome(false);
+    iniciar.current();
+  };
+
+  const semNome = () => {
+    semRanking.current = true;
+    setPedirNome(false);
+    iniciar.current();
+  };
+
+  const trocarNome = () => {
+    nomeRef.current = null;
+    semRanking.current = false;
+    setNome(null);
+    setMeu(null);
+    try {
+      localStorage.removeItem(LS_NOME);
+    } catch {
+      /* ignora */
+    }
+  };
+
+  const alternaSom = () => {
+    const m = !somOn;
+    setSomOn(m);
+    setMudo(!m);
+    ativarAudio();
+    try {
+      localStorage.setItem(LS_SOM, m ? "1" : "0");
+    } catch {
+      /* ignora */
+    }
+  };
 
   useEffect(() => {
     const canvas = cv.current;
@@ -126,10 +291,20 @@ export default function Jogo() {
       tremer = 0;
       t = 0;
       fase.current = "jogando";
+      tocar("inicio");
+      aoIniciar.current();
       setFim(null);
       setCopiado(false);
     };
-    iniciar.current = novo;
+    const tentarIniciar = () => {
+      ativarAudio();
+      if (!nomeRef.current && !semRanking.current) {
+        abrirNome.current();
+        return;
+      }
+      novo();
+    };
+    iniciar.current = tentarIniciar;
 
     const terminar = () => {
       fase.current = "fim";
@@ -141,6 +316,8 @@ export default function Jogo() {
           /* ignora */
         }
       }
+      tocar("fim");
+      aoTerminar.current(pontos);
       setFim({ pontos, estrelas, melhor });
     };
 
@@ -183,6 +360,7 @@ export default function Jogo() {
     const pegaBonus = (b: Bonus) => {
       const info = BONUS[b.kind];
       avisos.push({ t: `${info.e} ${info.txt}`, x: Math.max(70, Math.min(W - 70, px)), y: PY - 50, vida: 1.1 });
+      tocar(b.kind === "limpa" ? "bomba" : "bonus");
       explode(b.x, b.y, [info.cor, "#ffffff"], 10);
       if (navigator.vibrate) navigator.vibrate(15);
       if (b.kind === "rapido") ef.rapido = DUR.rapido;
@@ -219,6 +397,7 @@ export default function Jogo() {
       if (tTiro <= 0) {
         const xs = ef.multi > 0 ? (ef.multiN === 3 ? [-12, 0, 12] : [-7, 7]) : [0];
         for (const d of xs) tiros.push({ x: px + d, y: PY - 26 });
+        tocar("tiro");
         tTiro = ef.rapido > 0 ? 0.12 : 0.27;
       }
       ef.rapido = Math.max(0, ef.rapido - dt);
@@ -248,8 +427,10 @@ export default function Jogo() {
             if (o.kind === "bloco") {
               o.hp--;
               explode(s.x, o.y + o.h / 2, [COR[o.cor][0], COR[o.cor][1]], o.hp <= 0 ? 12 : 4);
+              if (o.hp > 0) tocar("tick");
               if (o.hp <= 0) {
                 combo++;
+                tocar("pop", combo);
                 soltaBonus(o.x + o.w / 2, o.y + o.h / 2);
                 const ganho = (o.w > 44 ? 20 : 10) * mult();
                 pontos += ganho;
@@ -258,12 +439,15 @@ export default function Jogo() {
               }
             } else if (o.kind === "bomba") {
               o.hp = 0;
+              tocar("bomba");
               explode(o.x + o.w / 2, o.y + o.h / 2, ["#f97316", "#facc15", "#fef08a"], 18);
               tremer = 0.15;
             } else {
               o.hp--;
               explode(s.x, o.y + o.h / 2, ["#a16207", "#ca8a04"], 5);
+              if (o.hp > 0) tocar("tick");
               if (o.hp <= 0) {
+                tocar("caixa");
                 pontos += 5;
                 avisos.push({ t: "+5", x: o.x + o.w / 2, y: o.y, vida: 0.6 });
               }
@@ -282,12 +466,14 @@ export default function Jogo() {
           o.hp = 0;
           pontos += 5;
           avisos.push({ t: "+5", x: o.x + o.w / 2, y: o.y, vida: 0.6 });
+          tocar("escudo");
           explode(o.x + o.w / 2, o.y + o.h / 2, ["#22d3ee", "#a5f3fc"], 12);
           continue;
         }
         if (bate && o.kind !== "bloco" && imune <= 0) {
           o.hp = 0;
           vidas--;
+          tocar("dano");
           combo = 0;
           imune = 1.3;
           tremer = 0.3;
@@ -315,6 +501,7 @@ export default function Jogo() {
       const novas = Math.floor(pontos / PTS_ESTRELA);
       if (novas > estrelas) {
         estrelas = novas;
+        tocar("estrela");
         avisos.push({ t: "⭐ +1 estrela", x: W / 2, y: H / 2 - 40, vida: 1.2 });
       }
 
@@ -586,7 +773,8 @@ export default function Jogo() {
     const aoApertar = (e: PointerEvent) => {
       canvas.setPointerCapture?.(e.pointerId);
       mover(e.clientX);
-      if (fase.current === "pronto") novo();
+      ativarAudio();
+      if (fase.current === "pronto") tentarIniciar();
       else if (fase.current === "pausa") fase.current = "jogando";
     };
     const aoMover = (e: PointerEvent) => {
@@ -596,7 +784,7 @@ export default function Jogo() {
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") teclas.current.e = v;
       else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") teclas.current.d = v;
       else if (v && (e.key === " " || e.key === "Enter")) {
-        if (fase.current === "pronto" || fase.current === "fim") novo();
+        if (fase.current === "pronto" || fase.current === "fim") tentarIniciar();
         else if (fase.current === "pausa") fase.current = "jogando";
       } else if (v && (e.key === "Escape" || e.key === "p" || e.key === "P")) {
         if (fase.current === "jogando") fase.current = "pausa";
@@ -639,27 +827,119 @@ export default function Jogo() {
     }
   }, [fim]);
 
+  const meuNome = nome?.toLowerCase();
   return (
-    <div className="flex w-full flex-col items-center gap-3">
-      <div className="w-full overflow-hidden rounded-2xl border border-line bg-panel" style={{ maxWidth: "min(100%, calc(78dvh * 9 / 16))" }}>
-        <canvas
-          ref={cv}
-          role="img"
-          aria-label="Jogo: mova o personagem e atire nos blocos vermelhos e verdes, desviando de bombas e caixas"
-          className="block h-auto w-full select-none"
-          style={{ aspectRatio: `${W} / ${H}`, touchAction: "none" }}
-        />
-      </div>
-      {fim ? (
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <button type="button" onClick={() => iniciar.current()} className="h-11 rounded-xl bg-lime px-5 font-semibold text-ink">
-            Jogar de novo
-          </button>
-          <button type="button" onClick={() => void compartilhar()} className="h-11 rounded-xl border border-line px-5 text-paper">
-            {copiado ? "Link copiado ✓" : "Compartilhar pontuação"}
+    <div className="flex w-full flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-center">
+      <div className="flex w-full flex-col items-center gap-3" style={{ maxWidth: "min(100%, calc(78dvh * 9 / 16))" }}>
+        <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-panel">
+          <canvas
+            ref={cv}
+            role="img"
+            aria-label="Jogo: mova o personagem e atire nos blocos vermelhos e verdes, desviando de bombas e caixas"
+            className="block h-auto w-full select-none"
+            style={{ aspectRatio: `${W} / ${H}`, touchAction: "none" }}
+          />
+          {pedirNome ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/75 p-5">
+              <form onSubmit={(e) => void entrar(e)} className="w-full max-w-xs space-y-3 rounded-2xl border border-line bg-panel p-4">
+                <p className="font-display text-lg">Escolha seu usuário</p>
+                <p className="text-xs text-mute">Ele aparece no ranking dos 10 melhores. Cada nome é único.</p>
+                <input
+                  value={campo}
+                  onChange={(e) => setCampo(e.target.value.replace(/[^A-Za-z0-9_.]/g, "").slice(0, 16))}
+                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  maxLength={16}
+                  placeholder="seu_usuario"
+                  aria-label="Nome de usuário"
+                  className="h-11 w-full rounded-xl border border-line bg-ink px-3 text-base text-paper outline-none focus:border-lime"
+                />
+                {erroEntrada ? (
+                  <p role="alert" className="text-xs text-amber">
+                    {erroEntrada}
+                  </p>
+                ) : null}
+                <button type="submit" disabled={enviando} className="h-11 w-full rounded-xl bg-lime font-semibold text-ink disabled:opacity-60">
+                  {enviando ? "Entrando..." : "Entrar e jogar"}
+                </button>
+                <button type="button" onClick={semNome} className="w-full text-xs text-mute underline">
+                  Jogar sem ranking
+                </button>
+              </form>
+            </div>
+          ) : null}
+        </div>
+        <div className="flex w-full items-center justify-between text-xs text-mute">
+          <span className="truncate">{nome ? `Jogando como @${nome}` : "Sem usuário (sem ranking)"}</span>
+          <button type="button" onClick={alternaSom} aria-pressed={somOn} className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-paper">
+            {somOn ? "🔊 Som" : "🔇 Mudo"}
           </button>
         </div>
-      ) : null}
+        {fim ? (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button type="button" onClick={() => iniciar.current()} className="h-11 rounded-xl bg-lime px-5 font-semibold text-ink">
+              Jogar de novo
+            </button>
+            <button type="button" onClick={() => void compartilhar()} className="h-11 rounded-xl border border-line px-5 text-paper">
+              {copiado ? "Link copiado ✓" : "Compartilhar pontuação"}
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <aside className="w-full max-w-sm rounded-2xl border border-line bg-panel p-4 lg:w-72" aria-label="Ranking do jogo">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg">Top 10</h2>
+          <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-mute">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lime" aria-hidden /> ao vivo
+          </span>
+        </div>
+        {top === null ? (
+          <p className="text-sm text-mute">Carregando...</p>
+        ) : top.length === 0 ? (
+          <p className="text-sm text-mute">Ninguém pontuou ainda. Seja o primeiro!</p>
+        ) : (
+          <ol className="space-y-1">
+            {top.map((l, i) => (
+              <li
+                key={l.n.toLowerCase()}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${l.n.toLowerCase() === meuNome ? "bg-white/10 ring-1 ring-lime/60" : ""}`}
+              >
+                <span className="w-6 shrink-0 text-center">{["🥇", "🥈", "🥉"][i] ?? <span className="text-xs text-mute">{i + 1}º</span>}</span>
+                <span className="min-w-0 flex-1 truncate">@{l.n}</span>
+                <strong className="tabular">{new Intl.NumberFormat("pt-BR").format(l.p)}</strong>
+              </li>
+            ))}
+          </ol>
+        )}
+        <div className="mt-3 border-t border-line pt-3 text-xs text-mute">
+          {nome ? (
+            <>
+              <p>
+                Você: <strong className="text-paper">@{nome}</strong>
+                {meu && meu.melhor > 0 ? (
+                  <>
+                    {" "}
+                    · recorde <strong className="tabular text-paper">{new Intl.NumberFormat("pt-BR").format(meu.melhor)}</strong>
+                    {meu.rank ? ` · ${meu.rank}º lugar` : ""}
+                  </>
+                ) : (
+                  " · jogue para entrar no ranking"
+                )}
+              </p>
+              <button type="button" onClick={trocarNome} className="mt-1 underline">
+                Trocar usuário
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => setPedirNome(true)} className="underline">
+              Escolher um usuário para entrar no ranking
+            </button>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

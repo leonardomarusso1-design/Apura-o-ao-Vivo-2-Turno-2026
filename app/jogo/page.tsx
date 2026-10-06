@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main id="conteudo" className="mx-auto flex min-h-dvh max-w-md flex-col items-center gap-3 px-4 py-4">
+    <main id="conteudo" className="mx-auto flex min-h-dvh max-w-3xl flex-col items-center gap-3 px-4 py-4">
       <div className="flex w-full items-center justify-between text-sm">
         <Link href="/apuracao/2" className="text-mute hover:text-paper">
           ← Voltar à apuração
