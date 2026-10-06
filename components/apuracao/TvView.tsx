@@ -306,7 +306,16 @@ export default function TvView({
         </div>
         <div className="flex items-center gap-3 text-xl">
           <Hora />
-          {obs ? null : <>
+          {obs ? (
+            // invisível na transmissão: só aparece quando você passa o mouse aqui (janela "Interagir" do OBS)
+            <button
+              onClick={() => setEditPatro((v) => !v)}
+              className={`${botao} opacity-0 transition-opacity hover:opacity-100 focus:opacity-100`}
+              aria-expanded={editPatro}
+            >
+              Patrocínio
+            </button>
+          ) : <>
           {liveId ? (
             <button onClick={() => setChat((v) => !v)} className={botao} aria-pressed={chat}>
               Chat {chat ? "ligado" : "desligado"}
