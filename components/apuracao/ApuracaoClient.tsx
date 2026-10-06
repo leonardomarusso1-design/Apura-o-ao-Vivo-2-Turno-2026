@@ -93,7 +93,7 @@ function aplicarReplay(live: Payload, p: PontoReplay): Payload {
   };
 }
 
-export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null, pix = "" }: { initial?: Payload | null; turno?: 1 | 2; pixQr?: string | null; pix?: string }) {
+export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = false }: { initial?: Payload | null; turno?: 1 | 2; pixAtivo?: boolean }) {
   const [apoie, setApoie] = useState(false);
   const [dataLive, setData] = useState<Payload | null>(initial);
   const [pontos, setPontos] = useState<PontoReplay[]>([]);
@@ -430,7 +430,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
           >
             Exterior
           </button>
-          {pixQr ? (
+          {pixAtivo ? (
             <button onClick={() => setApoie(true)} className={`${btnTopo} !border-lime/60 text-lime`}>
               Apoie
             </button>
@@ -445,7 +445,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
       </header>
       <p className="tabular mb-2 text-[11px] text-mute 2xl:hidden">{statusTxt}{erro ? " · reconectando…" : ""}</p>
 
-      <main className="min-h-0 flex-1">
+      <main id="conteudo" className="min-h-0 flex-1">
         {aba !== "presidente" ? (
           <div className="pb-3 lg:h-full lg:min-h-0 lg:overflow-hidden lg:pb-0">
             {aba === "governadores" ? <Governadores /> : null}
@@ -655,11 +655,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
           oficial. Projeto independente, sem vínculo com o TSE, partidos ou campanhas.
         </p>
         <p className="mt-2">
-          <a href="/" className="underline">Início</a> · <a href="/privacidade" className="underline">Privacidade</a>
+          <a href="/" className="underline">Início</a> · <a href="/apuracao/perguntas" className="underline">Perguntas frequentes</a> · <a href="/privacidade" className="underline">Privacidade</a>
         </p>
       </footer>
 
-      {pixQr ? <ApoieModal aberto={apoie} onClose={() => setApoie(false)} qr={pixQr} pix={pix} /> : null}
+      {pixAtivo ? <ApoieModal aberto={apoie} onClose={() => setApoie(false)} /> : null}
       <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={(u) => { setAba("presidente"); setUf(u); }} />
     </div>
     </TurnoContext.Provider>

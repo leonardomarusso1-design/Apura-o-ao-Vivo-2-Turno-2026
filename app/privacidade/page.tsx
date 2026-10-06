@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { EMAIL_COMERCIAL, SITE_NAME } from "@/lib/env";
+import { EMAIL_COMERCIAL } from "@/lib/env";
 
-export const metadata: Metadata = { title: `Privacidade — ${SITE_NAME}` };
+export const metadata: Metadata = { title: "Política de privacidade", alternates: { canonical: "/privacidade" } };
 
 export default function Privacidade() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12 text-sm leading-relaxed text-paper/90">
+    <main id="conteudo" className="mx-auto max-w-2xl px-4 py-12 text-sm leading-relaxed text-paper/90">
       <h1 className="font-display text-3xl">Política de privacidade</h1>
       <p className="mt-4">
         Coletamos e-mail, nome (opcional) e WhatsApp (opcional) somente para avisar você sobre a apuração do 2º turno e

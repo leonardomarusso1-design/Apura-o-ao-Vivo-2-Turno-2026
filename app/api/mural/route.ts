@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 import { clientIp, hashIp } from "@/lib/ip";
 import { limited } from "@/lib/ratelimit";
+import { forbidden, readJson, sameOrigin } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,12 +36,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  let b: { tipo?: string; k?: string; cid?: string } = {};
-  try {
-    b = (await req.json()) as typeof b;
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
+  if (!sameOrigin(req)) return forbidden();
+  const b = await readJson<{ tipo?: string; k?: string; cid?: string }>(req, 512);
+  if (!b || typeof b !== "object") return NextResponse.json({ ok: false }, { status: 400 });
   const quem = hashIp(clientIp(req));
   if (await limited(`mural:${quem}`, 60, 60)) return NextResponse.json({ ok: false, erro: "devagar" }, { status: 429 });
 

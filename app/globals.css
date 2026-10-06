@@ -163,3 +163,19 @@ summary {
     box-shadow: 0 0 0 4px rgb(255 255 255 / 0.08), 0 0 0 5px rgb(255 255 255 / 0.25);
   }
 }
+
+/* Celular: alvos de toque de pelo menos 40 px de altura (guia WCAG 2.2 pede 24 px; 44 px é o conforto do polegar). */
+@media (pointer: coarse) {
+  button,
+  [role="tab"],
+  header a {
+    min-height: 40px;
+  }
+  button:where(.h-8, .w-8) {
+    min-width: 40px;
+  }
+  footer a {
+    display: inline-block;
+    padding-block: 0.65rem;
+  }
+}

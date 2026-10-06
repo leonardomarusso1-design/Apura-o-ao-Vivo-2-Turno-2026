@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import PaginaApuracao from "@/components/apuracao/PaginaApuracao";
-import { SITE_NAME } from "@/lib/env";
 
 export const metadata: Metadata = {
-  title: `Apuração ao vivo do 2º turno — ${SITE_NAME}`,
-  description: "Mapa, placar, projeção e atualizações da apuração do 2º turno em tempo real, com dados oficiais do TSE.",
+  title: "Apuração ao vivo do 2º turno 2026",
+  description: "Placar, mapa por estado e município, governadores e atualizações da apuração do 2º turno em tempo real. Dados oficiais do TSE.",
+  alternates: { canonical: "/apuracao/2" },
+  openGraph: { url: "/apuracao/2", title: "Apuração ao vivo do 2º turno 2026", type: "website", locale: "pt_BR" },
 };
 export const revalidate = 10;
 

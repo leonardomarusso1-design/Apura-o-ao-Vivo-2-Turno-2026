@@ -17,7 +17,7 @@ export default function Home() {
       <ToqyStrip />
       <StatsBar />
       <Heartbeat electionIso={ELECTION_ISO} />
-      <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:pt-14">
+      <main id="conteudo" className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:pt-14">
         <p className="text-[11px] uppercase tracking-widest text-lime">{SITE_NAME} · 2º turno · 25 de outubro</p>
         <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.05] sm:text-6xl">
           A apuração começa em breve. Seja avisado no segundo em que ela abrir.

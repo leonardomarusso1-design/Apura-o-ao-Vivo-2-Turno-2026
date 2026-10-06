@@ -86,7 +86,7 @@ export default function Placar({
             >
               <div className={`flex w-full min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end" : "items-start"}`}>
                 {c ? (
-<Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={36} />
+<Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={36} eager />
                 ) : (
                   <div className="w-[36px] h-[36px] rounded-full bg-white/[0.05] animate-pulse" />
                 )}

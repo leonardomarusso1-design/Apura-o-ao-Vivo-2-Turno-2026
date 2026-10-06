@@ -14,12 +14,14 @@ export default function Avatar({
   nome,
   cor,
   size = 48,
+  eager = false,
 }: {
   n?: number;
   sq?: number;
   nome: string;
   cor: string;
   size?: number;
+  eager?: boolean;
 }) {
   const fontes = [sq, n].filter((v): v is number => typeof v === "number" && v > 0).map((v) => `/candidatos/${v}.jpg`);
   const [idx, setIdx] = useState(0);
@@ -52,7 +54,8 @@ export default function Avatar({
           alt={nome}
           width={size}
           height={size}
-          loading="eager"
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
           ref={(el) => {
             if (el && el.complete && el.naturalWidth === 0) setIdx((i) => i + 1);
           }}
