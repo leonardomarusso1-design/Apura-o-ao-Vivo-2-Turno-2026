@@ -37,7 +37,7 @@ export type Evento = {
   candNome?: string;
 };
 
-export type Ponto = { t: string; pct: number; c: { n: number; pct: number }[] };
+export type Ponto = { t: string; pct: number; c: { n: number; pct: number; v?: number }[] };
 
 export type Snapshot = {
   turno: 1 | 2;

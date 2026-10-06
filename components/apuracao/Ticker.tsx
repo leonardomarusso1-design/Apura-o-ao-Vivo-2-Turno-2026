@@ -2,7 +2,7 @@ import type { Evento } from "@/lib/apuracao/types";
 
 /** Faixa de notícias correndo (estilo TV). Duplicamos o conteúdo para o loop ser contínuo. */
 export default function Ticker({ eventos }: { eventos: Evento[] }) {
-  const itens = eventos.length ? eventos.slice(0, 12).map((e) => e.texto) : ["Acompanhe a apuração ao vivo — atualizações aparecem aqui"];
+  const itens = eventos.length ? eventos.slice(0, 12).map((e) => e.texto) : ["Acompanhe a apuração ao vivo. As atualizações aparecem aqui"];
   const chars = itens.join("").length;
   const dur = Math.max(25, Math.round(chars * 0.22));
   const bloco = (k: string) => (

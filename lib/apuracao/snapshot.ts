@@ -136,14 +136,44 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
         texto: mudouLider
           ? `${rot}: ${l.nome} assumiu a liderança (${a.pctApurado.toFixed(0)}% apurado)`
           : a.pctApurado >= 99.99
-            ? `${rot}: apuração concluída — ${l.nome} lidera com ${l.pct.toFixed(1)}%`
-            : `${rot}: ${a.pctApurado.toFixed(0)}% apurado — ${l.nome} lidera com ${l.pct.toFixed(1)}%`,
+            ? `${rot}: apuração concluída. ${l.nome} lidera com ${l.pct.toFixed(1)}%`
+            : `${rot}: ${a.pctApurado.toFixed(0)}% apurado. ${l.nome} lidera com ${l.pct.toFixed(1)}%`,
+      });
+    }
+  }
+
+  // Marcos nacionais e troca de liderança no Brasil (só compara com a leitura anterior, nunca dispara no primeiro carregamento)
+  const antes = prev?.br ?? null;
+  if (br && antes && br.cands.length >= 2 && br.pctApurado > antes.pctApurado && antes.pctApurado > 0) {
+    const [l1] = br.cands;
+    for (const m of [10, 25, 50, 75, 90]) {
+      if (antes.pctApurado < m && br.pctApurado >= m) {
+        eventos.unshift({
+          t: new Date().toISOString(),
+          id: "BR",
+          pct: br.pctApurado,
+          candN: l1.n,
+          candSq: l1.sq,
+          candNome: l1.nome,
+          texto: `Brasil: ${m}% das seções totalizadas. ${l1.nome} tem ${l1.pct.toFixed(2).replace(".", ",")}%`,
+        });
+      }
+    }
+    if (antes.cands[0] && antes.cands[0].n !== l1.n) {
+      eventos.unshift({
+        t: new Date().toISOString(),
+        id: "BR",
+        pct: br.pctApurado,
+        candN: l1.n,
+        candSq: l1.sq,
+        candNome: l1.nome,
+        texto: `Brasil: ${l1.nome} assumiu a frente na contagem nacional (${br.pctApurado.toFixed(1).replace(".", ",")}% apurado)`,
       });
     }
   }
 
   // Brasil concluído: 1 evento de destaque (uma única vez)
-  if (br && br.pctApurado >= 99.99 && br.cands.length >= 2 && !eventos.some((e) => e.id === "BR")) {
+  if (br && br.pctApurado >= 99.99 && br.cands.length >= 2 && !eventos.some((e) => e.id === "BR" && /Apuração concluída|100% apurado/.test(e.texto))) {
     const [a1, a2] = br.cands;
     eventos.unshift({
       t: br.totalizadoEm ?? new Date().toISOString(),
@@ -164,7 +194,7 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
     historico.push({
       t: new Date().toISOString(),
       pct: br.pctApurado,
-      c: br.cands.slice(0, 3).map((c) => ({ n: c.n, pct: c.pct })),
+      c: br.cands.slice(0, 3).map((c) => ({ n: c.n, pct: c.pct, v: c.votos })),
     });
   }
 

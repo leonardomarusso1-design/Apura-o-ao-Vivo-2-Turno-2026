@@ -288,10 +288,6 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   const link = refCode ? `${SITE_URL}/?ref=${refCode}` : SITE_URL;
   const share = `Estou acompanhando a apuração do 2º turno ao vivo aqui. Entra na lista pra ser avisado: ${link}`;
 
-  if (tv && data?.br) {
-    return <TvView data={data} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
-  }
-
   const horaHM = (iso: string) =>
     new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).replace(":", "h");
   const statusTxt = data?.br
@@ -314,6 +310,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
     }
     return [...m.entries()].map(([n, v]) => ({ n, ...v })).sort((a, b) => b.qt - a.qt).slice(0, 2);
   }, [data]);
+  // Modo TV: o retorno antecipado fica depois de todos os hooks (senão o React quebra ao entrar na tela cheia)
+  if (tv && data?.br) {
+    return <TvView data={data} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
+  }
+
   const muniModo = modo === "municipios" || modo === "vantagem" || (modo === "candidato" && candN != null);
   const legenda: ResumoMun[] = muniModo ? resumoMun : contEstados;
   const escolherCand = (n: number) => {

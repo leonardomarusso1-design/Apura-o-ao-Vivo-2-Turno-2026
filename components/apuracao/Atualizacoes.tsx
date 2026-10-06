@@ -77,7 +77,7 @@ export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: {
         <div className="flex items-center gap-1" role="tablist" aria-label="Atualizações">
           {(
             [
-              ["tse", "TSE"],
+              ["tse", "Ao vivo"],
               ["noticias", "Notícias"],
               ["mural", "Mural"],
             ] as const
@@ -101,7 +101,7 @@ export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: {
             </button>
           ))}
         </div>
-        {aba === "tse" ? <span className="tabular text-[10px] font-medium text-mute">{eventos.length} avisos</span> : null}
+        {aba === "tse" ? <span className="tabular text-[10px] font-medium text-mute">{eventos.length} {eventos.length === 1 ? "atualização" : "atualizações"}</span> : null}
       </div>
 
       {aba === "mural" && mural ? (
