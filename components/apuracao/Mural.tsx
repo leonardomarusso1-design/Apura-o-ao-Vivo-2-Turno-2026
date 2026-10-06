@@ -17,6 +17,21 @@ const FAIXAS = [
   { k: "f6", n: "Depois das 21h" },
 ] as const;
 const LS = "apuracao:mural:palpite";
+const LS_R = "apuracao:mural:reacao";
+const LS_ID = "apuracao:mural:id";
+
+function meuId(): string {
+  try {
+    let id = localStorage.getItem(LS_ID);
+    if (!id) {
+      id = (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`).replace(/[^a-z0-9-]/gi, "").slice(0, 40).toLowerCase();
+      localStorage.setItem(LS_ID, id);
+    }
+    return id;
+  } catch {
+    return "";
+  }
+}
 type Est = { reacoes: Record<string, number>; palpites: Record<string, number> };
 
 const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
@@ -25,11 +40,13 @@ const fmt = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 export default function Mural({ pct }: { pct: number }) {
   const [e, setE] = useState<Est | null>(null);
   const [meu, setMeu] = useState<string | null>(null);
+  const [minha, setMinha] = useState<string | null>(null);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
     try {
       setMeu(localStorage.getItem(LS));
+      setMinha(localStorage.getItem(LS_R));
     } catch {
       /* ignore */
     }
@@ -53,14 +70,42 @@ export default function Mural({ pct }: { pct: number }) {
     };
   }, []);
 
-  const enviar = async (tipo: "reacao" | "palpite", k: string) => {
+  // Reação: uma por pessoa. Clicar em outra troca; clicar na mesma tira.
+  const reagir = async (k: string) => {
     setErro("");
-    if (tipo === "reacao") setE((x) => (x ? { ...x, reacoes: { ...x.reacoes, [k]: (x.reacoes[k] ?? 0) + 1 } } : x));
+    const antes = minha;
+    const depois = antes === k ? null : k;
+    setMinha(depois);
+    setE((x) => {
+      if (!x) return x;
+      const r = { ...x.reacoes };
+      if (antes) r[antes] = Math.max(0, (r[antes] ?? 0) - 1);
+      if (depois) r[depois] = (r[depois] ?? 0) + 1;
+      return { ...x, reacoes: r };
+    });
     try {
-      const r = await fetch("/api/mural", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, k }) });
+      if (depois) localStorage.setItem(LS_R, depois);
+      else localStorage.removeItem(LS_R);
+    } catch {
+      /* ignore */
+    }
+    try {
+      const r = await fetch("/api/mural", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: "reacao", k: depois ?? k, cid: meuId() }) });
       const j = (await r.json()) as Est & { ok: boolean; erro?: string };
       if (j.reacoes) setE({ reacoes: j.reacoes, palpites: j.palpites });
-      if (tipo === "palpite" && (j.ok || j.erro === "ja-votou")) {
+      if (j.erro === "devagar") setErro("Calma, muitos cliques seguidos.");
+    } catch {
+      setErro("Sem conexão. Tente de novo.");
+    }
+  };
+
+  const enviar = async (tipo: "palpite", k: string) => {
+    setErro("");
+    try {
+      const r = await fetch("/api/mural", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, k, cid: meuId() }) });
+      const j = (await r.json()) as Est & { ok: boolean; erro?: string };
+      if (j.reacoes) setE({ reacoes: j.reacoes, palpites: j.palpites });
+      if (j.ok || j.erro === "ja-votou") {
         setMeu(k);
         try {
           localStorage.setItem(LS, k);
@@ -77,17 +122,18 @@ export default function Mural({ pct }: { pct: number }) {
   const total = e ? Object.values(e.palpites).reduce((a, b) => a + b, 0) : 0;
   const encerrado = pct >= 90;
   return (
-    <div className="h-72 space-y-4 overflow-y-auto overscroll-contain pr-1 text-xs xl:h-[25rem]">
+    <div className="h-72 space-y-3 overflow-y-auto overscroll-contain pr-1 text-xs lg:h-auto lg:min-h-0 lg:flex-1">
       <div>
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-mute">Como você está se sentindo?</p>
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-mute">Como você está se sentindo? (uma reação por pessoa)</p>
         <div className="grid grid-cols-4 gap-2">
           {REACOES.map((r) => (
             <button
               key={r.k}
               type="button"
-              onClick={() => void enviar("reacao", r.k)}
+              onClick={() => void reagir(r.k)}
+              aria-pressed={minha === r.k}
               aria-label={`${r.n}: ${fmt(e?.reacoes[r.k] ?? 0)}`}
-              className="clicavel flex flex-col items-center gap-0.5 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2 active:scale-95"
+              className={`clicavel flex flex-col items-center gap-0.5 rounded-xl border py-1.5 active:scale-95 ${minha === r.k ? "border-lime/70 bg-white/10" : "border-white/[0.06] bg-white/[0.03]"}`}
             >
               <span className="text-xl">{r.e}</span>
               <span className="tabular text-[11px] font-semibold text-paper">{fmt(e?.reacoes[r.k] ?? 0)}</span>

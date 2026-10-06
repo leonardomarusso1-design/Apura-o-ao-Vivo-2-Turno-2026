@@ -40,8 +40,8 @@ function Noticias() {
     };
   }, []);
   return (
-    <>
-      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs xl:h-[25rem]">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs lg:h-auto lg:min-h-0 lg:flex-1">
         {n === null ? (
           <li className="py-8 text-center text-xs text-mute">Buscando as últimas notícias…</li>
         ) : n.length === 0 ? (
@@ -65,14 +65,14 @@ function Noticias() {
         )}
       </ul>
       <p className="mt-2 text-[10px] leading-snug text-mute">Manchetes e links dos veículos de imprensa; o conteúdo é de cada veículo.</p>
-    </>
+    </div>
   );
 }
 
 export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: { eventos: Evento[]; cor: (n: number | undefined) => string; mural?: boolean; pct?: number }) {
   const [aba, setAba] = useState<"tse" | "noticias" | "mural">(mural && eventos.length === 0 ? "mural" : "tse");
   return (
-    <section className="glass-panel rise rounded-2xl p-4 sm:p-5" aria-label="Últimas atualizações">
+    <section className="glass-panel rise rounded-2xl p-3 sm:p-4 lg:flex lg:h-full lg:min-h-0 lg:flex-col" aria-label="Últimas atualizações">
       <div className="mb-3 flex items-center justify-between border-b border-white/[0.06] pb-2.5">
         <div className="flex items-center gap-1" role="tablist" aria-label="Atualizações">
           {(
@@ -109,7 +109,7 @@ export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: {
       ) : aba === "noticias" ? (
         <Noticias />
       ) : (
-      <ul className="h-72 xl:h-[25rem] space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs">
+      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs lg:h-auto lg:min-h-0 lg:flex-1">
         {eventos.length === 0 ? (
           <li className="py-8 text-center text-mute text-xs">
             Aguardando primeiras urnas totalizadas pelo TSE...

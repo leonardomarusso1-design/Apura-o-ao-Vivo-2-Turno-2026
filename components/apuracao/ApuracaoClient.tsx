@@ -8,7 +8,6 @@ import Participacao from "./Participacao";
 import Regioes from "./Regioes";
 import Atualizacoes from "./Atualizacoes";
 import PainelUF from "./PainelUF";
-import SponsorSlot from "./SponsorSlot";
 import LiveBox from "./LiveBox";
 import dynamic from "next/dynamic";
 import BuscaModal from "./BuscaModal";
@@ -495,7 +494,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
               <div className="order-1 lg:order-none">
                 <Placar br={data?.br ?? null} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
-              <div className="order-6 lg:order-none">
+              <div className="order-6 lg:order-none [@media(max-height:900px)]:lg:hidden">
                 <Linha pontos={data?.historico ?? []} cor={cor} />
               </div>
               <div className="order-7 lg:order-none">
@@ -607,21 +606,20 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
                   <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={turno} onClose={() => setUf(null)} />
                 </div>
               ) : null}
-              <div className="order-4 lg:order-none">
+              <div className="order-4 lg:order-none lg:shrink-0">
                 <Regioes ufs={data?.ufs ?? {}} cor={cor} />
               </div>
-              <div className="order-4 lg:order-none">
-                <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
-              </div>
-              <div className="order-5 lg:order-none">
+              <div className="order-5 empty:hidden lg:order-none lg:shrink-0">
                 <LiveBox />
               </div>
-              <div className="order-5 lg:order-none">
-                <ToqyCard />
+              <div className="order-4 lg:order-none lg:min-h-[170px] lg:flex-1">
+                <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
               </div>
-              <div className="order-8 grid gap-3 lg:order-none">
-                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={250} label="Anuncie aqui" />
-                <SponsorSlot label="Sua marca na apuração" />
+              <div className="order-8 lg:order-none lg:shrink-0">
+                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={90} label="Anuncie aqui" />
+              </div>
+              <div className="order-5 lg:order-none lg:shrink-0 [@media(max-height:820px)]:lg:hidden">
+                <ToqyCard />
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@ export default function SponsorSlot({ label = "Anuncie aqui" }: { label?: string
       href={wa}
       target="_blank"
       rel="noopener noreferrer sponsored"
-      className="flex h-[90px] items-center justify-center rounded-2xl border border-dashed border-line text-xs text-mute"
+      className="flex h-[90px] items-center [@media(max-height:820px)]:h-[64px] justify-center rounded-2xl border border-dashed border-line text-xs text-mute"
     >
       {label} · patrocínio
     </a>

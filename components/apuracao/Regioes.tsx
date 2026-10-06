@@ -24,51 +24,33 @@ export default function Regioes({ ufs, cor }: { ufs: Record<string, Area>; cor: 
   });
 
   return (
-    <section className="glass-panel rise rounded-2xl p-4 sm:p-5" aria-label="Por região">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-paper">
-          Votação por Região
-        </h2>
-        <span className="text-[10px] text-mute uppercase tracking-widest">
-          Brasil
-        </span>
+    <section className="glass-panel rise rounded-2xl p-3 sm:p-4 [@media(max-height:820px)]:sm:p-3" aria-label="Por região">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-paper sm:text-sm">Votação por região</h2>
+        <span className="text-[10px] uppercase tracking-widest text-mute">Brasil</span>
       </div>
-
-      <ul className="grid gap-2.5">
+      <ul className="grid gap-1.5">
         {linhas.map((l) => (
-          <li key={l.r} className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-            <div className="flex items-baseline justify-between text-xs">
+          <li key={l.r} className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-2.5 py-1.5 [@media(max-height:820px)]:py-1" title={l.lider && l.pctApur > 0 ? `${l.lider[1].nome} lidera · ${fmtPct(l.pctApur, 1)}% apurado` : undefined}>
+            <div className="flex items-center justify-between gap-2 text-xs">
               <span className="font-semibold text-paper">{l.r}</span>
-              <span className="tabular text-xs">
+              <span className="tabular flex items-center gap-1.5">
                 {l.lider && l.pctApur > 0 ? (
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span 
-                      className="w-2 h-2 rounded-full inline-block" 
-                      style={{ backgroundColor: cor(l.lider[0]) }} 
-                    />
-                    <span className="text-paper">{fmtPct(l.pct, 1)}%</span>
-                  </span>
+                  <>
+                    <span className="hidden max-w-[110px] truncate text-[10px] text-mute xl:inline">{l.lider[1].nome}</span>
+                    <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: cor(l.lider[0]) }} />
+                    <span className="font-medium text-paper">{fmtPct(l.pct, 1)}%</span>
+                  </>
                 ) : (
-                  <span className="text-mute font-normal">—</span>
+                  <span className="text-mute">—</span>
                 )}
               </span>
             </div>
-            
-            {/* Barra de apuração da região */}
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/40 border border-white/[0.04]">
-              <div 
-                className="h-full bg-blue-500 rounded-full transition-all duration-500" 
-                style={{ width: `${l.pctApur}%` }} 
-              />
-            </div>
-            
-            <div className="tabular mt-1.5 flex items-center justify-between text-[10px] text-mute">
-              <span>{fmtPct(l.pctApur, 1)}% apurado</span>
-              {l.lider && l.pctApur > 0 ? (
-                <span className="text-paper/80 font-medium truncate max-w-[130px]">
-                  {l.lider[1].nome} lidera
-                </span>
-              ) : null}
+            <div className="mt-1 flex items-center gap-2 [@media(max-height:820px)]:mt-0.5">
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-black/40">
+                <div className="h-full rounded-full bg-blue-500 transition-all duration-500" style={{ width: `${l.pctApur}%` }} />
+              </div>
+              <span className="tabular text-[10px] text-mute [@media(max-height:820px)]:hidden">{fmtPct(l.pctApur, 0)}% apurado</span>
             </div>
           </li>
         ))}
