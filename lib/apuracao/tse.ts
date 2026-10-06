@@ -47,6 +47,7 @@ function collectCands(node: unknown, partido: string, out: Cand[]): void {
       votos: int(node.vap),
       pct: dec(node.pvap),
       eleito: node.e === "s",
+      ...(typeof node.st === "string" && node.st.length < 30 ? { sit: node.st } : {}),
     });
     return;
   }
@@ -78,6 +79,10 @@ export function parseArea(id: string, raw: unknown): Area | null {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dt);
   if (m && /^\d{2}:\d{2}:\d{2}$/.test(ht)) totalizadoEm = `${m[3]}-${m[2]}-${m[1]}T${ht}-03:00`;
 
+  const dg = str(raw.dg);
+  const hg = str(raw.hg);
+  const geracao = /^\d{2}\/\d{2}\/\d{4}$/.test(dg) && /^\d{2}:\d{2}:\d{2}$/.test(hg) ? `${dg} ${hg}` : null;
+
   return {
     id: id.toUpperCase(),
     secoesTotal: ts,
@@ -92,6 +97,8 @@ export function parseArea(id: string, raw: unknown): Area | null {
     cands: uniq,
     definidoTse: raw.md === "s" || raw.tf === "s" || uniq.some((c) => c.eleito),
     totalizadoEm,
+    geracao,
+    idg: str(raw.idg) || null,
   };
 }
 

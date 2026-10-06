@@ -13,12 +13,14 @@ export default function Placar({
   turno = 2,
   onCand,
   candSel = null,
+  ufs,
 }: {
   br: Area | null;
   cor: (n: number | undefined) => string;
   turno?: 1 | 2;
   onCand?: (n: number) => void;
   candSel?: number | null;
+  ufs?: Record<string, Area>;
 }) {
   // Ordena por votos para saber o líder
   const candsPorVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
@@ -29,6 +31,38 @@ export default function Placar({
   const top = (br?.cands.slice(0, 2) ?? []).sort((a, b) => a.n - b.n);
   const resto = br ? br.cands.slice(2) : [];
   const [todos, setTodos] = useState(false);
+
+  // Situação oficial: o TSE marca e="s" também para quem vai ao 2º turno, então "eleito" só vale com st="Eleito".
+  const fechado = Boolean(br && br.pctApurado >= 99.99);
+  const eleito = br?.cands.some((c) => c.sit === "Eleito") ?? false;
+  const selo = eleito
+    ? fechado
+      ? "Eleito"
+      : "Matematicamente eleito"
+    : turno === 1 && fechado && br?.cands.some((c) => c.sit === "2º turno")
+      ? "2º turno definido"
+      : fechado && br?.definidoTse
+        ? "Apuração concluída"
+        : null;
+
+  // "Brasil agora": quem lidera em quantos estados e quantos já fecharam (exterior fora da conta)
+  const agora = (() => {
+    if (!ufs) return null;
+    const por = new Map<number, { nome: string; qt: number }>();
+    let fechados = 0;
+    let comDados = 0;
+    for (const [k, a] of Object.entries(ufs)) {
+      if (k === "ZZ" || a.pctApurado <= 0 || !a.cands[0]) continue;
+      comDados++;
+      if (a.pctApurado >= 99.99) fechados++;
+      const l = a.cands[0];
+      const x = por.get(l.n) ?? { nome: l.nome.split(" ")[0], qt: 0 };
+      x.qt++;
+      por.set(l.n, x);
+    }
+    if (comDados === 0) return null;
+    return { lista: [...por.values()].sort((a, b) => b.qt - a.qt).slice(0, 2), fechados };
+  })();
 
   const dif = lider && segundo ? Math.abs(lider.votos - segundo.votos) : 0;
   const difPct = lider && segundo ? Math.abs(lider.pct - segundo.pct) : 0;
@@ -44,9 +78,9 @@ export default function Placar({
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           Presidência da República
         </span>
-        {br?.definidoTse ? (
+        {selo ? (
           <span className="rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-            Matematicamente Eleito
+            {selo}
           </span>
         ) : br?.pctApurado ? (
           <span className="text-[11px] font-medium text-mute tabular">
@@ -149,6 +183,19 @@ export default function Placar({
         </div>
       ) : null}
 
+      {agora ? (
+        <p className="tabular mt-2 text-[11px] text-mute">
+          {agora.lista.map((x, i) => (
+            <span key={`${x.nome}-${i}`}>
+              {i > 0 ? " · " : ""}
+              <strong className="text-paper">{x.nome}</strong> lidera em {x.qt} {x.qt === 1 ? "estado" : "estados"}
+            </span>
+          ))}
+          {" · "}
+          {agora.fechados} {agora.fechados === 1 ? "estado" : "estados"} com 100% apurado
+        </p>
+      ) : null}
+
       {/* Demais Candidatos (se houver mais de 2, como na prévia do 1º turno) */}
       {resto.length > 0 ? (
         <div className="mt-2 border-t border-white/[0.06] pt-2">
@@ -171,6 +218,16 @@ export default function Placar({
             </button>
           )}
         </div>
+      ) : null}
+      {br ? (
+        <p className="mt-2 text-[10px] leading-snug text-mute">
+          Dados oficiais do TSE{br.geracao ? `, geração de ${br.geracao.slice(0, 5)} às ${br.geracao.slice(11)}` : ""}
+          {br.idg ? ` (nº ${br.idg})` : ""}.{" "}
+          <a href="https://resultados.tse.jus.br/" target="_blank" rel="noopener noreferrer" className="underline hover:text-paper">
+            Conferir no TSE
+          </a>
+          . Site independente, sem vínculo com o TSE.
+        </p>
       ) : null}
       {br ? <Comparativo2022 area={br} turno={turno} cor={cor} rotulo="Brasil" /> : null}
     </section>

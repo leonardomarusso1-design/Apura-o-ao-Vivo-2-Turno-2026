@@ -1,7 +1,7 @@
 import type { Ponto } from "@/lib/apuracao/types";
 
 /** Gráfico "Ao longo da apuração": evolução suave dos votos em SVG puro de alta precisão */
-export default function Linha({ pontos, cor }: { pontos: Ponto[]; cor: (n: number | undefined) => string }) {
+export default function Linha({ pontos, cor, nome }: { pontos: Ponto[]; cor: (n: number | undefined) => string; nome?: (n: number) => string }) {
   const W = 320;
   const H = 130;
   const ns = pontos[pontos.length - 1]?.c.slice(0, 2).map((c) => c.n) ?? [];
@@ -10,6 +10,15 @@ export default function Linha({ pontos, cor }: { pontos: Ponto[]; cor: (n: numbe
   const max = Math.ceil(Math.max(...(todos.length ? todos : [60])) / 2) * 2 + 2;
   const x = (pct: number) => (pct / 100) * W;
   const y = (v: number) => H - ((v - min) / (max - min || 1)) * H;
+
+  // Mudanças de liderança: cada vez que o primeiro colocado nacional troca entre uma leitura e a seguinte
+  const trocas: { t: string; n: number; pct: number }[] = [];
+  for (let i = 1; i < pontos.length; i++) {
+    const a = pontos[i - 1].c[0];
+    const b = pontos[i].c[0];
+    if (a && b && a.n !== b.n) trocas.push({ t: pontos[i].t, n: b.n, pct: pontos[i].pct });
+  }
+  const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
   return (
     <section className="glass-panel rise rounded-2xl p-4 sm:p-5" aria-label="Ao longo da apuração">
@@ -55,6 +64,26 @@ export default function Linha({ pontos, cor }: { pontos: Ponto[]; cor: (n: numbe
             <text x="0" y={H + 16} fill="#7e8d9f" fontSize="9" fontWeight="500">0%</text>
             <text x={W} y={H + 16} fill="#7e8d9f" fontSize="9" fontWeight="500" textAnchor="end">100% apurado</text>
           </svg>
+          {trocas.length > 0 ? (
+            <div className="mt-3 border-t border-white/[0.06] pt-2">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">Mudanças de liderança</p>
+              <ul className="grid gap-0.5 text-xs">
+                {trocas
+                  .slice(-5)
+                  .reverse()
+                  .map((x) => (
+                    <li key={x.t} className="tabular flex items-center justify-between gap-2">
+                      <span style={{ color: cor(x.n) }} className="truncate font-medium">
+                        {nome ? nome(x.n) : x.n} assumiu
+                      </span>
+                      <span className="shrink-0 text-mute">
+                        {hora(x.t)} · {x.pct.toFixed(1).replace(".", ",")}% apurado
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       )}
     </section>

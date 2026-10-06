@@ -41,7 +41,10 @@ export default function PainelCandidato({
   const pos = [...br.cands].sort((a, b) => b.votos - a.votos).findIndex((x) => x.n === n);
   const fechado = br.pctApurado >= 99.99;
   let situacao = "Em apuração";
-  if (turno === 1 && fechado) situacao = pos <= 1 ? "Vai ao 2º turno" : "Fora do 2º turno";
+  if (c.sit === "Eleito") situacao = "Eleito";
+  else if (c.sit === "2º turno" && fechado) situacao = "Vai ao 2º turno";
+  else if (c.sit === "Não eleito" && fechado) situacao = turno === 1 ? "Fora do 2º turno" : "Não eleito";
+  else if (turno === 1 && fechado) situacao = pos <= 1 ? "Vai ao 2º turno" : "Fora do 2º turno";
   else if (turno === 2 && (br.definidoTse || fechado)) situacao = pos === 0 ? "Eleito" : "Não eleito";
   else if (pos === 0) situacao = "Lidera a apuração";
   const bom = situacao === "Vai ao 2º turno" || situacao === "Eleito" || situacao === "Lidera a apuração";

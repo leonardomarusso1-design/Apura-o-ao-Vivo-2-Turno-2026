@@ -297,7 +297,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   const statusTxt = data?.br
     ? data.previa && data.br.totalizadoEm
       ? `Como estava às ${horaHM(data.br.totalizadoEm)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
-      : `Atualizado às ${horaHM(data.geradoEm)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
+      : data.br.geracao
+        ? `TSE gerou às ${data.br.geracao.slice(11)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
+        : `Atualizado às ${horaHM(data.geradoEm)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
     : "Aguardando o TSE iniciar a divulgação";
 
   // "PL 15 · PT 12 estados": quem lidera em mais estados
@@ -502,10 +504,10 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 </p>
               ) : null}
               <div className="order-1 lg:order-none">
-                <Placar br={data?.br ?? null} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
+                <Placar br={data?.br ?? null} ufs={data?.ufs} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
               <div className="order-6 lg:order-none [@media(max-height:900px)]:lg:hidden">
-                <Linha pontos={data?.historico ?? []} cor={cor} />
+                <Linha pontos={data?.historico ?? []} cor={cor} nome={(n) => data?.br?.cands.find((c) => c.n === n)?.nome ?? String(n)} />
               </div>
               <div className="order-7 lg:order-none">
                 {data?.br && data.br.pctApurado >= 99.9 ? <Participacao br={data.br} /> : data ? <Projecao p={data.projecao} cor={cor} /> : null}

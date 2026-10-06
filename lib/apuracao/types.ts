@@ -5,7 +5,8 @@ export type Cand = {
   partido: string;
   votos: number;
   pct: number; // % dos votos válidos
-  eleito: boolean; // marcação oficial do TSE
+  eleito: boolean; // e="s" do TSE. No 1º turno vale também para quem vai ao 2º turno, então não significa eleito
+  sit?: string; // situação oficial (campo st do TSE): "Eleito", "2º turno", "Não eleito"
 };
 
 export type Area = {
@@ -22,6 +23,8 @@ export type Area = {
   cands: Cand[]; // ordenado por votos desc
   definidoTse: boolean; // TSE marcou como definido
   totalizadoEm: string | null; // ISO, quando o TSE totalizou
+  geracao?: string | null; // "dd/mm/aaaa hh:mm:ss": geração do arquivo no TSE (dg + hg)
+  idg?: string | null; // identificador da geração no TSE
 };
 
 export type Evento = {

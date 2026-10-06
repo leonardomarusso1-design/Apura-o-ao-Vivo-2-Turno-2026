@@ -11,8 +11,8 @@ export default function Projecao({ p, cor }: { p: P; cor: (n: number | undefined
             Projeção Final
           </h2>
         </div>
-        <span className="rounded-full bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-mute">
-          Modelo Matemático
+        <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-300">
+          Estimativa do site, não oficial
         </span>
       </div>
 

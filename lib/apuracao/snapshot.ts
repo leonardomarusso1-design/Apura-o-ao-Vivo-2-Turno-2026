@@ -153,8 +153,8 @@ async function build(ele: number, prev: Snapshot | null): Promise<Snapshot> {
       candSq: a1.sq,
       candNome: a1.nome,
       texto: br.definidoTse
-        ? `Brasil: ${a1.nome} (${a1.pct.toFixed(2).replace(".", ",")}%) e ${a2.nome} (${a2.pct.toFixed(2).replace(".", ",")}%) — apuração concluída`
-        : `Brasil: 100% apurado — ${a1.nome} ${a1.pct.toFixed(2).replace(".", ",")}%, ${a2.nome} ${a2.pct.toFixed(2).replace(".", ",")}%`,
+        ? `Brasil: ${a1.nome} (${a1.pct.toFixed(2).replace(".", ",")}%) e ${a2.nome} (${a2.pct.toFixed(2).replace(".", ",")}%). Apuração concluída`
+        : `Brasil: 100% apurado. ${a1.nome} ${a1.pct.toFixed(2).replace(".", ",")}%, ${a2.nome} ${a2.pct.toFixed(2).replace(".", ",")}%`,
     });
   }
   eventos.sort((x, y) => new Date(y.t).getTime() - new Date(x.t).getTime());

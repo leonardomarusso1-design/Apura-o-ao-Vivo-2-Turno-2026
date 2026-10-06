@@ -28,6 +28,18 @@ const PERGUNTAS: { q: string; a: string }[] = [
     a: "Sozinha, a cada poucos segundos, enquanto o TSE publicar dados novos. Você não precisa recarregar. A barra de tempo no rodapé mostra quando foi a última leitura.",
   },
   {
+    q: "Como posso conferir os números?",
+    a: "No portal Resultados do TSE (resultados.tse.jus.br). Na tela de apuração há um link de conferência e, abaixo do placar, a data, a hora e o número da geração do arquivo do TSE que foi lido. Se o TSE publicar uma geração mais nova, o portal pode mostrar números um pouco diferentes por alguns instantes até o site atualizar.",
+  },
+  {
+    q: "Este site é oficial do TSE?",
+    a: "Não. É uma plataforma independente que apresenta os dados que o TSE disponibiliza para divulgação. Não há vínculo com o tribunal, com partidos, candidatos ou campanhas.",
+  },
+  {
+    q: "Qual a diferença entre totalização e resultado final?",
+    a: "Totalização é a soma dos boletins de urna conforme chegam ao TSE, e por isso o percentual de seções apuradas sobe durante a noite. O resultado final só existe quando as seções estão totalizadas e o TSE marca o candidato como eleito. Antes disso, quem está na frente apenas lidera a contagem.",
+  },
+  {
     q: "O que é a projeção?",
     a: "É uma estimativa calculada pelo site a partir das seções já apuradas. Ela muda conforme entram regiões novas e deixa de aparecer quando a apuração chega perto de 100%. Não é resultado oficial e pode errar, principalmente no começo da noite.",
   },
