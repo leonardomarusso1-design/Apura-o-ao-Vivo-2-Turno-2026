@@ -27,15 +27,12 @@ for (const uf of UFS) {
   const nome = new Map(nomes.map((m) => [String(m.id), m.nome]));
 
   const aneis = (g) => (g.type === "Polygon" ? [g.coordinates] : g.coordinates); // lista de polígonos (cada um: anéis)
-  let minLon = 1e9, maxLon = -1e9, minLat = 1e9, maxLat = -1e9;
-  for (const f of geo.features) for (const poly of aneis(f.geometry)) for (const [lon, lat] of poly[0]) {
-    minLon = Math.min(minLon, lon); maxLon = Math.max(maxLon, lon); minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat);
-  }
-  const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
-  const sc = W / ((maxLon - minLon) * k);
-  const X = (lon) => (lon - minLon) * k * sc;
-  const Y = (lat) => (maxLat - lat) * sc;
-  const H = Math.ceil((maxLat - minLat) * sc);
+  // Projeção NACIONAL única (todos os estados no mesmo sistema de coordenadas): permite o mapa de todos os municípios do Brasil
+  const K = Math.cos((-14 * Math.PI) / 180);
+  const SC = W / ((-34.7 - -74.1) * K);
+  const X = (lon) => (lon + 74.1) * K * SC;
+  const Y = (lat) => (5.4 - lat) * SC;
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
 
   const m = geo.features.map((f) => {
     let d = "";
@@ -43,7 +40,9 @@ for (const uf of UFS) {
       let ult = "";
       const pts = [];
       for (const [lon, lat] of anel) {
-        const p = `${X(lon).toFixed(1)} ${Y(lat).toFixed(1)}`;
+        const px = X(lon), py = Y(lat);
+        x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+        const p = `${px.toFixed(1)} ${py.toFixed(1)}`;
         if (p !== ult) pts.push(p);
         ult = p;
       }
@@ -52,7 +51,8 @@ for (const uf of UFS) {
     const id = String(f.properties.codarea);
     return { i: id, n: nome.get(id) ?? "", d };
   });
-  writeFileSync(join(OUT, `${uf.toLowerCase()}.json`), JSON.stringify({ w: W, h: H, m }));
+  const vb = [x0 - 2, y0 - 2, x1 - x0 + 4, y1 - y0 + 4].map((v) => Math.round(v * 10) / 10);
+  writeFileSync(join(OUT, `${uf.toLowerCase()}.json`), JSON.stringify({ vb, m }));
   console.log(uf, m.length, "municípios");
 }
 console.log("Pronto: public/geo/mun/*.json");

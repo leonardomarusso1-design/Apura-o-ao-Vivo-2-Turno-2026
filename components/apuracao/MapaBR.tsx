@@ -5,6 +5,8 @@ import { BR_UFS } from "@/lib/br-map";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtPct } from "./types";
 import Bandeira from "./Bandeira";
+import Avatar from "./Avatar";
+import { NOMES_2022, V2022 } from "@/lib/apuracao/eleicao2022";
 
 type Props = {
   ufs: Record<string, Area>;
@@ -14,6 +16,8 @@ type Props = {
   tv?: boolean;
   modo?: ModoMapa;
   candN?: number | null;
+  turno?: 1 | 2;
+  fit?: boolean; // preenche a altura do contêiner (layout de tela única)
 };
 
 export type ModoMapa = "estados" | "vantagem" | "apurado" | "candidato";
@@ -25,7 +29,7 @@ const PEQUENOS_SUL = ["ES", "RJ"];
 
 type Pt = { x: number; y: number };
 
-export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, modo = "estados", candN = null }: Props) {
+export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, modo = "estados", candN = null, turno = 2, fit = false }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ uf: string; x: number; y: number } | null>(null);
   const refs = useRef<Record<string, SVGPathElement | null>>({});
@@ -232,11 +236,11 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
     "flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#0d1117]/80 text-sm font-semibold text-paper backdrop-blur hover:bg-white/10 transition";
 
   return (
-    <div ref={wrap} className={`relative w-full ${tv ? "h-full" : ""}`}>
+    <div ref={wrap} className={`relative w-full ${tv || fit ? "h-full" : ""}`}>
       <svg
         ref={svgRef}
         viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
-        className={`mx-auto w-full select-none ${tv ? "h-full max-h-full" : "h-auto max-h-[76vh]"}`}
+        className={`mx-auto w-full select-none ${tv || fit ? "h-full max-h-full" : "h-auto max-h-[76vh]"}`}
         style={{ touchAction: zoomado ? "none" : "pan-y" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -350,35 +354,70 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
         </g>
       </svg>
 
-      {/* Tooltip de Hover Sofisticado */}
+      {/* Tooltip: fotos, partido, 2022 e variação */}
       {hover && tip && box ? (
         <div
-          className="pointer-events-none absolute z-30 w-60 rounded-2xl glass-panel-elevated p-3 text-xs shadow-2xl border border-white/10"
+          className="pointer-events-none absolute z-30 w-[270px] rounded-2xl glass-panel-elevated p-3 text-xs shadow-2xl border border-white/10"
           style={{
-            left: Math.min(Math.max(hover.x - box.left + 14, 0), Math.max(0, box.width - 250)),
-            top: Math.min(Math.max(hover.y - box.top + 14, 0), Math.max(0, box.height - 140)),
+            left: Math.min(Math.max(hover.x - box.left + 14, 0), Math.max(0, box.width - 280)),
+            top: Math.min(Math.max(hover.y - box.top + 14, 0), Math.max(0, box.height - 230)),
           }}
         >
-          <div className="flex items-center justify-between pb-2 border-b border-white/[0.06] mb-2">
-            <div className="flex items-center gap-2 font-bold text-sm text-white">
+          <div className="mb-2 flex items-center justify-between border-b border-white/[0.06] pb-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-white">
               <Bandeira uf={hover.uf} w={22} />
               <span>{nomeUf(hover.uf)}</span>
             </div>
-            <span className="tabular text-[11px] font-semibold text-blue-400">
-              {fmtPct(tip.pctApurado, 1)}%
-            </span>
+            <span className="tabular text-[11px] font-semibold text-blue-400">{fmtPct(tip.pctApurado, 1)}% das seções</span>
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-2">
             {tip.cands.slice(0, 2).map((c) => (
-              <div key={c.sq} className="tabular flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 truncate">
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: cor(c.n) }} />
-                  <span className="text-paper/90 truncate max-w-[130px]">{c.nome}</span>
+              <div key={c.sq} className="flex items-center gap-2.5">
+                <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={34} />
+                <span className="min-w-0 flex-1 leading-tight">
+                  <span className="block truncate font-semibold text-paper">{c.nome}</span>
+                  <span className="text-[11px]" style={{ color: cor(c.n) }}>
+                    {c.partido} {c.n}
+                  </span>
                 </span>
-                <strong className="text-white ml-2">{fmtPct(c.pct, 1)}%</strong>
+                <strong className="tabular text-base text-white">{fmtPct(c.pct, 1)}%</strong>
               </div>
             ))}
           </div>
+          {(() => {
+            const b = V2022[turno === 1 ? "1" : "2"]?.[hover.uf === "ZZ" ? "ZZ" : hover.uf];
+            if (!b) return null;
+            const tot = Object.values(b).reduce((x, y) => x + y, 0);
+            if (!tot) return null;
+            const p22 = (n: number) => ((b[String(n)] ?? 0) / tot) * 100;
+            const par = tip.cands.slice(0, 2).filter((c) => b[String(c.n)] !== undefined);
+            if (par.length === 0) return null;
+            return (
+              <div className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] text-mute">
+                <p className="flex flex-wrap items-center gap-x-3">
+                  <span className="font-semibold text-paper/80">2022</span>
+                  {par.map((c) => (
+                    <span key={c.n} className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full" style={{ background: cor(c.n) }} />
+                      {(NOMES_2022[String(c.n)] ?? `Nº ${c.n}`).split(" ").slice(-1)[0]} {fmtPct(p22(c.n), 1)}%
+                    </span>
+                  ))}
+                </p>
+                <p className="mt-1 flex flex-wrap gap-x-3">
+                  <span className="font-semibold text-paper/80">Variação</span>
+                  {par.map((c) => {
+                    const d = c.pct - p22(c.n);
+                    return (
+                      <span key={c.n} style={{ color: d >= 0 ? "#30a46c" : "#e5484d" }}>
+                        {c.partido} {d >= 0 ? "+" : "−"}
+                        {fmtPct(Math.abs(d), 1)} pts
+                      </span>
+                    );
+                  })}
+                </p>
+              </div>
+            );
+          })()}
         </div>
       ) : null}
 

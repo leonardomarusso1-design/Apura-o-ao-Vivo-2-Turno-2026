@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import StatsBar from "@/components/StatsBar";
 import ToqyStrip from "@/components/ToqyStrip";
 import Heartbeat from "@/components/Heartbeat";
 import ApuracaoClient from "@/components/apuracao/ApuracaoClient";
@@ -19,11 +18,13 @@ export default async function Page() {
   const snap = await getSnapshot().catch(() => null);
   const initial = snap ? JSON.parse(JSON.stringify({ ...publicSnapshot(snap), projecao: projetar(snap) })) : null;
   return (
-    <>
+    // No computador a apuração cabe numa única tela (sem rolar a página); no celular rola normalmente.
+    <div className="flex min-h-dvh flex-col lg:h-dvh lg:overflow-hidden">
       <ToqyStrip />
-      <StatsBar />
       <Heartbeat electionIso={ELECTION_ISO} />
-      <ApuracaoClient initial={initial} />
-    </>
+      <div className="lg:min-h-0 lg:flex-1">
+        <ApuracaoClient initial={initial} />
+      </div>
+    </div>
   );
 }

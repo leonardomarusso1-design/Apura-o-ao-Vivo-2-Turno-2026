@@ -12,6 +12,7 @@ import LiveBox from "./LiveBox";
 import dynamic from "next/dynamic";
 import BuscaModal from "./BuscaModal";
 import MapaMunicipios from "./MapaMunicipios";
+import BarraTempo from "./BarraTempo";
 import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
@@ -35,6 +36,10 @@ const MapaExterior = dynamic(() => import("./MapaExterior"), {
 const Governadores = dynamic(() => import("./Governadores"), {
   ssr: false,
   loading: () => <div className="h-64 animate-pulse rounded-2xl border border-line bg-panel" />,
+});
+const MapaMunicipiosBR = dynamic(() => import("./MapaMunicipiosBR"), {
+  ssr: false,
+  loading: () => <div className="h-full min-h-[300px] animate-pulse rounded-2xl bg-panel" />,
 });
 const Legislativo = dynamic(() => import("./Legislativo"), {
   ssr: false,
@@ -94,7 +99,9 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
   const [novo, setNovo] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
-  const [modo, setModo] = useState<ModoMapa>("estados");
+  const [modo, setModo] = useState<ModoMapa | "municipios">("estados");
+  const [resumoMun, setResumoMun] = useState<{ partido: string; n: number; qt: number }[]>([]);
+  const [online, setOnline] = useState<number | null>(null);
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [busca, setBusca] = useState(false);
@@ -109,6 +116,26 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  useEffect(() => {
+    let alive = true;
+    let t: ReturnType<typeof setTimeout>;
+    const load = async () => {
+      try {
+        if (!document.hidden) {
+          const r = await fetch("/api/stats");
+          if (r.ok && alive) setOnline(((await r.json()) as { online: number | null }).online ?? null);
+        }
+      } catch {
+        /* mantém */
+      }
+      if (alive) t = setTimeout(load, 20_000);
+    };
+    void load();
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
   }, []);
   const gravando = Boolean(dataLive && !dataLive.previa && !dataLive.demo && dataLive.status !== "aguardando");
   useEffect(() => {
@@ -260,28 +287,55 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
     return <TvView data={data} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
   }
 
+  const horaHM = (iso: string) =>
+    new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).replace(":", "h");
+  const statusTxt = data?.br
+    ? data.previa && data.br.totalizadoEm
+      ? `Como estava às ${horaHM(data.br.totalizadoEm)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
+      : `Atualizado às ${horaHM(data.geradoEm)} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
+    : "Aguardando o TSE iniciar a divulgação";
+
+  // "PL 15 · PT 12 estados": quem lidera em mais estados
+  const contEstados = useMemo(() => {
+    const m = new Map<number, { partido: string; qt: number }>();
+    for (const [k, a] of Object.entries(data?.ufs ?? {})) {
+      const l = a.cands[0];
+      if (!l || k === "ZZ" || a.pctApurado <= 0) continue;
+      const c = m.get(l.n) ?? { partido: l.partido, qt: 0 };
+      c.qt++;
+      m.set(l.n, c);
+    }
+    return [...m.entries()].map(([n, v]) => ({ n, ...v })).sort((a, b) => b.qt - a.qt).slice(0, 2);
+  }, [data]);
+  const legenda = modo === "municipios" ? resumoMun : contEstados;
+
+  const abas = [
+    ["presidente", "Presidente"],
+    ["governadores", "Governadores"],
+    ["senado", "Senado"],
+    ["federais", "Deputados"],
+  ] as const;
+  const abaAtiva = aba === "estaduais" ? "federais" : aba;
+  const btnTopo = "h-9 whitespace-nowrap rounded-xl border border-line px-3 text-xs sm:text-sm hover:bg-white/5";
+
   return (
-    <div className="mx-auto w-full max-w-[1800px] px-4 pb-16 pt-5 lg:px-6">
+    <div className="mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-3 pt-2 lg:h-full lg:min-h-0 lg:px-4">
       {novo && !diaDaEleicao ? (
-        <div className="mb-4 rounded-2xl border border-lime/40 bg-panel p-4">
-          <p className="font-semibold">Você está na lista ✓</p>
-          <p className="mt-1 text-sm text-mute">
-            Esta é a página onde a apuração do 2º turno vai acontecer, ao vivo. No dia 25 avisamos você por e-mail
-            {" "}e WhatsApp quando começar. Por enquanto, explore.
+        <div className="mb-3 rounded-2xl border border-lime/40 bg-panel p-3">
+          <p className="text-sm font-semibold">Você está na lista ✓</p>
+          <p className="mt-1 text-xs text-mute">
+            No dia 25 avisamos você por e-mail e WhatsApp quando a apuração começar. Por enquanto, explore.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap gap-2">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(share)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-11 items-center rounded-xl bg-lime px-4 text-sm font-semibold text-ink"
+              className="inline-flex h-9 items-center rounded-xl bg-lime px-3 text-xs font-semibold text-ink"
             >
               Chamar amigos no WhatsApp
             </a>
-            <button
-              onClick={() => navigator.clipboard?.writeText(link)}
-              className="h-11 rounded-xl border border-line px-4 text-sm"
-            >
+            <button onClick={() => navigator.clipboard?.writeText(link)} className="h-9 rounded-xl border border-line px-3 text-xs">
               Copiar meu link
             </button>
           </div>
@@ -289,157 +343,134 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
       ) : null}
 
       {data?.demo ? (
-        <p className="mb-4 rounded-lg border border-amber/50 px-3 py-2 text-xs text-amber">
+        <p className="mb-2 rounded-lg border border-amber/50 px-3 py-1.5 text-xs text-amber">
           DEMONSTRAÇÃO — números fictícios para você ver como a página funciona.
         </p>
       ) : null}
 
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl sm:text-3xl">Apuração do {data?.turno === 1 ? "1º" : "2º"} turno</h1>
+      <header className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 lg:flex-nowrap">
+        <div className="shrink-0">
+          <h1 className="font-display text-xl leading-none sm:text-2xl">Apuração 2026</h1>
           <Credito compact />
-          <p className="tabular text-xs text-mute">
-            {data?.br
-              ? data.previa && data.br.totalizadoEm
-                ? `Como estava às ${new Date(data.br.totalizadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).replace(":", "h")} · ${fmtPct(data.br.pctApurado, 1)}% das seções`
-                : `${fmtPct(data.br.pctApurado, 2)}% das seções apuradas`
-              : "Aguardando o TSE iniciar a divulgação"}
-            {erro ? " · reconectando…" : ""}
-          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setBusca(true)} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4" aria-label="Buscar estado ou cidade">
-            Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
-          </button>
+        <nav className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-2xl border border-line bg-white/[0.03] p-1" role="tablist" aria-label="Cargo">
+          {abas.map(([k, nome]) => (
+            <button
+              key={k}
+              role="tab"
+              aria-selected={abaAtiva === k}
+              onClick={() => setAba(k)}
+              className={`h-8 shrink-0 whitespace-nowrap rounded-xl px-3 text-xs font-medium transition sm:text-sm ${abaAtiva === k ? "bg-white/10 text-paper" : "text-mute hover:text-paper"}`}
+            >
+              {nome}
+            </button>
+          ))}
+        </nav>
+        <button onClick={() => setBusca(true)} className={btnTopo} aria-label="Buscar estado ou cidade">
+          Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
+        </button>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <span className="tabular hidden items-center gap-1.5 text-xs text-mute xl:flex" aria-live="polite">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            {statusTxt}
+            {erro ? " · reconectando…" : ""}
+          </span>
           <button
-            onClick={() => setUf(uf === "ZZ" ? null : "ZZ")}
+            onClick={() => {
+              setAba("presidente");
+              setUf(uf === "ZZ" ? null : "ZZ");
+            }}
             aria-pressed={uf === "ZZ"}
-            className={`h-10 whitespace-nowrap rounded-xl border px-3 text-sm sm:px-4 ${uf === "ZZ" ? "border-lime bg-lime text-ink" : "border-line"}`}
+            className={`${btnTopo} ${uf === "ZZ" ? "!border-lime bg-lime text-ink" : ""}`}
           >
             Exterior
           </button>
-          <button onClick={compartilhar} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4">
+          <button onClick={compartilhar} className={btnTopo}>
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
-          <button onClick={entrarTv} className="h-10 whitespace-nowrap rounded-xl border border-line px-3 text-sm sm:px-4">
+          <button onClick={entrarTv} className={btnTopo}>
             Tela cheia
           </button>
         </div>
       </header>
+      <p className="tabular mb-2 text-[11px] text-mute xl:hidden">{statusTxt}{erro ? " · reconectando…" : ""}</p>
 
-      {gravando && pontos.length >= 2 ? (
-        <div className="glass-panel mb-4 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-mute">Linha do tempo</span>
-          <input
-            type="range"
-            min={0}
-            max={pontos.length - 1}
-            value={ri ?? pontos.length - 1}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setRi(v >= pontos.length - 1 ? null : v);
-            }}
-            aria-label="Voltar no tempo da apuração"
-            className="h-8 min-w-[140px] flex-1 accent-[#00e599]"
-          />
-          <span className="tabular text-xs text-paper">
-            {ri === null
-              ? "Ao vivo"
-              : `Como estava às ${horaBR(pontos[ri].t)} · ${fmtPct(pontos[ri].pct, 1)}% das seções`}
-          </span>
-          {ri !== null ? (
-            <button onClick={() => setRi(null)} className="h-9 rounded-xl bg-lime px-3 text-xs font-semibold text-ink">
-              Voltar ao vivo
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Cargo">
-        {(
-          [
-            ["presidente", "Presidente"],
-            ["governadores", "Governadores"],
-            ["senado", "Senado"],
-            ["federais", "Deputados Federais"],
-            ["estaduais", "Deputados Estaduais"],
-          ] as const
-        ).map(([k, nome]) => (
-          <button
-            key={k}
-            role="tab"
-            aria-selected={aba === k}
-            onClick={() => setAba(k)}
-            className={`h-10 shrink-0 whitespace-nowrap rounded-xl border px-4 text-sm font-medium transition ${aba === k ? "border-white/20 bg-white/10 text-paper" : "border-line text-mute hover:text-paper"}`}
-          >
-            {nome}
-          </button>
-        ))}
-      </div>
-
-      {aba === "governadores" ? <Governadores /> : null}
-      {aba === "senado" ? <Legislativo cargo={5} /> : null}
-      {aba === "federais" ? <Legislativo cargo={6} /> : null}
-      {aba === "estaduais" ? <Legislativo cargo={7} /> : null}
-
-      {aba === "presidente" && esperandoVotos ? (
-        <p className="mb-4 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-mute" role="status">
-          <span className="pulse-dot mr-2 inline-block h-2 w-2 rounded-full bg-amber align-middle" />
-          Esperando novos votos serem contabilizados…
-        </p>
-      ) : null}
-
-      {aba === "presidente" ? (
-        <>
-      {aguardando && !data?.br ? (
-        <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
-          <p className="font-display text-2xl">Aguardando os primeiros votos</p>
-          <p className="mt-2 text-sm text-mute">
-            A divulgação começa quando as urnas fecham, às 17h (Brasília). Esta página atualiza sozinha.
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[340px_minmax(0,1fr)_360px]">
-          <div className="contents lg:flex lg:flex-col lg:gap-4">
-            <div className="order-1 lg:order-none">
-              <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} />
-            </div>
-            <div className="order-3 lg:order-none">{data ? <Projecao p={data.projecao} cor={cor} /> : null}</div>
-            <div className="order-6 lg:order-none">
-              <Linha pontos={data?.historico ?? []} cor={cor} />
-            </div>
-            <div className="order-7 lg:order-none">
-              <Regioes ufs={data?.ufs ?? {}} cor={cor} />
-            </div>
-          </div>
-
-          <div className="order-2 grid gap-4 lg:order-none lg:content-start">
-            {uf === "ZZ" ? (
-              <MapaExterior total={data?.ufs["ZZ"]} cor={cor} onVoltar={() => setUf(null)} />
-            ) : uf ? (
-              <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
-                <button onClick={() => setUf(null)} className="mb-2 h-9 rounded-lg border border-line px-3 text-xs hover:bg-white/5">
-                  ← Brasil
-                </button>
-                <MapaMunicipios uf={uf} cargo={1} inicial />
-                <p className="mt-1 text-center text-[11px] text-mute">Passe o mouse (ou toque) em um município · cor = quem lidera</p>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-line bg-panel p-3 sm:p-5">
-                <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs" role="tablist" aria-label="Modo do mapa">
+      <main className="min-h-0 flex-1">
+        {aba !== "presidente" ? (
+          <div className="pb-3 lg:h-full lg:overflow-y-auto lg:pr-1">
+            {aba === "governadores" ? <Governadores /> : null}
+            {aba === "senado" ? <Legislativo cargo={5} /> : null}
+            {aba === "federais" || aba === "estaduais" ? (
+              <div className="grid gap-3">
+                <div className="flex gap-1.5" role="tablist" aria-label="Casa legislativa">
                   {(
                     [
+                      ["federais", "Federais"],
+                      ["estaduais", "Estaduais"],
+                    ] as const
+                  ).map(([k, nome]) => (
+                    <button
+                      key={k}
+                      role="tab"
+                      aria-selected={aba === k}
+                      onClick={() => setAba(k)}
+                      className={`h-9 rounded-xl border px-4 text-sm ${aba === k ? "border-white/20 bg-white/10 text-paper" : "border-line text-mute"}`}
+                    >
+                      {nome}
+                    </button>
+                  ))}
+                </div>
+                <Legislativo cargo={aba === "federais" ? 6 : 7} />
+              </div>
+            ) : null}
+          </div>
+        ) : aguardando && !data?.br ? (
+          <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
+            <p className="font-display text-2xl">Aguardando os primeiros votos</p>
+            <p className="mt-2 text-sm text-mute">
+              A divulgação começa quando as urnas fecham, às 17h (Brasília). Esta página atualiza sozinha.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
+            {/* coluna esquerda */}
+            <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
+              {esperandoVotos ? (
+                <p className="order-1 rounded-lg border border-line bg-panel px-3 py-2 text-xs text-mute lg:order-none" role="status">
+                  <span className="pulse-dot mr-2 inline-block h-2 w-2 rounded-full bg-amber align-middle" />
+                  Esperando novos votos serem contabilizados…
+                </p>
+              ) : null}
+              <div className="order-1 lg:order-none">
+                <Placar br={data?.br ?? null} cor={cor} turno={data?.turno === 1 ? 1 : 2} />
+              </div>
+              <div className="order-6 lg:order-none">
+                <Linha pontos={data?.historico ?? []} cor={cor} />
+              </div>
+              <div className="order-7 lg:order-none">{data ? <Projecao p={data.projecao} cor={cor} /> : null}</div>
+            </div>
+
+            {/* centro: mapa */}
+            <section className="order-2 flex min-h-[420px] flex-col rounded-2xl border border-line bg-panel/60 p-2 sm:p-3 lg:order-none lg:min-h-0" aria-label="Mapa">
+              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                <div className="flex flex-wrap items-center gap-1" role="tablist" aria-label="Modo do mapa">
+                  {(
+                    [
+                      ["municipios", "Municípios"],
                       ["estados", "Estados"],
                       ["vantagem", "Vantagem"],
                       ["apurado", "Apurado"],
-                    ] as [ModoMapa, string][]
+                    ] as [ModoMapa | "municipios", string][]
                   ).map(([m, nome]) => (
                     <button
                       key={m}
                       role="tab"
                       aria-selected={modo === m}
-                      onClick={() => setModo(m)}
-                      className={`h-8 rounded-lg border px-3 ${modo === m ? "border-lime bg-lime text-ink" : "border-line text-mute"}`}
+                      onClick={() => {
+                        setModo(m);
+                        if (uf) setUf(null);
+                      }}
+                      className={`h-8 rounded-lg px-3 transition ${modo === m && !uf ? "bg-white/10 text-paper ring-1 ring-white/25" : "text-mute hover:text-paper"}`}
                     >
                       {nome}
                     </button>
@@ -448,12 +479,13 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                     aria-label="Mapa de um candidato"
                     value={modo === "candidato" && candN != null ? String(candN) : ""}
                     onChange={(e) => {
+                      if (uf) setUf(null);
                       if (e.target.value) {
                         setCandN(Number(e.target.value));
                         setModo("candidato");
                       } else setModo("estados");
                     }}
-                    className={`h-8 rounded-lg border bg-panel px-2 ${modo === "candidato" ? "border-lime text-paper" : "border-line text-mute"}`}
+                    className={`h-8 rounded-lg bg-panel px-2 ${modo === "candidato" ? "text-paper ring-1 ring-white/25" : "text-mute"}`}
                   >
                     <option value="">Candidato…</option>
                     {(data?.br?.cands ?? []).map((c) => (
@@ -463,74 +495,98 @@ export default function ApuracaoClient({ initial = null }: { initial?: Payload |
                     ))}
                   </select>
                 </div>
-                <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo} candN={candN} />
-                <Legenda cands={data?.br?.cands ?? []} />
-                <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Escolher estado">
-                  {Object.keys(data?.ufs ?? {})
-                    .filter((k) => k !== "ZZ")
-                    .sort()
-                    .map((k) => (
-                      <button
-                        key={k}
-                        onClick={() => setUf(k)}
-                        className="flex h-8 items-center gap-1.5 rounded-lg border border-line px-2 text-xs hover:bg-white/5"
-                      >
-                        <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: cor(data?.ufs[k]?.cands[0]?.n) }} />
-                        {k}
-                      </button>
-                    ))}
-                </div>
-                <p className="mt-1 text-center text-[11px] text-mute">Toque em um estado · cor = bloco de quem lidera · intensidade = margem</p>
+                <ul className="tabular ml-auto flex items-center gap-3 text-mute" aria-label="Quem lidera">
+                  {legenda.map((l) => (
+                    <li key={l.n} className="flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: cor(l.n) }} />
+                      <span style={{ color: cor(l.n) }} className="font-semibold">
+                        {l.partido}
+                      </span>
+                      <strong className="text-paper">{new Intl.NumberFormat("pt-BR").format(l.qt)}</strong>
+                    </li>
+                  ))}
+                  <li className="hidden sm:inline">{modo === "municipios" ? "municípios" : "estados"}</li>
+                </ul>
               </div>
-            )}
-            {uf && uf !== "ZZ" ? <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={data?.turno === 1 ? 1 : 2} onClose={() => setUf(null)} /> : null}
+
+              <div className="relative min-h-[320px] flex-1 lg:min-h-0">
+                {uf === "ZZ" ? (
+                  <div className="h-full overflow-y-auto">
+                    <MapaExterior total={data?.ufs["ZZ"]} cor={cor} onVoltar={() => setUf(null)} />
+                  </div>
+                ) : uf ? (
+                  <div className="flex h-full flex-col">
+                    <div>
+                      <button onClick={() => setUf(null)} className="h-8 rounded-lg border border-line px-3 text-xs hover:bg-white/5">
+                        ← Brasil
+                      </button>
+                    </div>
+                    <div className="min-h-0 flex-1">
+                      <MapaMunicipios uf={uf} cargo={1} inicial fit />
+                    </div>
+                  </div>
+                ) : modo === "municipios" ? (
+                  <MapaMunicipiosBR cor={cor} onSelectUf={setUf} onResumo={setResumoMun} />
+                ) : (
+                  <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo as ModoMapa} candN={candN} turno={data?.turno === 1 ? 1 : 2} fit />
+                )}
+                <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[290px] lg:block">
+                  <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={84} label="Anuncie aqui" />
+                </div>
+              </div>
+            </section>
+
+            {/* coluna direita */}
+            <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
+              {uf && uf !== "ZZ" ? (
+                <div className="order-3 lg:order-none">
+                  <PainelUF uf={uf} area={data?.ufs[uf]} cor={cor} turno={data?.turno === 1 ? 1 : 2} onClose={() => setUf(null)} />
+                </div>
+              ) : null}
+              <div className="order-4 lg:order-none">
+                <Regioes ufs={data?.ufs ?? {}} cor={cor} />
+              </div>
+              <div className="order-4 lg:order-none">
+                <Atualizacoes eventos={data?.eventos ?? []} cor={cor} />
+              </div>
+              <div className="order-5 lg:order-none">
+                <LiveBox />
+              </div>
+              <div className="order-5 lg:order-none">
+                <ToqyCard />
+              </div>
+              <div className="order-8 grid gap-3 lg:order-none">
+                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={250} label="Anuncie aqui" />
+                <SponsorSlot label="Sua marca na apuração" />
+              </div>
+            </div>
           </div>
+        )}
+      </main>
 
-          <div className="contents lg:flex lg:flex-col lg:gap-4">
-            <div className="order-4 lg:order-none">
-              <LiveBox />
-            </div>
-            <div className="order-4 lg:order-none">
-              <Atualizacoes eventos={data?.eventos ?? []} cor={cor} />
-            </div>
-            <div className="order-5 lg:order-none">
-              <ToqyCard />
-            </div>
-            <div className="order-8 grid gap-4 lg:order-none">
-              <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={250} label="Anuncie aqui" />
-              <SponsorSlot label="Sua marca na apuração" />
-            </div>
-          </div>
-        </div>
-      )}
+      <BarraTempo
+        pontos={gravando ? pontos : []}
+        ri={ri}
+        setRi={setRi}
+        online={online}
+        ativo={aba === "presidente"}
+        horaHM={horaHM}
+      />
 
-      <div className="mt-6">
-        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={120} label="Anuncie aqui · faixa grande" />
-      </div>
-        </>
-      ) : null}
-
-      <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={setUf} />
-
-      <footer className="mt-10 border-t border-line pt-5 text-xs leading-relaxed text-mute">
+      <footer className="mt-4 border-t border-line pt-4 text-xs leading-relaxed text-mute lg:hidden">
         <p className="mb-2">
           <Credito />
         </p>
         <p>
-          Dados oficiais: TSE (resultados.tse.jus.br). Projeção e cálculos de diferença são estimativas do site e não
-          substituem o resultado oficial. Projeto independente, sem vínculo com o TSE, partidos ou campanhas. Mapa:
-          @svg-maps/brazil (CC BY 4.0).
+          Dados oficiais: TSE (resultados.tse.jus.br). Projeção e cálculos de diferença são estimativas do site e não substituem o resultado
+          oficial. Projeto independente, sem vínculo com o TSE, partidos ou campanhas.
         </p>
         <p className="mt-2">
-          <a href="/" className="underline">
-            Início
-          </a>{" "}
-          ·{" "}
-          <a href="/privacidade" className="underline">
-            Privacidade
-          </a>
+          <a href="/" className="underline">Início</a> · <a href="/privacidade" className="underline">Privacidade</a>
         </p>
       </footer>
+
+      <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={(u) => { setAba("presidente"); setUf(u); }} />
     </div>
   );
 }

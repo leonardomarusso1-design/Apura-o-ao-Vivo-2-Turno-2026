@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { ItemMapa } from "@/lib/apuracao/municipios";
 import { fmtPct, makeCor } from "./types";
 
-type Geo = { w: number; h: number; m: { i: string; n: string; d: string }[] };
+type Geo = { vb: [number, number, number, number]; m: { i: string; n: string; d: string }[] };
 type Resp = { ok: boolean; pendente?: boolean; itens?: ItemMapa[] };
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /** Mapa de municípios de um estado: cada cidade colorida pelo líder (cor do bloco do partido). */
-export default function MapaMunicipios({ uf, cargo, inicial = false }: { uf: string; cargo: 1 | 3 | 5; inicial?: boolean }) {
+export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false }: { uf: string; cargo: 1 | 3 | 5; inicial?: boolean; fit?: boolean }) {
   const [aberto, setAberto] = useState(inicial);
   const [geo, setGeo] = useState<Geo | null | "falta">(null);
   const [dados, setDados] = useState<ItemMapa[] | null>(null);
@@ -74,9 +74,9 @@ export default function MapaMunicipios({ uf, cargo, inicial = false }: { uf: str
 
   const achar = (g: Geo["m"][number]) => porId.get(g.i) ?? porId.get(g.i.slice(0, 6)) ?? porNome.get(norm(g.n));
   return (
-    <div className="relative mt-4" onPointerLeave={() => setHover(null)}>
+    <div className={`relative ${fit ? "flex h-full flex-col" : "mt-4"}`} onPointerLeave={() => setHover(null)}>
       <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">Municípios · {dados.length}</p>
-      <svg viewBox={`0 0 ${geo.w} ${geo.h}`} className="max-h-[70vh] w-full" role="img" aria-label={`Mapa dos municípios de ${uf}`}>
+      <svg viewBox={geo.vb.join(" ")} className={fit ? "min-h-0 w-full flex-1" : "max-h-[70vh] w-full"} role="img" aria-label={`Mapa dos municípios de ${uf}`}>
         {geo.m.map((g) => {
           const it = achar(g);
           const l = it?.top[0];

@@ -15,13 +15,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: SITE_NAME,
+    images: [{ url: "/icons/og-apuracao.png", width: 1200, height: 630, alt: "Apuração ao vivo do 2º turno — mapa, placar e projeção" }],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", images: ["/icons/og-apuracao.png"] },
+  manifest: "/manifest.webmanifest",
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0d0c",
+  themeColor: "#07090e",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
