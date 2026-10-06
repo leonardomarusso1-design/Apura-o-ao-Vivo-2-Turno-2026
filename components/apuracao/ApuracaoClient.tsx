@@ -17,6 +17,7 @@ import AdSlot from "../ads/AdSlot";
 import ToqyCard from "./ToqyCard";
 import { fmtPct, makeCor, type Payload } from "./types";
 import type { PontoReplay } from "@/lib/apuracao/types";
+import ApoieModal from "./ApoieModal";
 import { TurnoContext } from "./TurnoContext";
 import SeletorCandidato from "./SeletorCandidato";
 import PainelCandidato from "./PainelCandidato";
@@ -92,7 +93,8 @@ function aplicarReplay(live: Payload, p: PontoReplay): Payload {
   };
 }
 
-export default function ApuracaoClient({ initial = null, turno = 2 }: { initial?: Payload | null; turno?: 1 | 2 }) {
+export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null, pix = "" }: { initial?: Payload | null; turno?: 1 | 2; pixQr?: string | null; pix?: string }) {
+  const [apoie, setApoie] = useState(false);
   const [dataLive, setData] = useState<Payload | null>(initial);
   const [pontos, setPontos] = useState<PontoReplay[]>([]);
   const [ri, setRi] = useState<number | null>(null); // null = ao vivo
@@ -418,6 +420,11 @@ export default function ApuracaoClient({ initial = null, turno = 2 }: { initial?
           >
             Exterior
           </button>
+          {pixQr ? (
+            <button onClick={() => setApoie(true)} className={`${btnTopo} !border-lime/60 text-lime`}>
+              Apoie
+            </button>
+          ) : null}
           <button onClick={compartilhar} className={btnTopo}>
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
@@ -638,6 +645,7 @@ export default function ApuracaoClient({ initial = null, turno = 2 }: { initial?
         </p>
       </footer>
 
+      {pixQr ? <ApoieModal aberto={apoie} onClose={() => setApoie(false)} qr={pixQr} pix={pix} /> : null}
       <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={(u) => { setAba("presidente"); setUf(u); }} />
     </div>
     </TurnoContext.Provider>

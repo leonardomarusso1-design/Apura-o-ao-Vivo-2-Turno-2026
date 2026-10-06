@@ -1,13 +1,15 @@
 import ToqyStrip from "@/components/ToqyStrip";
 import Heartbeat from "@/components/Heartbeat";
 import ApuracaoClient from "./ApuracaoClient";
-import { ELECTION_ISO } from "@/lib/env";
+import QRCode from "qrcode";
+import { ELECTION_ISO, PIX_COPIA_COLA } from "@/lib/env";
 import { getSnapshot, publicSnapshot } from "@/lib/apuracao/snapshot";
 import { projetar } from "@/lib/apuracao/projection";
 
 /** Página de uma rodada (servidor): já chega com os números. */
 export default async function PaginaApuracao({ turno }: { turno: 1 | 2 }) {
   const snap = await getSnapshot(turno).catch(() => null);
+  const pixQr = PIX_COPIA_COLA ? await QRCode.toDataURL(PIX_COPIA_COLA, { margin: 1, width: 240, errorCorrectionLevel: "M" }).catch(() => null) : null;
   const initial = snap ? JSON.parse(JSON.stringify({ ...publicSnapshot(snap), projecao: projetar(snap) })) : null;
   return (
     // No computador a apuração cabe numa única tela (sem rolar a página); no celular rola normalmente.
@@ -15,7 +17,7 @@ export default async function PaginaApuracao({ turno }: { turno: 1 | 2 }) {
       <ToqyStrip />
       <Heartbeat electionIso={ELECTION_ISO} />
       <div className="lg:min-h-0 lg:flex-1">
-        <ApuracaoClient initial={initial} turno={turno} />
+        <ApuracaoClient initial={initial} turno={turno} pixQr={pixQr} pix={PIX_COPIA_COLA} />
       </div>
     </div>
   );
