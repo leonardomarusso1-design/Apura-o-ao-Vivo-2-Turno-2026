@@ -466,7 +466,8 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
             ) : null}
           </div>
         ) : aguardando && !data?.br ? (
-          <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-line bg-panel p-8 text-center" role="status">
+                    <div className="mx-auto mt-4 grid max-w-4xl gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+            <div className="rounded-2xl border border-line bg-panel p-8 text-center" role="status">
             <p className="font-display text-2xl">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
             <p className="mt-2 text-sm text-mute">
               {turno === 2
@@ -478,6 +479,8 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixQr = null
                 Ver o resultado do 1º turno
               </a>
             ) : null}
+          </div>
+            <Atualizacoes eventos={[]} cor={cor} mural={turno === 2} pct={0} />
           </div>
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">

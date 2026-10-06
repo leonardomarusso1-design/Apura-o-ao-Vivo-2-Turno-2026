@@ -70,7 +70,7 @@ function Noticias() {
 }
 
 export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: { eventos: Evento[]; cor: (n: number | undefined) => string; mural?: boolean; pct?: number }) {
-  const [aba, setAba] = useState<"tse" | "noticias" | "mural">("tse");
+  const [aba, setAba] = useState<"tse" | "noticias" | "mural">(mural && eventos.length === 0 ? "mural" : "tse");
   return (
     <section className="glass-panel rise rounded-2xl p-4 sm:p-5" aria-label="Últimas atualizações">
       <div className="mb-3 flex items-center justify-between border-b border-white/[0.06] pb-2.5">
