@@ -169,7 +169,7 @@ export default function TvView({
   const placar = (
     <div className="flex min-h-0 flex-col gap-3">
       {placarCard}
-      {c && !chat ? <div className="lg:hidden"><BannerTv p={patro} /></div> : <BannerTv p={patro} fill={c} />}
+      <BannerTv p={patro} />
     </div>
   );
 
@@ -349,37 +349,32 @@ export default function TvView({
       ) : null}
 
       {liveId ? (
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(280px,24%)_minmax(0,1fr)]">
-          {placar}
-          <div className="grid h-full min-h-0 gap-3 lg:grid-rows-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
-            <div className="flex min-h-0 gap-3">
-              <div className="aspect-video h-full max-w-[70%] shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
+        <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,27%)_minmax(0,1fr)]">
+          <div className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+            {placarCard}
+            <div className="aspect-video w-full shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
+                title="Live do YouTube"
+                className="h-full w-full"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
+            <BannerTv p={patro} fill={!(chat && host)} />
+            {chat && host ? (
+              <div className="hidden min-h-[120px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
                 <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
-                  title="Live do YouTube"
+                  src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
+                  title="Chat da live"
                   className="h-full w-full"
-                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  allowFullScreen
                   referrerPolicy="strict-origin-when-cross-origin"
                 />
               </div>
-              {chat && host ? (
-                <div className="hidden min-h-0 min-w-0 flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
-                  <iframe
-                    src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
-                    title="Chat da live"
-                    className="h-full w-full"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                </div>
-              ) : (
-                <div className="hidden min-w-0 flex-1 lg:flex">
-                  <BannerTv p={patro} fill />
-                </div>
-              )}
-            </div>
-            <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
+            ) : null}
           </div>
+          <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
         </div>
       ) : (
         <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
