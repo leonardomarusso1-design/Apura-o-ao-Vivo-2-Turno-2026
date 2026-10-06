@@ -52,9 +52,9 @@ export default function PainelCandidato({
       <ul className="grid gap-1.5">
         {itens.map((e) => (
           <li key={e.id}>
-            <button onClick={() => onUf(e.id)} className="block w-full text-left">
+            <button onClick={() => onUf(e.id)} className="clicavel block w-full px-1 py-0.5 text-left" title={`Ver ${nomeUf(e.id)}`}>
               <span className="flex items-center justify-between text-xs">
-                <span className="truncate">{nomeUf(e.id)}</span>
+                <span className="truncate">{nomeUf(e.id)} <span aria-hidden className="text-mute">›</span></span>
                 <strong className="tabular">{fmtPct(e.pct, 1)}%</strong>
               </span>
               <span className="mt-0.5 block h-1 overflow-hidden rounded-full bg-white/10">

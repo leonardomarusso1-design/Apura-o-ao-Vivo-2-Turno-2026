@@ -138,3 +138,28 @@ body {
 @keyframes pop-in { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
 .animate-in { animation: pop-in .25s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .glow-card::before, .live-dot::after, .net-line, .net-dot, .animate-in { animation: none !important; } }
+
+/* Tudo que é clicável mostra isso ao passar o mouse */
+button:not(:disabled),
+[role="button"],
+[role="tab"],
+[role="option"],
+summary {
+  cursor: pointer;
+}
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  [role="button"]:hover {
+    filter: brightness(1.18);
+  }
+  .clicavel {
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: background-color 0.15s, box-shadow 0.15s;
+  }
+  .clicavel:hover,
+  .clicavel:focus-visible {
+    background-color: rgb(255 255 255 / 0.08);
+    box-shadow: 0 0 0 4px rgb(255 255 255 / 0.08), 0 0 0 5px rgb(255 255 255 / 0.25);
+  }
+}

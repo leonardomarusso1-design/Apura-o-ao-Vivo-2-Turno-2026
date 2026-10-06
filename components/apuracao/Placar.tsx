@@ -73,29 +73,28 @@ export default function Placar({
           const candidatoCor = c ? cor(c.n) : "#7e8d9f";
 
           return (
-            <div 
-              key={c?.sq ?? i} 
-              className={`flex min-w-0 flex-col ${i === 1 ? "items-end text-right" : "items-start text-left"}`}
+            <div
+              key={c?.sq ?? i}
+              role={c ? "button" : undefined}
+              tabIndex={c ? 0 : undefined}
+              onClick={() => c && onCand?.(c.n)}
+              onKeyDown={(e) => c && (e.key === "Enter" || e.key === " ") && onCand?.(c.n)}
+              aria-label={c ? `Ver o mapa de ${c.nome}` : undefined}
+              title={c ? "Ver o mapa deste candidato" : undefined}
+              style={c && (candSel === c.n) ? { borderColor: candidatoCor } : undefined}
+              className={`-m-1 flex min-w-0 cursor-pointer flex-col rounded-2xl border border-transparent p-2 transition hover:border-white/25 hover:bg-white/[0.05] focus-visible:border-white/40 ${candSel === c?.n ? "bg-white/[0.06]" : ""} ${i === 1 ? "items-end text-right" : "items-start text-left"}`}
             >
               <div className={`flex w-full min-w-0 items-center gap-2.5 ${i === 1 ? "flex-row-reverse" : ""}`}>
                 {c ? (
-                  <button
-                    type="button"
-                    onClick={() => onCand?.(c.n)}
-                    aria-label={`Ver o mapa de ${c.nome}`}
-                    title="Ver o mapa deste candidato"
-                    className={`shrink-0 rounded-full transition hover:scale-105 ${candSel === c.n ? "ring-2 ring-white" : ""}`}
-                  >
-                    <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
-                  </button>
+<Avatar n={c.n} sq={c.sq} nome={c.nome} cor={candidatoCor} size={46} />
                 ) : (
                   <div className="w-[46px] h-[46px] rounded-full bg-white/[0.05] animate-pulse" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="line-clamp-2 break-words text-sm font-semibold leading-tight text-paper sm:text-[15px]">
+                  <span className="block break-words text-sm font-semibold leading-tight text-paper [overflow-wrap:anywhere] sm:text-[15px]">
                     {c ? c.nome : "—"}
                   </span>
-                  <span className={`mt-0.5 flex min-h-[2.5rem] flex-wrap content-start items-center gap-1.5 text-xs font-medium text-mute ${i === 1 ? "justify-end" : ""}`}>
+                  <span className={`mt-0.5 flex flex-wrap content-start items-center gap-1.5 text-xs font-medium text-mute ${i === 1 ? "justify-end" : ""}`}>
                     {c ? `${c.partido} · ${c.n}` : ""}
                     {isLider && (
                       <span

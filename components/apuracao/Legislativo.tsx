@@ -15,32 +15,61 @@ const ROTULO: Record<Bloco, string> = { esquerda: "Esquerda", centro: "Centrão"
 const ORDEM: Bloco[] = ["esquerda", "centro", "outros", "direita"];
 const TITULO: Record<CargoLeg, string> = { 5: "Senado", 6: "Câmara dos Deputados", 7: "Assembleias Legislativas" };
 
-/** Hemiciclo em SVG: fileiras concêntricas, pontos ordenados por ângulo (esquerda → direita). */
-function Hemiciclo({ seats }: { seats: { cor: string; titulo: string }[] }) {
-  const total = seats.length;
-  const pontos = useMemo(() => {
-    const filas = Math.max(2, Math.round(Math.sqrt(total / 3.2)));
-    const r0 = 0.38;
-    const raios = Array.from({ length: filas }, (_, i) => r0 + ((1 - r0) * i) / (filas - 1));
-    const soma = raios.reduce((a, b) => a + b, 0);
-    const out: { x: number; y: number; a: number }[] = [];
-    raios.forEach((r, i) => {
-      const n = i === filas - 1 ? total - out.length : Math.round((total * r) / soma);
-      for (let k = 0; k < n; k++) {
-        const a = Math.PI - (Math.PI * (k + 0.5)) / n;
-        out.push({ x: 50 + 48 * r * Math.cos(a), y: 50 - 48 * r * Math.sin(a), a });
-      }
-    });
-    return out.sort((p, q) => q.a - p.a).slice(0, total);
-  }, [total]);
-  const raio = Math.max(0.7, Math.min(2.2, 70 / Math.sqrt(total * 6)));
+type Tile = { sg: string; cadeiras: number; bloco: Bloco };
+type Rect = Tile & { x: number; y: number; w: number; h: number };
+
+/** Treemap "squarified": cada partido é um bloco com área proporcional às cadeiras. */
+function squarify(itens: Tile[], W: number, H: number): Rect[] {
+  const total = itens.reduce((a, b) => a + b.cadeiras, 0) || 1;
+  const k = (W * H) / total;
+  const fila = [...itens].sort((a, b) => b.cadeiras - a.cadeiras);
+  const out: Rect[] = [];
+  let x = 0, y = 0, w = W, h = H;
+  const pior = (linha: Tile[], lado: number) => {
+    const area = linha.reduce((a, b) => a + b.cadeiras * k, 0);
+    const mx = Math.max(...linha.map((i) => i.cadeiras * k));
+    const mn = Math.min(...linha.map((i) => i.cadeiras * k));
+    return Math.max((lado * lado * mx) / (area * area), (area * area) / (lado * lado * mn));
+  };
+  while (fila.length) {
+    const lado = Math.min(w, h);
+    const linha: Tile[] = [fila.shift()!];
+    while (fila.length && pior([...linha, fila[0]], lado) <= pior(linha, lado)) linha.push(fila.shift()!);
+    const area = linha.reduce((a, b) => a + b.cadeiras * k, 0);
+    const espessura = area / lado;
+    let off = 0;
+    for (const i of linha) {
+      const comp = (i.cadeiras * k) / espessura;
+      out.push(w >= h ? { ...i, x, y: y + off, w: espessura, h: comp } : { ...i, x: x + off, y, w: comp, h: espessura });
+      off += comp;
+    }
+    if (w >= h) { x += espessura; w -= espessura; } else { y += espessura; h -= espessura; }
+  }
+  return out;
+}
+
+function Mosaico({ partidos, total }: { partidos: Tile[]; total: number }) {
+  const W = 400, H = 230;
+  const rects = useMemo(() => squarify(partidos.filter((p) => p.cadeiras > 0), W, H), [partidos]);
   return (
-    <svg viewBox="0 0 100 54" className="w-full" role="img" aria-label={`Hemiciclo com ${total} cadeiras`}>
-      {pontos.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y + 3} r={raio} fill={seats[i]?.cor ?? "#333"}>
-          <title>{seats[i]?.titulo}</title>
-        </circle>
-      ))}
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Cadeiras por partido (${total})`}>
+      {rects.map((r) => {
+        const c = COR_BLOCO[r.bloco][0];
+        const grande = r.w > 46 && r.h > 34;
+        return (
+          <g key={r.sg} className="cursor-default">
+            <rect x={r.x + 1} y={r.y + 1} width={Math.max(0, r.w - 2)} height={Math.max(0, r.h - 2)} rx={6} fill={c} fillOpacity={0.28} stroke={c} strokeOpacity={0.9} strokeWidth={1.2}>
+              <title>{`${r.sg}: ${r.cadeiras} (${ROTULO[r.bloco]})`}</title>
+            </rect>
+            {grande ? (
+              <>
+                <text x={r.x + 8} y={r.y + 18} fontSize={r.w > 90 ? 13 : 11} fontWeight={700} fill="#fff">{r.sg}</text>
+                <text x={r.x + 8} y={r.y + (r.w > 90 ? 40 : 34)} fontSize={r.w > 90 ? 20 : 14} fontWeight={800} fill={c}>{r.cadeiras}</text>
+              </>
+            ) : null}
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -181,17 +210,13 @@ export default function Legislativo({ cargo }: { cargo: CargoLeg }) {
         ) : null}
 
         <section className="glass-panel rounded-2xl p-3">
-          <div className="mx-auto max-w-[340px]">
-            <Hemiciclo seats={seats} />
-          </div>
-          <ul className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px]">
-            {d.partidos.slice(0, 14).map((p) => (
-              <li key={p.sg} className="flex items-center gap-1">
-                <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: COR_BLOCO[p.bloco][0] }} />
-                {p.sg} <strong className="tabular">{p.cadeiras}</strong>
-              </li>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-paper">Cadeiras por partido</h3>
+          <Mosaico partidos={d.partidos.map((p) => ({ sg: p.sg, cadeiras: p.cadeiras, bloco: p.bloco }))} total={seats.length} />
+          <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-white/10" aria-hidden>
+            {blocosAtivos.map((b) => (
+              <span key={b} style={{ width: `${(d.blocos[b] / Math.max(1, seats.length)) * 100}%`, background: COR_BLOCO[b][0] }} />
             ))}
-          </ul>
+          </div>
         </section>
 
         <section className="glass-panel min-h-0 rounded-2xl p-3 lg:flex-1 lg:overflow-y-auto">
