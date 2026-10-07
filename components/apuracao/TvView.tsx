@@ -282,7 +282,9 @@ export default function TvView({
   const botao = "h-10 shrink-0 rounded-xl border border-line px-4 text-sm text-mute hover:text-paper";
 
   return (
-    <div className="fixed inset-0 z-50 grid h-dvh grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto bg-ink p-3 sm:p-5 lg:overflow-hidden">
+    <div data-tv-root className={`fixed inset-0 z-50 grid h-dvh grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto p-3 sm:p-5 lg:overflow-hidden ${obs ? "bg-transparent" : "bg-ink"}`}>
+      {/* OBS: página transparente (sem fundo do site), para a webcam aparecer por baixo do espaço da câmera */}
+      {obs ? <style>{"html,body{background:transparent!important}body *{visibility:hidden}[data-tv-root],[data-tv-root] *{visibility:visible}"}</style> : null}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           {!br ? (
@@ -370,7 +372,8 @@ export default function TvView({
               />
             </div>
           ) : obs ? (
-            <div className="aspect-video w-full shrink-0" aria-hidden />
+            // furo transparente com cantos arredondados: o anel da cor do fundo esconde os cantos retos da webcam que fica por baixo
+            <div className="aspect-video w-full shrink-0 rounded-3xl shadow-[0_0_0_10px_#07090e]" aria-hidden />
           ) : (
             <div className="hidden aspect-video w-full shrink-0 items-center justify-center rounded-3xl border border-dashed border-line px-4 text-center text-xs text-mute lg:flex">
               A transmissão aparece aqui quando a live começar
