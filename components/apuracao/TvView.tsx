@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { idDeLive } from "@/lib/live-id";
+import { camSrc, lerCamera } from "@/lib/camera";
 import MapaBR, { type ModoMapa } from "./MapaBR";
 import MapaMunicipios from "./MapaMunicipios";
 import type { ResumoMun } from "./MapaMunicipiosBR";
@@ -51,11 +52,10 @@ export default function TvView({
   const ufsTv = data?.ufs ?? {};
   const [autoId, setAutoId] = useState<string | null>(null);
   const [manualId, setManualId] = useState<string | null>(null);
-  const [chat, setChat] = useState(true);
   const [editor, setEditor] = useState(false);
   const [campo, setCampo] = useState("");
   const [host, setHost] = useState("");
-  // ?obs=1: versão para o OBS (sem o vídeo/chat embutidos, que repetiriam a própria live; deixa os espaços vazios para câmera e chat)
+  // ?obs=1: versão para o OBS (sem o vídeo embutido, que repetiria a própria live; deixa o espaço do vídeo vazio para a sua câmera)
   const [obs] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("obs") === "1");
   const [modo, setModo] = useState<ModoTv>("estados");
   const [candN, setCandN] = useState<number | null>(null);
@@ -97,7 +97,10 @@ export default function TvView({
     };
   }, []);
 
-  const liveId = obs ? null : (manualId ?? autoId);
+  // Câmera separada (definida em /admin/patro) tem prioridade; sem ela, entra a live inteira como antes.
+  const camera = obs ? null : lerCamera(patro.camera);
+  const camUrl = camera ? camSrc(camera, host) : null;
+  const liveId = obs || camera ? null : (manualId ?? autoId);
   const salvar = (id: string | null) => {
     setManualId(id);
     try {
@@ -112,11 +115,14 @@ export default function TvView({
   const porVotos = [...(br?.cands ?? [])].sort((a, b) => b.votos - a.votos);
   const lider = porVotos[0];
   const dupla = (br?.cands.slice(0, 2) ?? []).sort((a, b) => a.n - b.n); // lados fixos, não trocam quando a liderança muda
+  // Antes dos votos, o cartão ocupa o mesmo espaço (dois lados em branco), para a altura não mudar quando os números chegarem.
+  const lados = dupla.length === 2 ? dupla : null;
   const dif = porVotos.length > 1 ? porVotos[0].votos - porVotos[1].votos : 0;
   const encerrado = Boolean(br && br.pctApurado >= 99.99) || data?.status === "finalizado" || Boolean(data?.previa);
   const atualizado = br?.geracao ? `Geração do TSE: ${br.geracao.slice(11)}` : "";
 
-  const c = Boolean(liveId) || obs; // com live, o placar encolhe para dar lugar ao vídeo
+  // O layout é sempre o mesmo (com o espaço do vídeo reservado), esteja a live no ar ou não, no 1º e no 2º turno: nada desce quando os votos começam.
+  const c = true;
   const tamPct = c ? "text-[clamp(1.8rem,2.8vw,2.6rem)]" : "text-[clamp(3rem,9vw,8rem)]";
   const tamCand = c ? "text-[clamp(1.4rem,2.1vw,2.1rem)]" : "text-[clamp(2.5rem,6vw,5.5rem)]";
 
@@ -129,12 +135,12 @@ export default function TvView({
               <Num v={br.pctApurado} d={2} />
               <span className="ml-1 text-[0.4em] text-mute">%</span>
             </p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-mute sm:text-sm">das seções totalizadas</p>
+            <p className="mt-1 truncate whitespace-nowrap text-xs font-semibold uppercase tracking-[0.25em] text-mute sm:text-sm">das seções totalizadas</p>
           </>
         ) : (
           <>
             <p className={`font-display ${tamPct} font-bold leading-none`}>Aguardando</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-mute sm:text-sm">a divulgação começa em 25/10 às 17h</p>
+            <p className="mt-1 truncate whitespace-nowrap text-xs font-semibold uppercase tracking-[0.2em] text-mute sm:text-sm">apuração 25/10 · 17h</p>
           </>
         )}
         <div className="mx-auto mt-1.5 h-1.5 max-w-xl overflow-hidden rounded-full bg-white/10">
@@ -143,47 +149,38 @@ export default function TvView({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {dupla.map((k, i) => (
-          <div key={k.sq} className={`flex min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end text-right" : "items-start text-left"}`}>
-            <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 32 : 72} eager />
-            <p className={`w-full truncate font-semibold uppercase tracking-wide ${c ? "text-xs sm:text-sm" : "text-lg sm:text-2xl"}`} style={{ color: cor(k.n) }}>
-              {k.nome}
-              {lider && k.n === lider.n && k.votos > 0 ? <span className="ml-2 align-middle text-[10px] text-mute">LÍDER</span> : null}
+        {(lados ?? [null, null]).map((k, i) => (
+          <div key={k?.sq ?? i} className={`flex min-w-0 flex-col gap-1.5 ${i === 1 ? "items-end text-right" : "items-start text-left"}`}>
+            {k ? (
+              <Avatar n={k.n} sq={k.sq} nome={k.nome} cor={cor(k.n)} size={c ? 32 : 72} eager />
+            ) : (
+              <span className="h-8 w-8 rounded-full bg-white/10" aria-hidden />
+            )}
+            <p className={`w-full truncate font-semibold uppercase tracking-wide ${c ? "text-xs sm:text-sm" : "text-lg sm:text-2xl"}`} style={k ? { color: cor(k.n) } : undefined}>
+              {k ? k.nome : <span className="text-mute">Candidato</span>}
+              {k && lider && k.n === lider.n && k.votos > 0 ? <span className="ml-2 align-middle text-[10px] text-mute">LÍDER</span> : null}
             </p>
             <p className={`tabular font-display ${tamCand} font-bold leading-none`}>
-              <Num v={k.pct} d={2} />
+              {k ? <Num v={k.pct} d={2} /> : <span className="text-mute">--</span>}
               <span className="text-[0.4em] text-mute">%</span>
             </p>
             <p className={`tabular text-mute ${c ? "text-xs" : "text-base sm:text-xl"}`}>
-              <Num v={k.votos} d={0} /> votos
+              {k ? <Num v={k.votos} d={0} /> : "0"} votos
             </p>
           </div>
         ))}
       </div>
 
-      {dupla.length === 2 ? (
-        <div className={`flex w-full overflow-hidden rounded-full bg-black/40 ${c ? "h-2" : "h-3"}`} aria-hidden>
-          {dupla.map((k) => (
-            <div key={k.sq} className="h-full transition-all duration-700" style={{ width: `${k.pct}%`, background: cor(k.n) }} />
-          ))}
-        </div>
-      ) : null}
+      <div className={`flex w-full overflow-hidden rounded-full bg-black/40 ${c ? "h-2" : "h-3"}`} aria-hidden>
+        {lados?.map((k) => <div key={k.sq} className="h-full transition-all duration-700" style={{ width: `${k.pct}%`, background: cor(k.n) }} />)}
+      </div>
 
-      {dif > 0 ? (
-        <p className={`tabular text-center ${c ? "text-sm" : "text-lg sm:text-2xl"}`}>
-          <span className="text-mute">Diferença </span>
-          <strong>{fmtInt(dif)}</strong>
-          <span className="text-mute"> votos</span>
-        </p>
-      ) : null}
+      <p className={`tabular text-center ${c ? "text-sm" : "text-lg sm:text-2xl"} ${dif > 0 ? "" : "invisible"}`}>
+        <span className="text-mute">Diferença </span>
+        <strong>{fmtInt(dif)}</strong>
+        <span className="text-mute"> votos</span>
+      </p>
     </section>
-  );
-
-  const placar = (
-    <div className="flex min-h-0 flex-col gap-3">
-      {placarCard}
-      <BannerTv p={patro} />
-    </div>
   );
 
   const escolherUf = (u: string) => {
@@ -306,14 +303,11 @@ export default function TvView({
         <div className="flex items-center gap-3 text-xl">
           <Hora />
           {obs ? null : <>
-          {liveId ? (
-            <button onClick={() => setChat((v) => !v)} className={botao} aria-pressed={chat}>
-              Chat {chat ? "ligado" : "desligado"}
+          {camera ? null : (
+            <button onClick={() => setEditor((v) => !v)} className={botao} aria-expanded={editor}>
+              {liveId ? "Trocar live" : "Adicionar live"}
             </button>
-          ) : null}
-          <button onClick={() => setEditor((v) => !v)} className={botao} aria-expanded={editor}>
-            {liveId ? "Trocar live" : "Adicionar live"}
-          </button>
+          )}
           <button onClick={onExit} className={botao}>
             Sair
           </button>
@@ -354,52 +348,38 @@ export default function TvView({
               Remover
             </button>
           ) : null}
-          <span className="w-full text-[11px] text-mute">Vale só neste aparelho. A live precisa permitir incorporação. Clique no vídeo para ligar o som.</span>
+          <span className="w-full text-[11px] text-mute">Vale só neste aparelho. A live precisa permitir incorporação. Clique no vídeo para ligar o som. Para mostrar só a câmera para todo mundo, use /admin/patro.</span>
         </form>
       ) : null}
         </div>
       ) : null}
 
-      {c ? (
-        <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,27%)_minmax(0,1fr)]">
-          <div className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
-            {placarCard}
-            {liveId ? (
-              <div className="aspect-video w-full shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
-                  title="Live do YouTube"
-                  className="h-full w-full"
-                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  allowFullScreen
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-              </div>
-            ) : obs ? (
-              <div className="aspect-video w-full shrink-0" aria-hidden />
-            ) : null}
-            <BannerTv p={patro} fill={!obs && !(chat && host && Boolean(liveId))} slim />
-            {obs ? (
-              <div className="hidden min-h-[200px] flex-1 lg:block" aria-hidden />
-            ) : chat && host && liveId ? (
-              <div className="hidden min-h-[200px] flex-1 overflow-hidden rounded-3xl border border-line bg-panel lg:block">
-                <iframe
-                  src={`https://www.youtube.com/live_chat?v=${liveId}&embed_domain=${encodeURIComponent(host)}&dark_theme=1`}
-                  title="Chat da live"
-                  className="h-full w-full"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-              </div>
-            ) : null}
-          </div>
-          <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
+      <div className="grid min-h-0 gap-3 lg:grid-cols-[minmax(300px,27%)_minmax(0,1fr)]">
+        <div className="flex min-h-0 flex-col gap-3 lg:overflow-hidden">
+          {placarCard}
+          {/* Espaço do vídeo: sempre reservado (16:9) no computador. No OBS fica vazio para a sua câmera; no site entra só a câmera (ou a live, se não houver câmera). */}
+          {camUrl || liveId ? (
+            <div className="aspect-video w-full shrink-0 overflow-hidden rounded-3xl border border-line bg-black">
+              <iframe
+                src={camUrl ?? `https://www.youtube-nocookie.com/embed/${liveId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`}
+                title={camUrl ? "Câmera ao vivo" : "Live do YouTube"}
+                className="h-full w-full"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
+          ) : obs ? (
+            <div className="aspect-video w-full shrink-0" aria-hidden />
+          ) : (
+            <div className="hidden aspect-video w-full shrink-0 items-center justify-center rounded-3xl border border-dashed border-line px-4 text-center text-xs text-mute lg:flex">
+              A transmissão aparece aqui quando a live começar
+            </div>
+          )}
+          <BannerTv p={patro} fill slim />
         </div>
-      ) : (
-        <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-          {placar}
-          {mapa}
-        </div>
-      )}
+        <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
+      </div>
 
       <div className="grid gap-2">
         <Ticker eventos={data?.eventos ?? []} patrocinios={patro.faixas.length ? patro.faixas : FAIXA_PADRAO} />

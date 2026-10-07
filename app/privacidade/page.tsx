@@ -17,6 +17,10 @@ export default function Privacidade() {
         anunciantes.
       </p>
       <p className="mt-3">
+        Quem dá um lance no leilão de patrocínio (página Anunciar) informa empresa, nome, e-mail e WhatsApp. Usamos esses dados apenas para falar com os
+        vencedores sobre pagamento e arte, e não os mostramos a ninguém.
+      </p>
+      <p className="mt-3">
         Você pode sair a qualquer momento pelo link presente em todas as mensagens, ou pedindo a exclusão dos seus dados
         em {EMAIL_COMERCIAL || "nosso e-mail de contato"}.
       </p>

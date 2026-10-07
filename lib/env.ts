@@ -2,7 +2,6 @@ export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "Apuração ao Viv
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const ELECTION_ISO =
   process.env.NEXT_PUBLIC_ELECTION_ISO ?? "2026-10-25T17:00:00-03:00";
-export const WHATSAPP_COMERCIAL = process.env.NEXT_PUBLIC_WHATSAPP_COMERCIAL ?? "";
 export const EMAIL_COMERCIAL = process.env.NEXT_PUBLIC_EMAIL_COMERCIAL ?? "";
 export const CONSENT_VERSION = "2026-10-v1";
 export const CONSENT_TEXT =

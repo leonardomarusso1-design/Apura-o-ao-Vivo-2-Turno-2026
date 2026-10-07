@@ -21,7 +21,7 @@ const csp = [
   `img-src 'self' data: blob:${gImg}${vercelLive}`,
   "font-src 'self' data:",
   `connect-src 'self'${gConnect}${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
-  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com${vercelLive}`,
+  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://player.twitch.tv https://iframe.videodelivery.net${vercelLive}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
