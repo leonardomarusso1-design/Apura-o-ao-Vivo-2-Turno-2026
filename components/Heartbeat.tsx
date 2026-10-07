@@ -17,6 +17,12 @@ export default function Heartbeat({ electionIso }: { electionIso: string }) {
     } catch {
       sid = crypto.randomUUID();
     }
+    // Amostragem para o dia de pico: com NEXT_PUBLIC_PING_AMOSTRA=10, só 1 de cada 10 aparelhos pinga e o contador multiplica por 10.
+    // O Redis aguenta 10 mil comandos/s; sem isso, ~600 mil pessoas online já o saturariam. Padrão 1 = todos (contagem exata).
+    const amostra = Math.max(1, Math.floor(Number(process.env.NEXT_PUBLIC_PING_AMOSTRA) || 1));
+    let h = 0;
+    for (let i = 0; i < sid.length; i++) h = (h * 31 + sid.charCodeAt(i)) >>> 0;
+    if (h % amostra !== 0) return;
     const ping = () => {
       if (document.hidden) return;
       void fetch("/api/ping", {

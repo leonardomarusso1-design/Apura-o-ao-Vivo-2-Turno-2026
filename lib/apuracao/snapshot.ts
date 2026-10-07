@@ -5,7 +5,8 @@ import { UFS, type Area, type Evento, type Ponto, type PontoReplay, type Snapsho
 
 const key = (ele: number) => `snap:v2:${ele}`;
 const lockKey = (ele: number) => `snap:lock:${ele}`;
-const FRESH_MS = 12_000; // não atualiza mais de 1x a cada 12s, não importa quantos acessem
+// Não consulta o TSE mais de 1x a cada 6s, não importa quantos acessem. Ajustável sem mexer no código: SNAP_FRESH_MS (ms, mínimo 3000).
+const FRESH_MS = Math.max(3_000, Number(process.env.SNAP_FRESH_MS) || 6_000);
 const FRESH_PREVIA_MS = 300_000; // prévia (dados antigos) muda pouco
 const MAX_EVENTOS = 80;
 const MAX_PONTOS = 400;

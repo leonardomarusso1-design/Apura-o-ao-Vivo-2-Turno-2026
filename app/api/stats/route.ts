@@ -26,7 +26,8 @@ async function onlineCount(): Promise<number | null> {
   const bucket = Math.floor(Date.now() / 60_000);
   const keys = [0, 1, 2].map((i) => `on:${bucket - i}`);
   const n = await redis<number>(["PFCOUNT", ...keys]);
-  return typeof n === "number" ? n : null;
+  const amostra = Math.max(1, Math.floor(Number(process.env.NEXT_PUBLIC_PING_AMOSTRA) || 1));
+  return typeof n === "number" ? n * amostra : null; // com amostragem, cada aparelho que pinga representa `amostra` aparelhos
 }
 
 export async function GET() {

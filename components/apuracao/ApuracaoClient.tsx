@@ -29,7 +29,7 @@ import { track } from "@/lib/track";
 import { SITE_URL, ELECTION_ISO } from "@/lib/env";
 import { marcarInscrito } from "@/lib/inscrito";
 
-const POLL_MS = 15_000;
+const POLL_MS = 8_000;
 const STALE_MIN = 4; // minutos sem mudança => mensagem de espera
 const LS_REF = "apuracao:ref";
 
@@ -135,7 +135,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
       } catch {
         /* mantém */
       }
-      if (alive) t = setTimeout(load, 10_000);
+      if (alive) t = setTimeout(load, 20_000);
     };
     void load();
     return () => {

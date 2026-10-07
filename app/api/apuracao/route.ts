@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     {
       headers: {
         // A CDN serve a mesma resposta a todos por 10s: o TSE nunca vê o tráfego dos usuários
-        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20",
+        "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10",
       },
     },
   );
