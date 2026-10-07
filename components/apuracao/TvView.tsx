@@ -57,6 +57,7 @@ export default function TvView({
   const [host, setHost] = useState("");
   // ?obs=1: versão para o OBS (sem o vídeo embutido, que repetiria a própria live; deixa o espaço do vídeo vazio para a sua câmera)
   const [obs] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("obs") === "1");
+  const [dupla2] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("dupla") === "1");
   const [modo, setModo] = useState<ModoTv>("estados");
   const [candN, setCandN] = useState<number | null>(null);
   const [ufTv, setUfTv] = useState<string | null>(uf);
@@ -373,7 +374,10 @@ export default function TvView({
             </div>
           ) : obs ? (
             // furo transparente com cantos arredondados: o anel da cor do fundo esconde os cantos retos da webcam que fica por baixo
-            <div className="aspect-video w-full shrink-0 rounded-3xl shadow-[0_0_0_10px_#07090e]" aria-hidden />
+            <div className="relative aspect-video w-full shrink-0 rounded-3xl shadow-[0_0_0_10px_#07090e]" aria-hidden>
+              {/* ?dupla=1: divisória fina no meio, para duas câmeras lado a lado (uma de cada lado) */}
+              {dupla2 ? <span className="absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 bg-[#07090e]" /> : null}
+            </div>
           ) : (
             <div className="hidden aspect-video w-full shrink-0 items-center justify-center rounded-3xl border border-dashed border-line px-4 text-center text-xs text-mute lg:flex">
               A transmissão aparece aqui quando a live começar
