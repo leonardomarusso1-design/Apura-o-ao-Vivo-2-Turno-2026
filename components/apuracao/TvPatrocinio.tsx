@@ -137,3 +137,34 @@ export function BannerTv({ p, fill = false, slim = false, desloca = false }: { p
     </div>
   );
 }
+
+/** Modo TV: os patrocinadores todos de uma vez, em 4 quadros (2 em cima, 2 embaixo), sem trocar. Quadro vazio convida para o leilão. */
+export function GradeTv({ p }: { p: Patro }) {
+  return (
+    <div className="grid min-h-[150px] max-h-[340px] flex-1 grid-cols-2 grid-rows-2 gap-2" aria-label="Patrocinadores">
+      {Array.from({ length: MAX_IMGS }, (_, i) => {
+        const src = p.imgs[i];
+        const href = p.links[i];
+        const caixa = "flex min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-2xl border bg-panel";
+        if (!src) {
+          return (
+            <div key={i} className={`${caixa} border-dashed border-line text-center text-[11px] text-mute`}>
+              Anuncie aqui
+            </div>
+          );
+        }
+        // eslint-disable-next-line @next/next/no-img-element
+        const img = <img src={src} alt={p.texto || `Patrocinador ${i + 1}`} className="h-full w-full object-contain" />;
+        return href ? (
+          <a key={src} href={href} target="_blank" rel="noopener noreferrer sponsored" className={`${caixa} border-line`}>
+            {img}
+          </a>
+        ) : (
+          <div key={src} className={`${caixa} border-line`}>
+            {img}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

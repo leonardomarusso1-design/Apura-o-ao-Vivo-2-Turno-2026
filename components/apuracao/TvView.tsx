@@ -7,7 +7,7 @@ import { camSrc, lerCamera } from "@/lib/camera";
 import MapaBR, { type ModoMapa } from "./MapaBR";
 import MapaMunicipios from "./MapaMunicipios";
 import type { ResumoMun } from "./MapaMunicipiosBR";
-import { BannerTv, FAIXA_PADRAO, usePatro } from "./TvPatrocinio";
+import { BannerTv, FAIXA_PADRAO, GradeTv, usePatro } from "./TvPatrocinio";
 import Ticker from "./Ticker";
 import Legenda from "./Legenda";
 import Avatar from "./Avatar";
@@ -376,9 +376,8 @@ export default function TvView({
               A transmissão aparece aqui quando a live começar
             </div>
           )}
-          <BannerTv p={patro} fill slim />
-          {/* segundo espaço: com 2 ou mais patrocinadores, mostra outro da fila ao mesmo tempo */}
-          {patro.imgs.length >= 2 ? <BannerTv p={patro} fill slim desloca /> : null}
+          {/* patrocinadores: todos visíveis ao mesmo tempo, 2 em cima e 2 embaixo (sem rodízio) */}
+          {patro.imgs.length ? <GradeTv p={patro} /> : <BannerTv p={patro} fill slim />}
         </div>
         <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
       </div>

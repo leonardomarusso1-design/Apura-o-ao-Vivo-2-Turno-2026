@@ -158,9 +158,9 @@ export default function PainelPatro() {
             );
           })}
         </div>
-        <p className="text-xs text-mute">Ideal: 1200 x 400 px (3:1), logo centralizada, PNG ou JPG. A imagem aparece inteira, sem cortar.</p>
+        <p className="text-xs text-mute">Na página de apuração as imagens passam uma a uma; no Modo TV aparecem as 4 juntas, em quadros. Arte que funciona nos dois: 1200 x 800 px (3:2) com a marca no centro, PNG ou JPG. A imagem aparece inteira, sem cortar.</p>
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-mute">Troca a cada</span>
+          <span className="text-mute">Troca a cada (só na página de apuração)</span>
           <input type="number" min={SEG_MIN} max={SEG_MAX} value={seg} onChange={(e) => setSeg(Number(e.target.value))} className={`${campo} h-10 w-20`} />
           <span className="text-mute">segundos</span>
         </label>
