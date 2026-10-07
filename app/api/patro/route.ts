@@ -11,6 +11,7 @@ import {
   MAX_IMGS,
   MAX_IMG_CHARS,
   kImg,
+  limparLink,
   limparSeg,
   limparTextos,
   normalizarSalvo,
@@ -38,14 +39,15 @@ export async function GET() {
         texto: p.texto,
         faixas: p.faixas,
         imgs: p.imgs.flatMap((tem, i) => (tem ? [`/api/patro/img?i=${i}&v=${p.v}`] : [])),
+        links: p.imgs.flatMap((tem, i) => (tem ? [p.links[i] ?? ""] : [])),
         camera: p.camera,
         seg: p.seg,
       }
-    : { texto: "", faixas: [] as string[], imgs: [] as string[], camera: "", seg: 8 };
+    : { texto: "", faixas: [] as string[], imgs: [] as string[], links: [] as string[], camera: "", seg: 8 };
   return NextResponse.json(corpo, { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" } });
 }
 
-type Corpo = { texto?: unknown; faixas?: unknown; imgs?: unknown; camera?: unknown; seg?: unknown };
+type Corpo = { texto?: unknown; faixas?: unknown; imgs?: unknown; links?: unknown; camera?: unknown; seg?: unknown };
 
 /**
  * Painel /admin/patro. Senha = ADMIN_SECRET (Bearer).
@@ -83,7 +85,7 @@ export async function PUT(req: Request) {
       }
     }
   }
-  const novo: PatroSalvo = { texto, faixas, v: Date.now(), imgs, camera, seg: limparSeg(b.seg) };
+  const novo: PatroSalvo = { texto, faixas, v: Date.now(), imgs, links: Array.from({ length: MAX_IMGS }, (_, i) => limparLink(Array.isArray(b.links) ? b.links[i] : "")), camera, seg: limparSeg(b.seg) };
   const ok = await redis(["SET", K_PATRO, JSON.stringify(novo)]);
   if (ok === null) return NextResponse.json({ ok: false, erro: "redis" }, { status: 503 });
   return NextResponse.json({ ok: true, v: novo.v }, { headers: { "Cache-Control": "no-store" } });

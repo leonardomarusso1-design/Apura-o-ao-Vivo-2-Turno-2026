@@ -10,7 +10,7 @@ export default function SponsorSlot({ label = "Anuncie aqui" }: { label?: string
   if (p.imgs.length) {
     return (
       <div className={`${caixa} overflow-hidden border-line bg-panel`} aria-label="Patrocinadores">
-        <Carrossel imgs={p.imgs} seg={p.seg} alt={p.texto || "Patrocinador"} />
+        <Carrossel imgs={p.imgs} links={p.links} seg={p.seg} alt={p.texto || "Patrocinador"} />
       </div>
     );
   }

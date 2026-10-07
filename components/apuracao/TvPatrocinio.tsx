@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { MAX_FAIXAS, MAX_IMGS, SEG_PADRAO, limparSeg, type Patro } from "@/lib/patro";
+import { MAX_FAIXAS, MAX_IMGS, SEG_PADRAO, limparLink, limparSeg, type Patro } from "@/lib/patro";
 
 export type { Patro };
 
@@ -10,6 +10,7 @@ export const FAIXA_PADRAO = ["TOQY: crie seu link na bio e seu cartão digital p
 
 const env = (): Patro => ({
   imgs: [],
+  links: [],
   texto: process.env.NEXT_PUBLIC_TV_BANNER_TEXTO ?? "",
   faixas: (process.env.NEXT_PUBLIC_TV_FAIXA ?? "")
     .split("|")
@@ -37,6 +38,7 @@ async function ler() {
       const base = env();
       const novo: Patro = {
         imgs: Array.isArray(j.imgs) ? j.imgs.filter(imgOk).slice(0, MAX_IMGS) : [],
+        links: Array.isArray(j.links) ? j.links.slice(0, MAX_IMGS).map(limparLink) : [],
         texto: typeof j.texto === "string" && j.texto ? j.texto.slice(0, 120) : base.texto,
         faixas: Array.isArray(j.faixas) && j.faixas.length ? j.faixas.map((x) => String(x).slice(0, 160)).slice(0, MAX_FAIXAS) : base.faixas,
         camera: typeof j.camera === "string" ? j.camera.slice(0, 200) : "",
@@ -74,7 +76,7 @@ export function usePatro(): Patro {
 }
 
 /** Imagens de patrocinadores passando uma a uma, com troca suave. O tamanho vem de quem usa (className); a imagem se ajusta inteira, sem cortar. */
-export function Carrossel({ imgs, seg, alt }: { imgs: string[]; seg: number; alt: string }) {
+export function Carrossel({ imgs, links = [], seg, alt, desloca = false }: { imgs: string[]; links?: string[]; seg: number; alt: string; desloca?: boolean }) {
   const [i, setI] = useState(0);
   const n = imgs.length;
   useEffect(() => {
@@ -84,25 +86,34 @@ export function Carrossel({ imgs, seg, alt }: { imgs: string[]; seg: number; alt
     }, seg * 1000);
     return () => clearInterval(id);
   }, [n, seg]);
-  const ativo = n ? i % n : 0;
+  // desloca: começa na metade da fila, então dois carrosseis lado a lado mostram patrocinadores diferentes ao mesmo tempo
+  const ativo = n ? (i + (desloca ? Math.floor(n / 2) || 1 : 0)) % n : 0;
   return (
     <div className="relative h-full w-full">
-      {imgs.map((src, k) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={src}
-          src={src}
-          alt={k === ativo ? alt : ""}
-          aria-hidden={k !== ativo}
-          className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ${k === ativo ? "opacity-100" : "opacity-0"}`}
-        />
-      ))}
+      {imgs.map((src, k) => {
+        const href = links[k];
+        const ligado = k === ativo;
+        const img = (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt={ligado ? alt : ""} className="h-full w-full object-contain" />
+        );
+        const cls = `absolute inset-0 transition-opacity duration-700 ${ligado ? "opacity-100" : "pointer-events-none opacity-0"}`;
+        return href ? (
+          <a key={src} href={href} target="_blank" rel="noopener noreferrer sponsored" className={cls} aria-hidden={!ligado} tabIndex={ligado ? 0 : -1}>
+            {img}
+          </a>
+        ) : (
+          <div key={src} className={cls} aria-hidden={!ligado}>
+            {img}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 /** Espaço do patrocínio no Modo TV. Sem nada cadastrado, vira o convite do TOQY. */
-export function BannerTv({ p, fill = false, slim = false }: { p: Patro; fill?: boolean; slim?: boolean }) {
+export function BannerTv({ p, fill = false, slim = false, desloca = false }: { p: Patro; fill?: boolean; slim?: boolean; desloca?: boolean }) {
   return (
     <div
       className={`flex items-center justify-center overflow-hidden rounded-3xl border border-line bg-panel ${
@@ -111,7 +122,7 @@ export function BannerTv({ p, fill = false, slim = false }: { p: Patro; fill?: b
       aria-label="Publicidade"
     >
       {p.imgs.length ? (
-        <Carrossel imgs={p.imgs} seg={p.seg} alt={p.texto || "Patrocinador"} />
+        <Carrossel imgs={p.imgs} links={p.links} seg={p.seg} alt={p.texto || "Patrocinador"} desloca={desloca} />
       ) : p.texto ? (
         <p className="px-4 text-center font-display text-[clamp(1rem,2vw,1.75rem)] font-bold leading-tight">{p.texto}</p>
       ) : (

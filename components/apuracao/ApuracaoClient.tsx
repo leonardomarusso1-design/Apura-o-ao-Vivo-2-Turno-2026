@@ -444,6 +444,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
           <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnTopo}>
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
+          <a href="/anunciar" className={`${btnTopo} inline-flex items-center border-amber/50 text-amber`}>
+            Anunciar
+          </a>
           <button onClick={() => { track("modo_tv", { turno }); void entrarTv(); }} className={btnTopo}>
             Tela cheia
           </button>
@@ -667,7 +670,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
           oficial. Projeto independente, sem vínculo com o TSE, partidos ou campanhas.
         </p>
         <p className="mt-2">
-          <a href="/" className="underline">Início</a> · <a href="/apuracao/perguntas" className="underline">Perguntas frequentes</a> · <a href="/privacidade" className="underline">Privacidade</a>
+          <a href="/" className="underline">Início</a> · <a href="/apuracao/perguntas" className="underline">Perguntas frequentes</a> · <a href="/anunciar" className="underline">Anunciar</a> · <a href="/privacidade" className="underline">Privacidade</a>
         </p>
       </footer>
 

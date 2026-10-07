@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MAX_FAIXAS, MAX_IMGS, SEG_MAX, SEG_MIN } from "@/lib/patro";
 
-type Atual = { texto: string; faixas: string[]; imgs: string[]; camera: string; seg: number };
+type Atual = { texto: string; faixas: string[]; imgs: string[]; links: string[]; camera: string; seg: number };
 
 /** Reduz a foto no aparelho antes de enviar (banner horizontal, até 1200 px de largura). */
 async function encolher(file: File): Promise<string> {
@@ -35,6 +35,7 @@ export default function PainelPatro() {
   const [faixas, setFaixas] = useState("");
   const [camera, setCamera] = useState("");
   const [seg, setSeg] = useState(8);
+  const [links, setLinks] = useState<string[]>(Array.from({ length: MAX_IMGS }, () => ""));
   const [atuais, setAtuais] = useState<string[]>([]);
   // por posição: undefined = não mexer; "" = remover; "data:..." = trocar
   const [novas, setNovas] = useState<(string | undefined)[]>(Array.from({ length: MAX_IMGS }, () => undefined));
@@ -50,6 +51,8 @@ export default function PainelPatro() {
       setFaixas(j.faixas.join("\n"));
       setCamera(j.camera);
       setSeg(j.seg);
+      // links vêm na mesma ordem das imagens existentes; a posição real está no i= da URL
+      setLinks(Array.from({ length: MAX_IMGS }, (_, i) => j.links[j.imgs.findIndex((u) => u.includes(`i=${i}&`))] ?? ""));
       setAtuais(j.imgs);
     } catch {
       /* sem rede */
@@ -66,7 +69,7 @@ export default function PainelPatro() {
       const r = await fetch("/api/patro", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${senha}` },
-        body: JSON.stringify({ texto, faixas: faixas.split("\n"), camera, seg, imgs: novas.map((x) => (x === undefined ? null : x)) }),
+        body: JSON.stringify({ texto, faixas: faixas.split("\n"), camera, seg, links, imgs: novas.map((x) => (x === undefined ? null : x)) }),
       });
       if (r.ok) {
         setMsg({ ok: true, t: "Salvo. Aparece no site e no OBS em até 1 minuto." });
@@ -118,6 +121,13 @@ export default function PainelPatro() {
                 ) : (
                   <p className="grid aspect-[3/1] place-items-center rounded-xl border border-dashed border-line text-mute">Vazio</p>
                 )}
+                <input
+                  value={links[i]}
+                  onChange={(e) => setLinks((a) => a.map((x, k) => (k === i ? e.target.value : x)))}
+                  placeholder="Link ao clicar (site, Instagram, WhatsApp)"
+                  maxLength={300}
+                  className={`${campo} h-10 text-xs`}
+                />
                 <div className="flex flex-wrap gap-2">
                   <label className="inline-flex h-10 cursor-pointer items-center rounded-xl bg-lime px-3 font-semibold text-ink">
                     Escolher

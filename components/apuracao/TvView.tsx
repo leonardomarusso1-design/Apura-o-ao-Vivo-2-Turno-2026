@@ -377,6 +377,8 @@ export default function TvView({
             </div>
           )}
           <BannerTv p={patro} fill slim />
+          {/* segundo espaço: com 2 ou mais patrocinadores, mostra outro da fila ao mesmo tempo */}
+          {patro.imgs.length >= 2 ? <BannerTv p={patro} fill slim desloca /> : null}
         </div>
         <div className="min-h-[260px] lg:min-h-0">{mapa}</div>
       </div>
