@@ -158,12 +158,7 @@ export default function PainelPatro() {
             );
           })}
         </div>
-        <p className="text-xs text-mute">Na página de apuração as imagens passam uma a uma; no Modo TV aparecem as 4 juntas, em quadros. Arte que funciona nos dois: 1200 x 800 px (3:2) com a marca no centro, PNG ou JPG. A imagem aparece inteira, sem cortar.</p>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="text-mute">Troca a cada (só na página de apuração)</span>
-          <input type="number" min={SEG_MIN} max={SEG_MAX} value={seg} onChange={(e) => setSeg(Number(e.target.value))} className={`${campo} h-10 w-20`} />
-          <span className="text-mute">segundos</span>
-        </label>
+        <p className="text-xs text-mute">Cada patrocinador tem um lugar fixo, sem troca: 1 e 2 ficam nos cantos do mapa, 3 e 4 embaixo das notícias (e os 4 juntos no Modo TV). Arte ideal: 1200 x 800 px (3:2) com a marca no centro, PNG ou JPG. A imagem aparece inteira, sem cortar.</p>
       </fieldset>
 
       <label className="grid gap-1.5 text-sm">

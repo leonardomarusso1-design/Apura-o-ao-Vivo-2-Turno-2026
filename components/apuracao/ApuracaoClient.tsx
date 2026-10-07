@@ -604,8 +604,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 ) : (
                   <MapaBR ufs={data?.ufs ?? {}} cor={cor} selecionada={uf} onSelect={setUf} modo={modo as ModoMapa} candN={candN} turno={turno} fit />
                 )}
-                <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[290px] lg:block">
-                  <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BANNER} height={84} label="Anuncie aqui" />
+                <div className="pointer-events-auto absolute bottom-2 left-2 hidden w-[220px] lg:block">
+                  <AdSlot indice={0} label="Anuncie aqui" />
+                </div>
+                <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[220px] lg:block">
+                  <AdSlot indice={1} label="Anuncie aqui" />
                 </div>
               </div>
             </section>
@@ -640,7 +643,10 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
               </div>
               <div className="order-8 lg:order-none lg:shrink-0">
-                <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDE} height={90} label="Anuncie aqui" />
+                <div className="grid grid-cols-2 gap-2">
+                  <AdSlot indice={2} label="Anuncie aqui" alto="h-[96px] [@media(max-height:820px)]:h-[72px]" />
+                  <AdSlot indice={3} label="Anuncie aqui" alto="h-[96px] [@media(max-height:820px)]:h-[72px]" />
+                </div>
               </div>
               <div className="order-5 lg:order-none lg:shrink-0 [@media(max-height:820px)]:lg:hidden">
                 <ToqyCard />
