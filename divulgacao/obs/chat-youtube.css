@@ -1,0 +1,25 @@
+/* Cole em: Fonte Navegador > CSS personalizado. Tamanho da fonte: largura 520, altura 760 (NAO estique, mude so o tamanho aqui). */
+body { background: transparent !important; overflow: hidden !important; }
+yt-live-chat-renderer, #chat, #contents, #item-scroller, #item-list { background: transparent !important; }
+/* esconde cabecalho, campo de digitar, fixados e contadores */
+yt-live-chat-header-renderer, yt-live-chat-message-input-renderer, #input-panel,
+yt-live-chat-ticker-renderer, yt-live-chat-banner-renderer, #panel-pages, #chat-messages > #separator { display: none !important; }
+/* cada mensagem vira um cartao vidro, com entrada deslizando de baixo */
+yt-live-chat-text-message-renderer, yt-live-chat-paid-message-renderer {
+  background: rgba(14, 18, 24, .62) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 18px;
+  margin: 7px 12px !important;
+  padding: 10px 16px 10px 12px !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  animation: entrar .45s cubic-bezier(.2, .9, .3, 1.2) both, sumir 1s ease 45s forwards;
+}
+@keyframes entrar { from { opacity: 0; transform: translateY(26px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes sumir { to { opacity: 0; transform: translateY(-10px); } }
+yt-live-chat-text-message-renderer #author-photo { width: 34px !important; height: 34px !important; margin-right: 12px !important; border-radius: 50% !important; }
+yt-live-chat-text-message-renderer #author-name { color: #9fb3c8 !important; font-weight: 700 !important; font-size: 15px !important; }
+yt-live-chat-text-message-renderer #message { color: #ffffff !important; font-size: 19px !important; line-height: 1.3 !important; font-weight: 500 !important; }
+yt-live-chat-text-message-renderer #timestamp { display: none !important; }
+/* se o OBS cortar o topo, a fonte do chat fica atras do video: ponha o chat numa pilha de baixo para cima */
+#item-scroller { overflow: hidden !important; }

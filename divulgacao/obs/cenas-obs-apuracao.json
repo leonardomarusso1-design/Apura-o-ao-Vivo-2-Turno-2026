@@ -1,0 +1,1603 @@
+{
+  "current_scene": "1 - Iniciando",
+  "current_program_scene": "1 - Iniciando",
+  "scene_order": [
+    {
+      "name": "1 - Iniciando"
+    },
+    {
+      "name": "2 - Eu inteiro"
+    },
+    {
+      "name": "3 - Modo TV 2º turno"
+    },
+    {
+      "name": "4 - Modo TV com Paulo (dupla)"
+    },
+    {
+      "name": "5 - Modo TV 1º turno"
+    },
+    {
+      "name": "6 - Site completo"
+    }
+  ],
+  "name": "Apuração 2026",
+  "sources": [
+    {
+      "prev_ver": 536870914,
+      "name": "Fundo estúdio",
+      "uuid": "6f24a353-1cd2-499c-a1a5-47e6ce13b22c",
+      "id": "image_source",
+      "versioned_id": "image_source",
+      "settings": {
+        "file": "C:/mega-brain-test/projects/apuracao/divulgacao/obs/fundo-estudio-1920x1080.png"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Moldura TV",
+      "uuid": "a86671f3-3cfc-4c0b-b4a7-99335e0a2644",
+      "id": "image_source",
+      "versioned_id": "image_source",
+      "settings": {
+        "file": "C:/mega-brain-test/projects/apuracao/divulgacao/obs/moldura-tv-1920x1080.png"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Bandeira (escolha o vídeo)",
+      "uuid": "1626a829-37b3-4235-8bc6-b65db3cd58bc",
+      "id": "ffmpeg_source",
+      "versioned_id": "ffmpeg_source",
+      "settings": {
+        "local_file": "",
+        "looping": true,
+        "is_local_file": true,
+        "close_when_inactive": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Câmera (escolha a webcam)",
+      "uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+      "id": "dshow_input",
+      "versioned_id": "dshow_input",
+      "settings": {},
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": [
+        {
+          "prev_ver": 536870914,
+          "name": "Chroma Key (ligue se usar fundo verde)",
+          "id": "chroma_key_filter_v2",
+          "versioned_id": "chroma_key_filter_v2",
+          "settings": {
+            "key_color_type": "green"
+          },
+          "mixers": 0,
+          "flags": 0,
+          "enabled": false,
+          "hotkeys": {}
+        }
+      ]
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Meet do Paulo (escolha a janela)",
+      "uuid": "1a9df412-3357-47e3-b5d2-4a9c1750bc9f",
+      "id": "window_capture",
+      "versioned_id": "window_capture",
+      "settings": {},
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Chat YouTube",
+      "uuid": "87589d5c-9d3f-44bf-8918-d99d604e2ac5",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "https://www.youtube.com/live_chat?is_popout=1&v=COLE_O_ID_DA_LIVE",
+        "width": 520,
+        "height": 760,
+        "fps": 30,
+        "css": "/* Cole em: Fonte Navegador > CSS personalizado. Tamanho da fonte: largura 520, altura 760 (NAO estique, mude so o tamanho aqui). */\nbody { background: transparent !important; overflow: hidden !important; }\nyt-live-chat-renderer, #chat, #contents, #item-scroller, #item-list { background: transparent !important; }\n/* esconde cabecalho, campo de digitar, fixados e contadores */\nyt-live-chat-header-renderer, yt-live-chat-message-input-renderer, #input-panel,\nyt-live-chat-ticker-renderer, yt-live-chat-banner-renderer, #panel-pages, #chat-messages > #separator { display: none !important; }\n/* cada mensagem vira um cartao vidro, com entrada deslizando de baixo */\nyt-live-chat-text-message-renderer, yt-live-chat-paid-message-renderer {\n  background: rgba(14, 18, 24, .62) !important;\n  backdrop-filter: blur(10px);\n  border: 1px solid rgba(255, 255, 255, .10);\n  border-radius: 18px;\n  margin: 7px 12px !important;\n  padding: 10px 16px 10px 12px !important;\n  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);\n  animation: entrar .45s cubic-bezier(.2, .9, .3, 1.2) both, sumir 1s ease 45s forwards;\n}\n@keyframes entrar { from { opacity: 0; transform: translateY(26px) scale(.94); } to { opacity: 1; transform: none; } }\n@keyframes sumir { to { opacity: 0; transform: translateY(-10px); } }\nyt-live-chat-text-message-renderer #author-photo { width: 34px !important; height: 34px !important; margin-right: 12px !important; border-radius: 50% !important; }\nyt-live-chat-text-message-renderer #author-name { color: #9fb3c8 !important; font-weight: 700 !important; font-size: 15px !important; }\nyt-live-chat-text-message-renderer #message { color: #ffffff !important; font-size: 19px !important; line-height: 1.3 !important; font-weight: 500 !important; }\nyt-live-chat-text-message-renderer #timestamp { display: none !important; }\n/* se o OBS cortar o topo, a fonte do chat fica atras do video: ponha o chat numa pilha de baixo para cima */\n#item-scroller { overflow: hidden !important; }\n",
+        "shutdown": false,
+        "restart_when_active": false,
+        "reroute_audio": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Título 1",
+      "uuid": "edfc0480-7292-47c5-84d2-57d3958b9e0d",
+      "id": "text_gdiplus_v3",
+      "versioned_id": "text_gdiplus_v3",
+      "settings": {
+        "text": "APURAÇÃO AO VIVO",
+        "font": {
+          "face": "Arial",
+          "size": 110,
+          "style": "Bold",
+          "flags": 1
+        },
+        "color": 4294967295,
+        "outline": false,
+        "align": "left",
+        "valign": "top"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Título 2",
+      "uuid": "8c974834-04ff-4a7c-86a2-981ce493507b",
+      "id": "text_gdiplus_v3",
+      "versioned_id": "text_gdiplus_v3",
+      "settings": {
+        "text": "2º TURNO · 2026",
+        "font": {
+          "face": "Arial",
+          "size": 64,
+          "style": "Bold",
+          "flags": 1
+        },
+        "color": 4294967295,
+        "outline": false,
+        "align": "left",
+        "valign": "top"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Rodapé site",
+      "uuid": "43bc74e7-2e8d-46dc-9a7d-f3880c3d7ede",
+      "id": "text_gdiplus_v3",
+      "versioned_id": "text_gdiplus_v3",
+      "settings": {
+        "text": "apuracaoaovivo2026.com.br",
+        "font": {
+          "face": "Arial",
+          "size": 36,
+          "style": "Bold",
+          "flags": 1
+        },
+        "color": 4294967295,
+        "outline": false,
+        "align": "left",
+        "valign": "top"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Nome na tela",
+      "uuid": "dd6851ff-e299-47bd-ba86-79d46afd8261",
+      "id": "text_gdiplus_v3",
+      "versioned_id": "text_gdiplus_v3",
+      "settings": {
+        "text": "Leonardo Marusso · @leomvideomaker",
+        "font": {
+          "face": "Arial",
+          "size": 34,
+          "style": "Bold",
+          "flags": 1
+        },
+        "color": 4294967295,
+        "outline": false,
+        "align": "left",
+        "valign": "top"
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Cor fundo",
+      "uuid": "a9e48dcd-b401-46c1-b8e7-407930872ba9",
+      "id": "color_source_v3",
+      "versioned_id": "color_source_v3",
+      "settings": {
+        "color": 4279109895,
+        "width": 1920,
+        "height": 1080
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Modo TV 2º turno",
+      "uuid": "a09b6c5e-39a3-43a9-b232-d44507cf9358",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "https://www.apuracaoaovivo2026.com.br/apuracao/2?obs=1",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "css": "",
+        "shutdown": true,
+        "restart_when_active": true,
+        "reroute_audio": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Modo TV 2º turno dupla",
+      "uuid": "cf4c32b7-f164-4b4a-b314-8ce2482f8ea1",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "https://www.apuracaoaovivo2026.com.br/apuracao/2?obs=1&dupla=1",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "css": "",
+        "shutdown": true,
+        "restart_when_active": true,
+        "reroute_audio": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Modo TV 1º turno",
+      "uuid": "11627616-9d46-4c14-a570-827661e9ba6a",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "https://www.apuracaoaovivo2026.com.br/apuracao/1?obs=1",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "css": "",
+        "shutdown": true,
+        "restart_when_active": true,
+        "reroute_audio": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "Site completo",
+      "uuid": "4960a69d-2c76-44ae-86c6-5eafb69e18b8",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "https://www.apuracaoaovivo2026.com.br/apuracao/2",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "css": "",
+        "shutdown": true,
+        "restart_when_active": true,
+        "reroute_audio": false
+      },
+      "mixers": 255,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "1 - Iniciando",
+      "uuid": "8eef9470-aead-41df-b3df-5114a2c0d2d5",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Fundo estúdio",
+            "source_uuid": "6f24a353-1cd2-499c-a1a5-47e6ce13b22c",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Bandeira (escolha o vídeo)",
+            "source_uuid": "1626a829-37b3-4235-8bc6-b65db3cd58bc",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 796.0,
+              "y": 176.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 1045.0,
+              "y": 588.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Moldura TV",
+            "source_uuid": "a86671f3-3cfc-4c0b-b4a7-99335e0a2644",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 3,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Chat YouTube",
+            "source_uuid": "87589d5c-9d3f-44bf-8918-d99d604e2ac5",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 4,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Título 1",
+            "source_uuid": "edfc0480-7292-47c5-84d2-57d3958b9e0d",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 60.0,
+              "y": 830.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 5,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Título 2",
+            "source_uuid": "8c974834-04ff-4a7c-86a2-981ce493507b",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 64.0,
+              "y": 955.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 6,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Rodapé site",
+            "source_uuid": "43bc74e7-2e8d-46dc-9a7d-f3880c3d7ede",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 1300.0,
+              "y": 990.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 7,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 7,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "2 - Eu inteiro",
+      "uuid": "6dd66196-ae1b-4459-80c5-aad4c7a34e6c",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Fundo estúdio",
+            "source_uuid": "6f24a353-1cd2-499c-a1a5-47e6ce13b22c",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Câmera (escolha a webcam)",
+            "source_uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 1920.0,
+              "y": 1080.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Chat YouTube",
+            "source_uuid": "87589d5c-9d3f-44bf-8918-d99d604e2ac5",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 3,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Nome na tela",
+            "source_uuid": "dd6851ff-e299-47bd-ba86-79d46afd8261",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 60.0,
+              "y": 1000.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 4,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 4,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "3 - Modo TV 2º turno",
+      "uuid": "2e15dc54-b2fe-4c3f-a9f0-de21e1443708",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Cor fundo",
+            "source_uuid": "a9e48dcd-b401-46c1-b8e7-407930872ba9",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Câmera (escolha a webcam)",
+            "source_uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 21.0,
+              "y": 350.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 506.0,
+              "y": 284.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Modo TV 2º turno",
+            "source_uuid": "a09b6c5e-39a3-43a9-b232-d44507cf9358",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 3,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 3,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "4 - Modo TV com Paulo (dupla)",
+      "uuid": "ce195156-8c4b-48d0-8a2b-23ff067b6c05",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Cor fundo",
+            "source_uuid": "a9e48dcd-b401-46c1-b8e7-407930872ba9",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Câmera (escolha a webcam)",
+            "source_uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 21.0,
+              "y": 350.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 253.0,
+              "y": 284.0
+            },
+            "crop_left": 479,
+            "crop_right": 479,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Meet do Paulo (escolha a janela)",
+            "source_uuid": "1a9df412-3357-47e3-b5d2-4a9c1750bc9f",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 274.0,
+              "y": 350.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 3,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 253.0,
+              "y": 284.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 3,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Modo TV 2º turno dupla",
+            "source_uuid": "cf4c32b7-f164-4b4a-b314-8ce2482f8ea1",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 4,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 4,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "5 - Modo TV 1º turno",
+      "uuid": "b28cd4c9-5ee9-463a-8410-509497928c2d",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Cor fundo",
+            "source_uuid": "a9e48dcd-b401-46c1-b8e7-407930872ba9",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Câmera (escolha a webcam)",
+            "source_uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 21.0,
+              "y": 350.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 506.0,
+              "y": 284.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Modo TV 1º turno",
+            "source_uuid": "11627616-9d46-4c14-a570-827661e9ba6a",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 3,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 3,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    },
+    {
+      "prev_ver": 536870914,
+      "name": "6 - Site completo",
+      "uuid": "2b33a9a9-291c-45c9-bde2-b58faa4be502",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "items": [
+          {
+            "name": "Site completo",
+            "source_uuid": "4960a69d-2c76-44ae-86c6-5eafb69e18b8",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 1,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          },
+          {
+            "name": "Câmera (escolha a webcam)",
+            "source_uuid": "e042cd18-bfbf-4b86-bad8-dffbc705f728",
+            "visible": true,
+            "locked": false,
+            "rot": 0.0,
+            "pos": {
+              "x": 1520.0,
+              "y": 850.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "align": 5,
+            "bounds_type": 2,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 380.0,
+              "y": 214.0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0,
+            "id": 2,
+            "group_item_backup": false,
+            "scale_filter": "disable",
+            "blend_method": "default",
+            "blend_type": "normal",
+            "show_transition": {
+              "duration": 0
+            },
+            "hide_transition": {
+              "duration": 0
+            },
+            "private_settings": {}
+          }
+        ],
+        "id_counter": 2,
+        "custom_size": false
+      },
+      "mixers": 0,
+      "sync": 0,
+      "flags": 0,
+      "volume": 1.0,
+      "balance": 0.5,
+      "enabled": true,
+      "muted": false,
+      "push-to-mute": false,
+      "push-to-mute-delay": 0,
+      "push-to-talk": false,
+      "push-to-talk-delay": 0,
+      "hotkeys": {},
+      "deinterlace_mode": 0,
+      "deinterlace_field_order": 0,
+      "monitoring_type": 0,
+      "private_settings": {},
+      "filters": []
+    }
+  ],
+  "groups": [],
+  "quick_transitions": [],
+  "transitions": [
+    {
+      "name": "Fade",
+      "id": "fade_transition",
+      "settings": {},
+      "hotkeys": []
+    }
+  ],
+  "saved_projectors": [],
+  "current_transition": "Fade",
+  "transition_duration": 500,
+  "preview_locked": false,
+  "scaling_enabled": false,
+  "scaling_level": 0,
+  "scaling_off_x": 0.0,
+  "scaling_off_y": 0.0,
+  "virtual-camera": {
+    "type2": 3
+  },
+  "modules": {},
+  "version": 2,
+  "resolution": {
+    "x": 1920,
+    "y": 1080
+  }
+}
