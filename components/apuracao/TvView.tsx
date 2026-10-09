@@ -285,7 +285,7 @@ export default function TvView({
   return (
     <div data-tv-root className={`fixed inset-0 z-50 grid h-dvh grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-y-auto p-3 sm:p-5 lg:overflow-hidden ${obs ? "bg-transparent" : "bg-ink"}`}>
       {/* OBS: página transparente (sem fundo do site), para a webcam aparecer por baixo do espaço da câmera */}
-      {obs ? <style>{"html,body{background:transparent!important}body *{visibility:hidden}[data-tv-root],[data-tv-root] *{visibility:visible}"}</style> : null}
+      {obs ? <style>{"html,body{background:transparent!important}*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}body *{visibility:hidden}[data-tv-root],[data-tv-root] *{visibility:visible}"}</style> : null}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           {!br ? (

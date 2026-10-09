@@ -48,9 +48,11 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
       .then((j) => {
         if (!vivo) return;
         if (j.itens) setDados(j.itens);
-        else if (j.pendente && tent < 8) t = setTimeout(() => setTent((x) => x + 1), 6000); // outra instância está coletando
+        else if (tent < 20) t = setTimeout(() => setTent((x) => x + 1), 6000); // sem dados ainda (outra instância coletando ou apuração aguardando): tenta de novo
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (vivo && tent < 20) t = setTimeout(() => setTent((x) => x + 1), 6000);
+      });
     return () => {
       vivo = false;
       if (t) clearTimeout(t);

@@ -315,7 +315,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   }, [data]);
   // Modo TV: o retorno antecipado fica depois de todos os hooks (senão o React quebra ao entrar na tela cheia)
   if (tv) {
-    return <TvView data={data} turno={turno} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />;
+    return (
+      <TurnoContext.Provider value={turno}>
+        <TvView data={data} turno={turno} cor={cor} uf={uf} onSelect={setUf} onExit={sairTv} />
+      </TurnoContext.Provider>
+    );
   }
 
   const muniModo = modo === "municipios" || modo === "vantagem" || (modo === "candidato" && candN != null);

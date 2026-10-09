@@ -181,33 +181,41 @@ export default function MapaMunicipiosBR({
 
   useEffect(() => {
     let vivo = true;
-    const fila = [...UFS];
+    // Fila de estados. Quem ainda não tem dados volta para o FIM da fila (não trava os outros) e tenta de novo.
+    const fila: { uf: string; t: number }[] = UFS.map((uf) => ({ uf, t: 0 }));
+    const comGeo = new Set<string>();
     const trabalhar = async () => {
       while (vivo && fila.length) {
-        const uf = fila.shift()!;
+        const it = fila.shift()!;
+        const uf = it.uf;
         const l = uf.toLowerCase();
-        try {
-          const g = await fetch(`/geo/mun/${l}.json`);
-          if (!g.ok) throw new Error("sem geo");
-          const geo = (await g.json()) as Geo;
-          if (vivo) setGeos((x) => ({ ...x, [uf]: geo }));
-        } catch {
-          if (vivo) setFalta(true);
-          return;
-        }
-        for (let t = 0; t < 8 && vivo; t++) {
+        if (!comGeo.has(uf)) {
           try {
-            const r = await fetch(`/api/municipios-mapa?uf=${l}&c=1&${qt(turnoCtx)}`);
-            const j = (await r.json()) as Resp;
-            if (j.itens) {
-              if (vivo) setDados((x) => ({ ...x, [uf]: j.itens! }));
-              break;
-            }
-            if (!j.pendente) break;
+            const g = await fetch(`/geo/mun/${l}.json`);
+            if (!g.ok) throw new Error("sem geo");
+            const geo = (await g.json()) as Geo;
+            comGeo.add(uf);
+            if (vivo) setGeos((x) => ({ ...x, [uf]: geo }));
           } catch {
-            break;
+            if (vivo) setFalta(true);
+            continue;
           }
-          await new Promise((res) => setTimeout(res, 5000));
+        }
+        let ok = false;
+        try {
+          const r = await fetch(`/api/municipios-mapa?uf=${l}&c=1&${qt(turnoCtx)}`);
+          const j = (await r.json()) as Resp;
+          if (j.itens) {
+            ok = true;
+            if (vivo) setDados((x) => ({ ...x, [uf]: j.itens! }));
+          }
+        } catch {
+          /* tenta de novo */
+        }
+        if (!ok && it.t < 40) {
+          fila.push({ uf, t: it.t + 1 });
+          // só espera quando todo o resto da fila já é repetição (evita martelar a API)
+          if (fila.every((f) => f.t > 0)) await new Promise((res) => setTimeout(res, 4000));
         }
       }
     };
