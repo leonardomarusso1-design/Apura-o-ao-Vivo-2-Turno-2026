@@ -489,7 +489,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
           </div>
         ) : (
           <div className="flex flex-col gap-3 lg:h-full lg:min-h-0">
-            {aguardando && !data?.br ? (
+            {(aguardando && !data?.br) || (turno === 2 && !data?.demo && (data?.br?.pctApurado ?? 0) === 0) ? (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line bg-panel px-4 py-2.5" role="status">
                 <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-amber" />
                 <p className="font-display text-base sm:text-lg">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
