@@ -8,8 +8,9 @@ export default function Privacidade() {
     <main id="conteudo" className="mx-auto max-w-2xl px-4 py-12 text-sm leading-relaxed text-paper/90">
       <h1 className="font-display text-3xl">Política de privacidade</h1>
       <p className="mt-4">
-        Coletamos e-mail, nome (opcional) e WhatsApp (opcional) somente para avisar você sobre a apuração do 2º turno e
-        novidades deste site, com base no seu consentimento (LGPD, art. 7º, I).
+        Coletamos e-mail, nome (opcional) e WhatsApp (opcional) para avisar você sobre a apuração do 2º turno e novidades
+        deste site, e também para enviar novidades e ofertas da Marusso Produções (TOQY, GCard e outros), com base no seu consentimento (LGPD, art. 7º, I).
+        Você pode cancelar a qualquer momento pelo link de descadastro.
       </p>
       <p className="mt-3">
         Guardamos também um identificador técnico do seu acesso (hash do IP, sem o IP original) para evitar abuso.
