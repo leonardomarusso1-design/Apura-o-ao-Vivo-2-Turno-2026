@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   // "aguardando" = Brasil com 0%. Mas o exterior pode já ter cidades apuradas (ZZ > 0%): nesse caso busca mesmo assim.
   const extJaTem = (snap.ufs?.["ZZ"]?.pctApurado ?? 0) > 0;
   // Não depende do status nacional: as cidades do exterior publicam antes do agregado. A sonda barata decide se há algo.
-  const data = snap.demo ? null : await getExterior(snap.eleicao, snap.previa, extJaTem);
+  const data = snap.demo ? null : await getExterior(snap.eleicao, snap.previa, extJaTem, (snap.br?.cands ?? []).map((c) => ({ n: c.n, nome: c.nome, partido: c.partido })));
   return NextResponse.json(
     { ok: Boolean(data), geradoEm: data?.geradoEm ?? null, cidades: data?.cidades ?? {} },
     { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },

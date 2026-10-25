@@ -1,6 +1,7 @@
 import { redis } from "@/lib/redis";
 import { BASE, parseArea } from "./tse";
 import { EXT_CIDADES } from "@/lib/exterior-mapa";
+import { coletarBU, type NomeCand } from "./exterior-bu";
 
 export type CandCidade = { n: number; nome: string; partido: string; votos: number; pct: number };
 export type CidadeRes = {
@@ -71,27 +72,35 @@ async function read(ele: number): Promise<ExteriorData | null> {
   return mem?.ele === ele ? mem : null;
 }
 
+async function coletarOficial(ele: number, forcar: boolean): Promise<CidadeRes[] | "skip"> {
+  if (!forcar && (await redis<string>(["GET", `ext:404:${ele}`]))) return "skip";
+  // Sonda de ~18 cidades que fecham primeiro: se nenhuma existe ainda (404), não dispara as ~186 requisições.
+  const probes = await Promise.all(SONDA.map((cd) => fetchCidade(cd, ele)));
+  if (!forcar && probes.every((p) => p === "none")) {
+    await redis(["SET", `ext:404:${ele}`, "1", "EX", 60]);
+    return "skip";
+  }
+  const rest = EXT_CIDADES.map((c) => c.cd).filter((cd) => !SONDA.includes(cd));
+  const found = await pool(rest, 8, (cd) => fetchCidade(cd, ele));
+  return [...probes, ...found].filter((r): r is CidadeRes => !!r && r !== "none");
+}
+
 /** Cidades do exterior: 1 coleta a cada ~45s para todo mundo (lock no Redis), nunca por visitante. */
-export async function getExterior(ele: number, previa: boolean, forcar = false): Promise<ExteriorData | null> {
+export async function getExterior(ele: number, previa: boolean, forcar = false, nomes: NomeCand[] = []): Promise<ExteriorData | null> {
   const cached = await read(ele);
   const maxAge = previa ? FRESH_PREVIA_MS : FRESH_MS;
   if (cached && Date.now() - new Date(cached.geradoEm).getTime() < maxAge) return cached;
 
   const got = await redis<string>(["SET", lock(ele), "1", "NX", "EX", 40]);
   if (got !== "OK" && cached) return cached; // outra instância está coletando
-  if (!forcar && (await redis<string>(["GET", `ext:404:${ele}`]))) return cached;
 
-  // Sonda de ~18 cidades que fecham primeiro: se nenhuma existe ainda (404), não dispara as ~186 requisições.
-  // "forcar" = o site já sabe (pelo agregado ZZ do TSE) que o exterior tem apuração: busca tudo, sem sondar.
-  const probes = await Promise.all(SONDA.map((cd) => fetchCidade(cd, ele)));
-  if (!forcar && probes.every((p) => p === "none")) {
-    await redis(["SET", `ext:404:${ele}`, "1", "EX", 60]);
-    return cached;
-  }
-  const rest = EXT_CIDADES.map((c) => c.cd).filter((cd) => !SONDA.includes(cd));
-  const found = await pool(rest, 8, (cd) => fetchCidade(cd, ele));
+  // Duas fontes em paralelo: (1) boletins de urna já publicados (rápido, seção a seção); (2) arquivos oficiais por cidade do TSE.
+  const [bu, oficial] = await Promise.all([coletarBU(ele, nomes).catch(() => ({}) as Record<string, CidadeRes>), coletarOficial(ele, forcar)]);
+  if (oficial === "skip" && Object.keys(bu).length === 0) return cached;
   const cidades: Record<string, CidadeRes> = { ...(cached?.cidades ?? {}) };
-  for (const r of [...probes, ...found]) if (r && r !== "none") cidades[r.cd] = r;
+  for (const r of Object.values(bu)) if (!cidades[r.cd] || r.pa >= cidades[r.cd].pa) cidades[r.cd] = r;
+  // O arquivo oficial da cidade vence quando está igual ou mais completo que o apurado pelos BUs.
+  if (oficial !== "skip") for (const r of oficial) if (!bu[r.cd] || r.pa >= bu[r.cd].pa) cidades[r.cd] = r;
   const data: ExteriorData = { geradoEm: new Date().toISOString(), ele, cidades };
   mem = data;
   await redis(["SET", key(ele), JSON.stringify(data), "EX", 3600]);
