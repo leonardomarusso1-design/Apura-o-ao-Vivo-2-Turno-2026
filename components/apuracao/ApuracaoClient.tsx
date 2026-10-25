@@ -25,6 +25,7 @@ import SeletorCandidato from "./SeletorCandidato";
 import PainelCandidato from "./PainelCandidato";
 import type { ResumoMun } from "./MapaMunicipiosBR";
 import Linha from "./Linha";
+import MudouDesde1 from "./MudouDesde1";
 
 import Credito from "../Credito";
 import { track } from "@/lib/track";
@@ -542,6 +543,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               <div className="order-1 lg:order-none">
                 <Placar br={data?.br ?? null} ufs={data?.ufs} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
+              {turno === 2 && data?.br ? (
+                <div className="order-6 lg:order-none">
+                  <MudouDesde1 ufs={data.ufs} finalistas={data.br.cands.slice(0, 2).map((c) => ({ n: c.n, sq: c.sq, nome: c.nome }))} cor={cor} />
+                </div>
+              ) : null}
               <div className="order-6 lg:order-none [@media(max-height:900px)]:lg:hidden">
                 <Linha pontos={data?.historico ?? []} cor={cor} nome={(n) => data?.br?.cands.find((c) => c.n === n)?.nome ?? String(n)} />
               </div>
