@@ -14,6 +14,10 @@ import Avatar from "./Avatar";
 import Num from "./Num";
 import { fmtInt, fmtPct, type Payload } from "./types";
 
+const MapaExterior = dynamic(() => import("./MapaExterior"), {
+  ssr: false,
+  loading: () => <div className="h-full min-h-[300px] animate-pulse rounded-2xl bg-panel" />,
+});
 const MapaMunicipiosBR = dynamic(() => import("./MapaMunicipiosBR"), {
   ssr: false,
   loading: () => <div className="h-full min-h-[200px] animate-pulse rounded-2xl bg-panel" />,
@@ -185,7 +189,10 @@ export default function TvView({
   );
 
   const escolherUf = (u: string) => {
-    if (u === "ZZ") return; // exterior não tem mapa de municípios
+    if (u === "ZZ") {
+      setUfTv("ZZ"); // exterior: mapa-múndi em tempo real (mesmo componente do site)
+      return;
+    }
     setUfTv(u);
     onSelect(u);
   };
@@ -258,7 +265,13 @@ export default function TvView({
               </button>
             </div>
             <div className="min-h-0 flex-1">
-              <MapaMunicipios uf={ufTv} cargo={1} inicial fit />
+              {ufTv === "ZZ" ? (
+                <div className="h-full overflow-y-auto">
+                  <MapaExterior total={ufsTv["ZZ"]} cor={cor} onVoltar={() => setUfTv(null)} />
+                </div>
+              ) : (
+                <MapaMunicipios uf={ufTv} cargo={1} inicial fit />
+              )}
             </div>
           </div>
         ) : muni ? (
