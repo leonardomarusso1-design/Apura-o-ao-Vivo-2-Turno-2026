@@ -11,8 +11,12 @@ export const COOKIE = "chat_s";
 export const SESSAO_SEG = 60 * 60 * 12;
 
 export type Resp = { u: string; m: string }; // citação da mensagem respondida (copiada no servidor)
-export type Msg = { id: string; t: number; uid: string; u: string; m: string; r?: Resp };
-export type MsgPub = { id: string; t: number; u: string; m: string; r?: Resp };
+export type Msg = { id: string; t: number; uid: string; u: string; m: string; r?: Resp; sv?: number }; // sv = valor (R$) do super chat aprovado
+export type MsgPub = { id: string; t: number; u: string; m: string; r?: Resp; sv?: number };
+export const K_SUPER_PEND = "chat:v1:super:pend"; // HASH id -> JSON SuperPend (aguardando você conferir o Pix)
+export const K_SUPER_RANK = "chat:v1:super:rank"; // ZSET apelido -> total em R$
+export const SUPER_VALORES = [5, 10, 20, 50, 100];
+export type SuperPend = { id: string; t: number; uid: string; u: string; m: string; v: number };
 
 export const clientId = () => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 

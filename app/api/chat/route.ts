@@ -3,7 +3,7 @@ import { redis, redisPipeline } from "@/lib/redis";
 import { limited } from "@/lib/ratelimit";
 import { forbidden, readJson, sameOrigin } from "@/lib/security";
 import { K_RX, STICKER_RE } from "@/lib/chat-stickers";
-import { K_BAN, K_MSGS, K_OFF, MAX_MSGS, limparMsg, uidDaSessao, type Msg, type MsgPub } from "@/lib/chat";
+import { K_BAN, K_MSGS, K_OFF, K_SUPER_RANK, MAX_MSGS, limparMsg, uidDaSessao, type Msg, type MsgPub } from "@/lib/chat";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,17 +20,20 @@ function parse(x: unknown): Msg | null {
 
 /** Lista pública (cache de CDN de 2 s: milhares de leitores = poucas leituras no Redis). Nunca expõe o uid. */
 export async function GET() {
-  const r = await redisPipeline([["EXISTS", K_OFF], ["LRANGE", K_MSGS, 0, 59], ["HGETALL", K_RX]]);
+  const r = await redisPipeline([["EXISTS", K_OFF], ["LRANGE", K_MSGS, 0, 59], ["HGETALL", K_RX], ["ZREVRANGE", K_SUPER_RANK, 0, 2, "WITHSCORES"]]);
   const off = r ? r[0] === 1 : false;
   const brutos = r ? ((r[1] as unknown[]) ?? []) : mem.slice(0, 60);
   const msgs: MsgPub[] = (r ? brutos.map(parse) : (brutos as Msg[]))
     .filter((m): m is Msg => Boolean(m))
     .reverse()
-    .map(({ id, t, u, m, r }) => ({ id, t, u, m, ...(r ? { r } : {}) }));
+    .map(({ id, t, u, m, r, sv }) => ({ id, t, u, m, ...(r ? { r } : {}), ...(sv ? { sv } : {}) }));
   const rx: Record<string, number> = {};
   const flat = r && Array.isArray(r[2]) ? (r[2] as string[]) : [];
   for (let i = 0; i + 1 < flat.length; i += 2) rx[flat[i]] = Number(flat[i + 1]) || 0;
-  return NextResponse.json({ off, msgs, rx }, { headers: { "Cache-Control": "public, s-maxage=2, stale-while-revalidate=4" } });
+  const topRaw = r && Array.isArray(r[3]) ? (r[3] as string[]) : [];
+  const top: { u: string; v: number }[] = [];
+  for (let i = 0; i + 1 < topRaw.length; i += 2) top.push({ u: topRaw[i], v: Number(topRaw[i + 1]) || 0 });
+  return NextResponse.json({ off, msgs, rx, top }, { headers: { "Cache-Control": "public, s-maxage=2, stale-while-revalidate=4" } });
 }
 
 export async function POST(req: Request) {

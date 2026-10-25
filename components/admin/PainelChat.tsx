@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-type Msg = { id: string; t: number; uid: string; u: string; m: string };
+type Msg = { id: string; t: number; uid: string; u: string; m: string; sv?: number };
+type Pend = { id: string; t: number; u: string; m: string; v: number };
 
 /** Moderação: apagar mensagem, banir quem escreveu (apaga tudo dele), pausar o chat. A senha fica só na memória desta aba. */
 export default function PainelChat() {
   const [senha, setSenha] = useState("");
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
   const [off, setOff] = useState(false);
+  const [pend, setPend] = useState<Pend[]>([]);
   const [aviso, setAviso] = useState("");
 
   const h = (s = senha) => ({ Authorization: `Bearer ${s}`, "Content-Type": "application/json" });
@@ -17,8 +19,9 @@ export default function PainelChat() {
     try {
       const r = await fetch("/api/admin/chat", { headers: h(s), cache: "no-store" });
       if (r.ok) {
-        const j = (await r.json()) as { off: boolean; msgs: Msg[] };
+        const j = (await r.json()) as { off: boolean; msgs: Msg[]; pend?: Pend[] };
         setMsgs(j.msgs);
+        setPend(j.pend ?? []);
         setOff(j.off);
         setAviso("");
       } else setAviso(r.status === 401 ? "Senha errada." : "Erro ao carregar.");
@@ -70,6 +73,25 @@ export default function PainelChat() {
               Apagar tudo
             </button>
           </div>
+          <section className="grid gap-1.5 rounded-2xl border border-amber/50 p-3">
+            <h2 className="text-sm font-semibold text-amber">Super chat aguardando o Pix ({pend.length})</h2>
+            <p className="text-xs text-mute">Confira no app do banco se entrou o valor e aprove: a mensagem aparece destacada no chat. Se não pagou, recuse.</p>
+            {pend.length === 0 ? <p className="text-sm text-mute">Nenhum pedido agora.</p> : null}
+            {pend.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-panel px-3 py-2 text-sm">
+                <span className="text-xs text-mute">{hora(p.t)}</span>
+                <strong className="text-lime">{p.u}</strong>
+                <b className="rounded-full bg-amber px-2 py-0.5 text-xs text-ink">R$ {p.v}</b>
+                <span className="min-w-0 flex-1 break-words">{p.m}</span>
+                <button className={`${btn} bg-lime text-ink`} onClick={() => void agir({ acao: "aprovar", id: p.id })}>
+                  Aprovar
+                </button>
+                <button className={btn} onClick={() => void agir({ acao: "recusar", id: p.id })}>
+                  Recusar
+                </button>
+              </div>
+            ))}
+          </section>
           <ul className="grid gap-1.5">
             {msgs.length === 0 ? <li className="text-sm text-mute">Sem mensagens.</li> : null}
             {msgs.map((m) => (
