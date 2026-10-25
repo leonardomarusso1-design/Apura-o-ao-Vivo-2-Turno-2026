@@ -25,6 +25,7 @@ export default function MapaExterior({
   const turnoCtx = useTurno();
   const [cidades, setCidades] = useState<Record<string, CidadeRes>>({});
   const [sel, setSel] = useState<string | null>(null);
+  const [bu, setBu] = useState<{ sp: number; st: number } | null>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [zoom, setZoom] = useState({ k: 1, x: 0, y: 0 });
   const svg = useRef<SVGSVGElement>(null);
@@ -37,8 +38,11 @@ export default function MapaExterior({
       try {
         const r = await fetch(`/api/exterior?${qt(turnoCtx)}`);
         if (r.ok) {
-          const j = (await r.json()) as { cidades: Record<string, CidadeRes> };
-          if (alive) setCidades(j.cidades ?? {});
+          const j = (await r.json()) as { cidades: Record<string, CidadeRes>; bu?: { sp: number; st: number } | null };
+          if (alive) {
+            setCidades(j.cidades ?? {});
+            setBu(j.bu ?? null);
+          }
         }
       } catch {
         /* tenta de novo */
@@ -117,7 +121,7 @@ export default function MapaExterior({
       paises.set(iso, p);
     }
     const lista = [...paises.values()].sort((a, b) => b.el - a.el);
-    return { el, validos, pa, cands, lista };
+    return { el, validos, pa, cands, lista, comVotos: arr.filter((c) => c.v > 0).length };
   }, [cidades]);
   const nomePais = (iso: string) => {
     try {
@@ -127,7 +131,7 @@ export default function MapaExterior({
     }
   };
   const mil = (n: number) => (n >= 1000 ? `${fmtInt(n / 1000)} mil` : fmtInt(n));
-  const paPainel = total && total.pctApurado > 0 ? total.pctApurado : resumo.pa;
+  const paPainel = total && total.pctApurado > 0 ? total.pctApurado : bu && bu.st > 0 ? (bu.sp / bu.st) * 100 : resumo.pa;
 
   const vb = `0 0 ${WORLD_W} ${WORLD_H}`;
   return (
@@ -286,7 +290,9 @@ export default function MapaExterior({
           )}
           <p className="mt-2 text-[11px] leading-snug text-mute">
             {resumo.validos > 0
-              ? `Soma dos votos já publicados pelo TSE em ${comDados} cidades. O total oficial do exterior sai junto com o do Brasil.`
+              ? bu && bu.st > 0
+                ? `Soma dos boletins que o TSE já publicou: ${fmtInt(bu.sp)} de ${fmtInt(bu.st)} urnas, em ${resumo.comVotos} cidades. O total oficial do exterior sai a partir das 17h, junto com o do Brasil.`
+                : `Soma dos votos já publicados pelo TSE em ${resumo.comVotos} cidades. O total oficial do exterior sai junto com o do Brasil.`
               : "O TSE ainda não publicou votos do exterior. O total oficial sai a partir das 17h, junto com o do Brasil."}
           </p>
         </div>

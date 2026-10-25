@@ -109,16 +109,25 @@ export function lerBU(buf: Uint8Array, ele: number): BU | null {
 }
 
 // ---------- coleta ----------
-async function getJSON<T>(url: string): Promise<T | null> {
+// O TSE responde 429 a quem consulta demais. Ao primeiro 429 paramos de sondar por 2 min (todas as instâncias, via Redis).
+const K429 = "bu:v1:429";
+let bloqueado = false;
+async function getJSON<T>(url: string, ignorarBloqueio = false): Promise<T | null> {
+  if (bloqueado && !ignorarBloqueio) return null;
   try {
     const r = await fetch(url, { headers: { ...UA, Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(9000) });
+    if (r.status === 429) {
+      bloqueado = true;
+      await redis(["SET", K429, "1", "EX", 120]);
+      return null;
+    }
     return r.ok ? ((await r.json()) as T) : null;
   } catch {
     return null;
   }
 }
 
-type CS = { abr?: { cd: string; mu?: { cd: string; zon?: { cd: string; sec?: { ns: string; da?: string }[] }[] }[] }[] };
+type CS = { abr?: { cd: string; mu?: { cd: string; zon?: { cd: string; sec?: { ns: string; da?: string; nsa?: string[] }[] }[] }[] }[] };
 type Aux = { hashes?: { hash: string; arq?: { nm: string; tp: string }[] }[] };
 
 async function buscarBU(pl: number, ele: number, cd: string, zona: string, ns: string): Promise<BU | null> {
@@ -127,8 +136,14 @@ async function buscarBU(pl: number, ele: number, cd: string, zona: string, ns: s
   const h = aux?.hashes?.filter((x) => x.arq?.some((f) => f.tp === "bu")).pop();
   const f = h?.arq?.find((x) => x.tp === "bu");
   if (!h || !f || !/^[0-9a-f]+$/i.test(h.hash) || !/^[\w.-]+$/.test(f.nm)) return null;
+  if (bloqueado) return null;
   try {
     const r = await fetch(`${dir}/${h.hash}/${f.nm}`, { headers: UA, cache: "no-store", signal: AbortSignal.timeout(9000) });
+    if (r.status === 429) {
+      bloqueado = true;
+      await redis(["SET", K429, "1", "EX", 120]);
+      return null;
+    }
     if (!r.ok) return null;
     return lerBU(new Uint8Array(await r.arrayBuffer()), ele);
   } catch {
@@ -147,23 +162,29 @@ async function pool<T, R>(items: T[], size: number, fn: (x: T) => Promise<R>, at
   return out;
 }
 
-export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<Record<string, CidadeRes>> {
+export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<{ cidades: Record<string, CidadeRes>; sp: number; st: number }> {
   const pl = Number(process.env.TSE_PLEITO_BU ?? PLEITO_DE[ele] ?? 0);
-  if (!pl) return {};
+  if (!pl) return { cidades: {}, sp: 0, st: 0 };
   const ate = Date.now() + 18_000;
-  const cs = await getJSON<CS>(`${BASE}/oficial/ele2026/arquivo-urna/${pl}/config/zz/zz-p${pad(pl, 6)}-cs.json`);
-  if (!cs?.abr) return {};
+  bloqueado = (await redis<number>(["EXISTS", K429])) === 1; // reinicia a cada coleta (a instância pode estar "quente")
+  const cs = await getJSON<CS>(`${BASE}/oficial/ele2026/arquivo-urna/${pl}/config/zz/zz-p${pad(pl, 6)}-cs.json`, true);
+  if (!cs?.abr) return { cidades: {}, sp: 0, st: 0 };
 
-  // seções por cidade e seções já publicadas
+  // "Urna" = seção principal. As agregadas (nsa) votam junto com a principal e aparecem na lista como entradas à parte: não contam.
+  const agregadas = new Set<string>();
+  for (const a of cs.abr) for (const m of a.mu ?? []) for (const z of m.zon ?? []) for (const s of z.sec ?? []) for (const x of s.nsa ?? []) agregadas.add(`${m.cd}:${z.cd}:${x}`);
   const total: Record<string, number> = {};
-  const publicadas: { cd: string; zona: string; ns: string; campo: string }[] = [];
+  const principais: { cd: string; zona: string; ns: string; campo: string; da: boolean }[] = [];
   for (const a of cs.abr) for (const m of a.mu ?? []) {
     if (!VALID.has(m.cd)) continue;
     for (const z of m.zon ?? []) for (const s of z.sec ?? []) {
+      const campo = `${m.cd}:${z.cd}:${s.ns}`;
+      if (agregadas.has(campo) || !/^\d+$/.test(z.cd) || !/^\d+$/.test(s.ns)) continue;
       total[m.cd] = (total[m.cd] ?? 0) + 1;
-      if (s.da && /^\d+$/.test(z.cd) && /^\d+$/.test(s.ns)) publicadas.push({ cd: m.cd, zona: z.cd, ns: s.ns, campo: `${m.cd}:${z.cd}:${s.ns}` });
+      principais.push({ cd: m.cd, zona: z.cd, ns: s.ns, campo, da: Boolean(s.da) });
     }
   }
+  const publicadas = principais.filter((s) => s.da);
 
   const salvo = (await redis<string[]>(["HGETALL", hkey(pl)])) ?? [];
   const bus = new Map<string, BU>();
@@ -175,8 +196,24 @@ export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<Record<
     }
   }
 
-  const novas = publicadas.filter((s) => !bus.has(s.campo)).slice(0, 600);
-  const lidas = await pool(novas, 24, async (s) => ({ s, bu: await buscarBU(pl, ele, s.cd, s.zona, s.ns) }), ate);
+  // 1) seções que a lista do TSE já marca como publicadas; 2) sondagem LEVE das demais: a lista do TSE atrasa em relação aos arquivos.
+  //    Sonda ~100 por rodada (cidades com boletins já publicados primeiro), em rodízio, e para no primeiro 429.
+  const novas = publicadas.filter((s) => !bus.has(s.campo)).slice(0, 400);
+  if (!bloqueado) {
+    const comBU = new Map<string, number>();
+    for (const c of bus.keys()) comBU.set(c.split(":")[0], (comBU.get(c.split(":")[0]) ?? 0) + 1);
+    const fila = principais
+      .filter((s) => !s.da && !bus.has(s.campo))
+      .sort((x, y) => (comBU.get(y.cd) ?? 0) - (comBU.get(x.cd) ?? 0) || x.campo.localeCompare(y.campo));
+    if (fila.length) {
+      const cur = Number(await redis<string>(["GET", `bu:v1:cur:${pl}`])) || 0;
+      const ini = cur % fila.length;
+      const n = Math.min(100, fila.length);
+      for (let i = 0; i < n; i++) novas.push(fila[(ini + i) % fila.length]);
+      await redis(["SET", `bu:v1:cur:${pl}`, String(ini + n), "EX", 7200]);
+    }
+  }
+  const lidas = await pool(novas, 6, async (s) => ({ s, bu: await buscarBU(pl, ele, s.cd, s.zona, s.ns) }), ate);
   const cmd: (string | number)[] = ["HSET", hkey(pl)];
   for (const { s, bu } of lidas) {
     if (!bu) continue;
@@ -189,7 +226,7 @@ export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<Record<
   }
 
   // agrega por cidade (somente seções que ainda constam como publicadas)
-  const ativos = new Set(publicadas.map((s) => s.campo));
+  const ativos = new Set(principais.map((s) => s.campo));
   const por: Record<string, { sec: number; a: number; v: Record<string, number> }> = {};
   for (const [campo, bu] of bus) {
     if (!ativos.has(campo)) continue;
@@ -220,5 +257,7 @@ export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<Record<
       top,
     };
   }
-  return out;
+  let sp = 0;
+  for (const campo of bus.keys()) if (ativos.has(campo)) sp++;
+  return { cidades: out, sp, st: principais.length };
 }

@@ -11,9 +11,9 @@ export type CidadeRes = {
   v: number; // votos válidos
   top: CandCidade[]; // 3 primeiros
 };
-export type ExteriorData = { geradoEm: string; ele: number; cidades: Record<string, CidadeRes> };
+export type ExteriorData = { geradoEm: string; ele: number; cidades: Record<string, CidadeRes>; bu?: { sp: number; st: number } }; // bu = urnas com boletim publicado / total de urnas
 
-const FRESH_MS = 20_000;
+const FRESH_MS = 45_000;
 const FRESH_PREVIA_MS = 300_000;
 const key = (ele: number) => `ext:v1:${ele}`;
 const lock = (ele: number) => `ext:lock:${ele}`;
@@ -95,13 +95,14 @@ export async function getExterior(ele: number, previa: boolean, forcar = false, 
   if (got !== "OK" && cached) return cached; // outra instância está coletando
 
   // Duas fontes em paralelo: (1) boletins de urna já publicados (rápido, seção a seção); (2) arquivos oficiais por cidade do TSE.
-  const [bu, oficial] = await Promise.all([coletarBU(ele, nomes).catch(() => ({}) as Record<string, CidadeRes>), coletarOficial(ele, forcar)]);
+  const [buRes, oficial] = await Promise.all([coletarBU(ele, nomes).catch(() => ({ cidades: {} as Record<string, CidadeRes>, sp: 0, st: 0 })), coletarOficial(ele, forcar)]);
+  const bu = buRes.cidades;
   if (oficial === "skip" && Object.keys(bu).length === 0) return cached;
   const cidades: Record<string, CidadeRes> = { ...(cached?.cidades ?? {}) };
   for (const r of Object.values(bu)) if (!cidades[r.cd] || r.pa >= cidades[r.cd].pa) cidades[r.cd] = r;
   // O arquivo oficial da cidade vence quando está igual ou mais completo que o apurado pelos BUs.
   if (oficial !== "skip") for (const r of oficial) if (!bu[r.cd] || r.pa >= bu[r.cd].pa) cidades[r.cd] = r;
-  const data: ExteriorData = { geradoEm: new Date().toISOString(), ele, cidades };
+  const data: ExteriorData = { geradoEm: new Date().toISOString(), ele, cidades, ...(buRes.st > 0 ? { bu: { sp: buRes.sp, st: buRes.st } } : cached?.bu ? { bu: cached.bu } : {}) };
   mem = data;
   await redis(["SET", key(ele), JSON.stringify(data), "EX", 3600]);
   return data;
