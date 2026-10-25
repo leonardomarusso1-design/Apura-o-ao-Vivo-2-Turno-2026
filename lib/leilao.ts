@@ -8,14 +8,14 @@ const num = (v: string | undefined, d: number) => {
 };
 
 export const COTAS = num(process.env.LEILAO_COTAS, 3);
-export const LANCE_MIN = num(process.env.LEILAO_LANCE_MIN, 100);
+export const LANCE_MIN = num(process.env.LEILAO_LANCE_MIN, 20);
 export const INCREMENTO = num(process.env.LEILAO_INCREMENTO, 10);
 export const LANCE_MAX = 1_000_000;
-/** Corte dos lances (padrão: 25/10 às 15h de Brasília, duas horas antes da apuração). Troque na Vercel com LEILAO_ENCERRA_ISO. */
-export const ENCERRA_ISO = process.env.LEILAO_ENCERRA_ISO || "2026-10-25T15:00:00-03:00";
+/** Propostas abertas: sem corte na prática (padrão 31/12/2026). O dono escolhe manualmente quem aceitar. Para fechar, defina LEILAO_ENCERRA_ISO na Vercel. */
+export const ENCERRA_ISO = process.env.LEILAO_ENCERRA_ISO || "2026-12-31T23:59:00-03:00";
 export const encerraMs = () => {
   const t = Date.parse(ENCERRA_ISO);
-  return Number.isFinite(t) ? t : Date.parse("2026-10-25T15:00:00-03:00");
+  return Number.isFinite(t) ? t : Date.parse("2026-12-31T23:59:00-03:00");
 };
 
 export type Lance = {

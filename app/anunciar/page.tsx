@@ -15,8 +15,8 @@ export default function Anunciar() {
       <p className="text-[11px] uppercase tracking-widest text-amber">Para marcas</p>
       <h1 className="mt-1 font-display text-3xl sm:text-4xl">Anuncie na apuração do 2º turno</h1>
       <p className="mt-3 text-mute">
-        Sua marca passa no site inteiro e no Modo TV, durante toda a apuração. Como a audiência chega de uma vez quando a contagem começa, as cotas são vendidas
-        em leilão, com lances até poucas horas antes. São {COTAS} cotas: ficam com elas os {COTAS} maiores lances.
+        Sua marca passa no site inteiro e no Modo TV, durante toda a apuração. Como a audiência chega de uma vez quando a contagem começa, cada marca diz quanto
+        quer pagar e nós escolhemos as propostas. São {COTAS} cotas.
       </p>
 
       <div className="mt-6">
@@ -25,8 +25,8 @@ export default function Anunciar() {
 
       <section className="mt-8 grid gap-3 text-sm leading-relaxed text-mute">
         <h2 className="font-display text-xl text-paper">Como funciona</h2>
-        <p>1. Você dá seu lance aqui. Pode aumentar até o encerramento, usando o mesmo e-mail. O valor dos outros lances não aparece, só o mínimo para entrar.</p>
-        <p>2. Quando os lances encerram, entramos em contato com os vencedores pelo WhatsApp e pelo e-mail que você deixar, para combinar o pagamento. Não há pagamento neste site.</p>
+        <p>1. Você diz aqui quanto quer pagar. Pode aumentar o valor depois, usando o mesmo e-mail. As propostas dos outros não aparecem.</p>
+        <p>2. Analisamos as propostas manualmente. Se aceitarmos a sua, entramos em contato pelo WhatsApp e pelo e-mail que você deixar, para combinar o pagamento. Não há pagamento neste site.</p>
         <p>3. Com o pagamento confirmado, você envia a arte (imagem horizontal 1200 x 400 px, PNG ou JPG) e colocamos no ar antes da apuração começar.</p>
         <p>
           Não aceitamos anúncios de candidatos, partidos, coligações ou qualquer propaganda eleitoral, nem conteúdo ilegal ou enganoso. Reservamo-nos o direito de

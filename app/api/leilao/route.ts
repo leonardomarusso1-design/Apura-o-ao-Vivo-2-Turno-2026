@@ -21,7 +21,8 @@ async function situacao() {
   const total = Number(r[0] ?? 0);
   const corte = Array.isArray(r[1]) && r[1].length === 2 ? Number(r[1][1]) : 0;
   const lotado = total >= COTAS && corte > 0;
-  return { total, corte, minimo: lotado ? corte + INCREMENTO : LANCE_MIN };
+  void lotado; void INCREMENTO;
+  return { total, corte, minimo: LANCE_MIN }; // propostas livres: o mínimo não sobe, quem aceitar é escolha manual do dono
 }
 
 /** Público: prazo, número de cotas e o lance mínimo para entrar. Nada de dados de quem deu lance. */

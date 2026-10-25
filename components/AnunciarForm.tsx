@@ -97,15 +97,15 @@ export default function AnunciarForm({ inicial }: { inicial: { encerra: string; 
     <div className="grid gap-5">
       <div className="grid gap-3 rounded-2xl border border-line bg-panel p-4 sm:grid-cols-3 sm:p-5">
         <div>
-          <p className="text-[11px] uppercase tracking-widest text-mute">{aberto ? "Lances encerram em" : "Lances"}</p>
-          <p className="tabular font-display text-2xl">{aberto ? (agora === null ? "--" : resta(fim, agora)) : "Encerrados"}</p>
+          <p className="text-[11px] uppercase tracking-widest text-mute">{aberto ? "Propostas" : "Lances"}</p>
+          <p className="tabular font-display text-2xl">{aberto ? "Abertas" : "Encerradas"}</p>
         </div>
         <div>
           <p className="text-[11px] uppercase tracking-widest text-mute">Cotas à venda</p>
           <p className="font-display text-2xl">{info.cotas}</p>
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-widest text-mute">Lance mínimo agora</p>
+          <p className="text-[11px] uppercase tracking-widest text-mute">Proposta mínima</p>
           <p className="tabular font-display text-2xl text-amber">{brl(info.minimo)}</p>
         </div>
       </div>
@@ -114,15 +114,12 @@ export default function AnunciarForm({ inicial }: { inicial: { encerra: string; 
         <p className="rounded-2xl border border-line bg-panel p-5 text-sm text-mute">Os lances foram encerrados. Os vencedores serão contatados pelo WhatsApp e pelo e-mail informados.</p>
       ) : est.k === "feito" ? (
         <div className="rounded-2xl border border-lime/40 bg-panel p-5" role="status">
-          <p className="font-display text-2xl">Lance de {brl(est.valor)} registrado ✓</p>
+          <p className="font-display text-2xl">Proposta de {brl(est.valor)} registrada ✓</p>
           <p className="mt-2 text-sm text-mute">
-            {est.dentro
-              ? "No momento, seu lance está entre os que ficam com uma cota."
-              : `No momento, seu lance ainda não está entre os vencedores. Para entrar, ofereça pelo menos ${brl(est.minimo)}.`}{" "}
-            Você pode aumentar o lance até o encerramento, usando o mesmo e-mail. Se vencer, entramos em contato pelo WhatsApp e pelo e-mail que você informou.
+            Recebemos sua proposta. Analisamos uma a uma e, se aceitarmos, entramos em contato pelo WhatsApp e pelo e-mail que você informou. Você pode aumentar o valor depois, usando o mesmo e-mail.
           </p>
           <button type="button" onClick={() => setEst({ k: "idle" })} className="mt-4 h-11 rounded-xl border border-line px-4 text-sm hover:bg-white/5">
-            Aumentar meu lance
+            Aumentar minha proposta
           </button>
         </div>
       ) : (
@@ -143,7 +140,7 @@ export default function AnunciarForm({ inicial }: { inicial: { encerra: string; 
             />
           </div>
           <label className="grid gap-1.5 text-sm">
-            <span className="text-mute">Seu lance (R$) · mínimo {brl(info.minimo)}</span>
+            <span className="text-mute">Quanto você quer pagar (R$) · mínimo {brl(info.minimo)}</span>
             <input
               inputMode="numeric"
               required
@@ -158,8 +155,8 @@ export default function AnunciarForm({ inicial }: { inicial: { encerra: string; 
           <label className="flex items-start gap-2 text-xs leading-relaxed text-mute">
             <input name="aceite" type="checkbox" required className="mt-0.5 h-4 w-4 shrink-0 accent-lime" />
             <span>
-              Entendo que o lance é um compromisso: se vencer, pago o valor combinado e envio a arte. Meu anúncio não é de candidato, partido, coligação nem de
-              propaganda eleitoral. Autorizo o contato por WhatsApp e e-mail sobre este leilão (
+              Entendo que a proposta é um compromisso: se for aceita, pago o valor combinado e envio a arte. Meu anúncio não é de candidato, partido, coligação nem de
+              propaganda eleitoral. Autorizo o contato por WhatsApp e e-mail sobre esta proposta (
               <a href="/privacidade" className="underline">
                 privacidade
               </a>
@@ -173,7 +170,7 @@ export default function AnunciarForm({ inicial }: { inicial: { encerra: string; 
             </p>
           ) : null}
           <button type="submit" disabled={est.k === "enviando"} className="h-12 rounded-xl bg-amber font-semibold text-ink disabled:opacity-50">
-            {est.k === "enviando" ? "Enviando..." : "Dar meu lance"}
+            {est.k === "enviando" ? "Enviando..." : "Enviar minha proposta"}
           </button>
         </form>
       )}
