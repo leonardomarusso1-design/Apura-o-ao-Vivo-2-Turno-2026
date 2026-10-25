@@ -78,16 +78,16 @@ export async function getExterior(ele: number, previa: boolean): Promise<Exterio
   if (got !== "OK" && cached) return cached; // outra instância está coletando
   if (await redis<string>(["GET", `ext:404:${ele}`])) return cached;
 
-  // Sonda 1 cidade: se ainda não existe (404), não dispara as 186 requisições
-  const probe = await fetchCidade(EXT_CIDADES[0].cd, ele);
-  if (probe === "none") {
+  // Sonda 6 cidades: se nenhuma existe ainda (404), não dispara as ~186 requisições. Uma só não basta: cada cidade fecha em um horário.
+  const probes = await Promise.all(EXT_CIDADES.slice(0, 6).map((c) => fetchCidade(c.cd, ele)));
+  if (probes.every((p) => p === "none")) {
     await redis(["SET", `ext:404:${ele}`, "1", "EX", 60]);
     return cached;
   }
-  const rest = EXT_CIDADES.slice(1).map((c) => c.cd);
+  const rest = EXT_CIDADES.slice(6).map((c) => c.cd);
   const found = await pool(rest, 8, (cd) => fetchCidade(cd, ele));
   const cidades: Record<string, CidadeRes> = { ...(cached?.cidades ?? {}) };
-  for (const r of [probe, ...found]) if (r && r !== "none") cidades[r.cd] = r;
+  for (const r of [...probes, ...found]) if (r && r !== "none") cidades[r.cd] = r;
   const data: ExteriorData = { geradoEm: new Date().toISOString(), ele, cidades };
   mem = data;
   await redis(["SET", key(ele), JSON.stringify(data), "EX", 3600]);
