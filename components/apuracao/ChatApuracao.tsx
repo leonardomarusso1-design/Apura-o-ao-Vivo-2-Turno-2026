@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { STICKERS, stickerDe } from "@/lib/chat-stickers";
+import { REACOES, STICKERS, stickerDe } from "@/lib/chat-stickers";
 
 type Msg = { id: string; t: number; u: string; m: string; r?: { u: string; m: string } };
 type Me = { logado: boolean; nick?: string };
@@ -28,7 +28,6 @@ const corDe = (n: string) => {
   for (let i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
   return CORES[h % CORES.length];
 };
-const RAPIDAS = ["🔥", "👏", "😮", "😂", "🇧🇷"];
 const EMOJIS = [
   "😀", "😂", "🤣", "😍", "😎", "🥳", "😭", "😡", "😱", "😮", "🤔", "🙄", "😅", "😬", "🥲", "😴",
   "👏", "🙌", "👍", "👎", "🙏", "💪", "🤝", "✌️", "🫡", "🤞", "👀", "🧠", "❤️", "💚", "💛", "💙",
@@ -48,6 +47,38 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
   const [emotes, setEmotes] = useState(false);
   const [figs, setFigs] = useState(false);
   const [resp, setResp] = useState<Msg | null>(null);
+  const [flut, setFlut] = useState<{ k: number; e: string; x: number; d: number }[]>([]);
+  const rxPrev = useRef<Record<string, number> | null>(null);
+  const rxPropria = useRef<Record<string, number>>({});
+  const rxFila = useRef<Record<string, number>>({});
+  const rxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seq = useRef(0);
+
+  const soltar = useCallback((id: string, n: number, janelaMs: number) => {
+    const e = REACOES.find((r) => r.id === id)?.e;
+    if (!e) return;
+    for (let i = 0; i < Math.min(n, 10); i++) {
+      setTimeout(() => {
+        const k = ++seq.current;
+        setFlut((f) => [...f.slice(-30), { k, e, x: Math.round(Math.random() * 70), d: 2.2 + Math.random() * 1.2 }]);
+        setTimeout(() => setFlut((f) => f.filter((x) => x.k !== k)), 3600);
+      }, Math.random() * janelaMs);
+    }
+  }, []);
+
+  const reagir = (id: string) => {
+    if (document.hidden) return;
+    soltar(id, 1, 0);
+    rxPropria.current[id] = (rxPropria.current[id] ?? 0) + 1;
+    rxFila.current[id] = Math.min(10, (rxFila.current[id] ?? 0) + 1);
+    if (rxTimer.current) return;
+    rxTimer.current = setTimeout(() => {
+      rxTimer.current = null;
+      const fila = rxFila.current;
+      rxFila.current = {};
+      for (const [rid, n] of Object.entries(fila)) void fetch("/api/chat/reacao", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: rid, n }) }).catch(() => undefined);
+    }, 900);
+  };
   const [novas, setNovas] = useState(false);
   const ultimoId = useRef("");
   const lista = useRef<HTMLDivElement>(null);
@@ -60,13 +91,26 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
     try {
       const r = await fetch("/api/chat");
       if (!r.ok) return;
-      const j = (await r.json()) as { off: boolean; msgs: Msg[] };
+      const j = (await r.json()) as { off: boolean; msgs: Msg[]; rx?: Record<string, number> };
       setOff(j.off);
       setMsgs(j.msgs);
+      if (j.rx) {
+        const ant = rxPrev.current;
+        rxPrev.current = j.rx;
+        if (ant) {
+          for (const [id, tot] of Object.entries(j.rx)) {
+            let d = tot - (ant[id] ?? 0);
+            const meu = Math.min(d, rxPropria.current[id] ?? 0);
+            rxPropria.current[id] = (rxPropria.current[id] ?? 0) - meu;
+            d -= meu;
+            if (d > 0) soltar(id, d, 4500);
+          }
+        }
+      }
     } catch {
       /* mantém */
     }
-  }, []);
+  }, [soltar]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -165,7 +209,7 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
 
   return (
     <aside className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-line bg-ink shadow-2xl sm:w-[380px]" aria-label="Chat ao vivo">
-      <style>{`@keyframes chatPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}.chat-fig{animation:chatPop .35s ease-out}@media (prefers-reduced-motion:reduce){.chat-fig{animation:none}}`}</style>
+      <style>{`@keyframes chatPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}.chat-fig{animation:chatPop .35s ease-out}@keyframes chatFlut{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-300px) scale(1.2);opacity:0}}.chat-flut{animation:chatFlut 3s ease-out forwards}@media (prefers-reduced-motion:reduce){.chat-fig,.chat-flut{animation:none}}`}</style>
       <header className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-sm font-bold">Chat ao vivo</h2>
@@ -246,9 +290,9 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
               </div>
             ) : null}
             <div className="flex gap-1.5" aria-label="Reações rápidas">
-              {RAPIDAS.map((e) => (
-                <button key={e} type="button" disabled={enviando} onClick={() => void mandar(e)} className="h-8 w-8 rounded-full border border-line text-sm hover:bg-white/10 disabled:opacity-40">
-                  {e}
+              {REACOES.map((r) => (
+                <button key={r.id} type="button" onClick={() => reagir(r.id)} aria-label={`Reagir ${r.id}`} className="h-8 w-8 rounded-full border border-line text-sm font-bold hover:bg-white/10 active:scale-90">
+                  {r.e}
                 </button>
               ))}
               <button type="button" onClick={() => { setFigs((v) => !v); setEmotes(false); }} aria-expanded={figs} className="ml-auto h-8 rounded-full border border-line px-3 text-xs font-semibold hover:bg-white/10">
@@ -323,6 +367,13 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
         )}
         {erro ? <p className="mt-2 text-xs text-amber">{erro}</p> : null}
         <p className="mt-1.5 text-[10px] leading-snug text-mute">Sem palavrões, ofensas, links ou spam: a conta é bloqueada. Conversa entre usuários, sem relação com o TSE.</p>
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-28 z-10 h-0 overflow-visible" aria-hidden>
+        {flut.map((f) => (
+          <span key={f.k} className="chat-flut absolute bottom-0 text-3xl" style={{ right: `${8 + f.x}px`, animationDuration: `${f.d}s` }}>
+            {f.e === "BR" ? <b className="rounded-full bg-[#009c3b] px-2 py-0.5 text-base text-[#ffdf00]">BR</b> : f.e}
+          </span>
+        ))}
       </div>
     </aside>
   );

@@ -25,6 +25,15 @@ export const STICKERS: { id: string; e: string; nome: string }[] = [
   { id: "gelo", e: "🥶", nome: "Gelado" },
   { id: "cranio", e: "💀", nome: "Morri" },
 ];
+/** Reações flutuantes (não viram mensagem): só contadores no Redis. */
+export const REACOES: { id: string; e: string }[] = [
+  { id: "fogo", e: "🔥" },
+  { id: "palmas", e: "👏" },
+  { id: "uau", e: "😮" },
+  { id: "rindo", e: "😂" },
+  { id: "br", e: "BR" },
+];
+export const K_RX = "chat:v1:rx"; // HASH id -> total
 export const STICKER_RE = /^:s:([a-z]{2,12}):$/;
 export const stickerDe = (m: string) => {
   const id = STICKER_RE.exec(m)?.[1];
