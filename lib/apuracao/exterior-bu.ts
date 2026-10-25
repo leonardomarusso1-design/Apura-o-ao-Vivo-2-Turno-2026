@@ -8,7 +8,7 @@ import type { CidadeRes } from "./exterior";
  * Fluxo: lista de seções (config .../zz-pNNNNNN-cs.json) -> para cada seção nova: aux.json -> bu.dat (ASN.1/BER) -> votos.
  * Cada BU é lido UMA vez e guardado no Redis (hash). A coleta roda sob lock, nunca por visitante.
  */
-export type NomeCand = { n: number; nome: string; partido: string };
+export type NomeCand = { sq?: number; n: number; nome: string; partido: string };
 
 // pleito (cd_pleito) por eleição. Descobertos em /oficial/comum/config/ele-c.jws: 3220 = 1º turno, 3221 = 2º turno.
 const PLEITO_DE: Record<number, number> = { 6257: 3220, 6258: 3221 };
@@ -208,7 +208,7 @@ export async function coletarBU(ele: number, nomes: NomeCand[]): Promise<Record<
     const top = Object.entries(c.v)
       .map(([n, votos]) => {
         const info = nome.get(Number(n));
-        return { n: Number(n), nome: info?.nome ?? `Candidato ${n}`, partido: info?.partido ?? "", votos, pct: validos > 0 ? Math.round((votos / validos) * 1000) / 10 : 0 };
+        return { sq: info?.sq, n: Number(n), nome: info?.nome ?? `Candidato ${n}`, partido: info?.partido ?? "", votos, pct: validos > 0 ? Math.round((votos / validos) * 1000) / 10 : 0 };
       })
       .sort((x, y) => y.votos - x.votos)
       .slice(0, 3);

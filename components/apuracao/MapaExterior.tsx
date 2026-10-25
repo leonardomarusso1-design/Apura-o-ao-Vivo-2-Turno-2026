@@ -92,10 +92,10 @@ export default function MapaExterior({
     const el = arr.reduce((a, c) => a + c.el, 0);
     const validos = arr.reduce((a, c) => a + c.v, 0);
     const pa = el > 0 ? arr.reduce((a, c) => a + c.pa * c.el, 0) / el : 0;
-    const por = new Map<number, { n: number; nome: string; partido: string; votos: number }>();
+    const por = new Map<number, { sq?: number; n: number; nome: string; partido: string; votos: number }>();
     for (const c of arr)
       for (const t of c.top) {
-        const x = por.get(t.n) ?? { n: t.n, nome: t.nome, partido: t.partido, votos: 0 };
+        const x = por.get(t.n) ?? { sq: t.sq, n: t.n, nome: t.nome, partido: t.partido, votos: 0 };
         x.votos += t.votos;
         por.set(t.n, x);
       }
@@ -270,7 +270,7 @@ export default function MapaExterior({
             <div className="mt-2 grid gap-2">
               {resumo.cands.map((c) => (
                 <div key={c.n} className="flex items-center gap-3">
-                  <Avatar n={c.n} nome={c.nome} cor={cor(c.n)} size={40} />
+                  <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={40} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{c.nome.split(" ").slice(0, 2).join(" ")}</p>
                     <p className="text-[11px] text-mute">{c.partido} · {c.n}</p>

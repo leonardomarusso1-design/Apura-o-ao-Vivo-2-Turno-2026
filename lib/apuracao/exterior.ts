@@ -3,7 +3,7 @@ import { BASE, parseArea } from "./tse";
 import { EXT_CIDADES } from "@/lib/exterior-mapa";
 import { coletarBU, type NomeCand } from "./exterior-bu";
 
-export type CandCidade = { n: number; nome: string; partido: string; votos: number; pct: number };
+export type CandCidade = { sq?: number; n: number; nome: string; partido: string; votos: number; pct: number };
 export type CidadeRes = {
   cd: string;
   pa: number; // % de seções apuradas
@@ -42,7 +42,7 @@ async function fetchCidade(cd: string, ele: number): Promise<CidadeRes | "none" 
       pa: Math.round(a.pctApurado * 10) / 10,
       el: a.eleitores,
       v: a.validos,
-      top: a.cands.slice(0, 3).map((c) => ({ n: c.n, nome: c.nome, partido: c.partido, votos: c.votos, pct: c.pct })),
+      top: a.cands.slice(0, 3).map((c) => ({ sq: c.sq, n: c.n, nome: c.nome, partido: c.partido, votos: c.votos, pct: c.pct })),
     };
   } catch {
     return null;
