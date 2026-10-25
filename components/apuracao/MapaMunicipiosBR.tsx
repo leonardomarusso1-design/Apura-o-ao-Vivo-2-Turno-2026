@@ -98,7 +98,7 @@ const Camada = memo(function Camada({
       {geo.m.map((g) => {
         const it = porId.get(g.i) ?? porId.get(g.i.slice(0, 6)) ?? porNome.get(norm(g.n));
         const l = lidDe(it);
-        let fill = "#161d29";
+        let fill = "#323d4d";
         let op = 0.7;
         if (modo === "vantagem") {
           fill = FUNDO;

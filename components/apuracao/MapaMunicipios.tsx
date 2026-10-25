@@ -90,7 +90,7 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
   const achar = (g: Geo["m"][number]) => porId.get(g.i) ?? porId.get(g.i.slice(0, 6)) ?? porNome.get(norm(g.n));
   return (
     <div className={`relative ${fit ? "flex h-full flex-col" : "mt-4"}`} onPointerLeave={() => setHover(null)}>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">{dados ? `Municípios · ${dados.length}` : "Aguardando os primeiros votos · municípios"}</p>
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">{dados ? `Municípios · ${dados.length} · ${dados.filter((i) => (i.vt ?? 0) > 0 || (i.top[0]?.v ?? 0) > 0).length} com votos apurados (cinza = ainda sem urna apurada)` : "Aguardando os primeiros votos · municípios"}</p>
       <div className={fit ? "min-h-0 flex-1" : "h-[60vh] max-h-[520px]"}>
       <ZoomBox>
       <svg viewBox={geo.vb.join(" ")} className="h-full w-full" role="img" aria-label={`Mapa dos municípios de ${uf}`}>
@@ -103,8 +103,8 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
             <path
               key={g.i}
               d={g.d}
-              fill={l ? cor(l.n) : "#1a2230"}
-              fillOpacity={l ? Math.min(1, 0.45 + dif / 40) : 0.6}
+              fill={l ? cor(l.n) : "#323d4d"}
+              fillOpacity={l ? Math.min(1, 0.45 + dif / 40) : 0.55}
               stroke="#0d1117"
               strokeWidth={0.6}
               onPointerMove={(e) => it && e.pointerType === "mouse" && setHover({ x: e.clientX, y: e.clientY, it, d: g.d })}
