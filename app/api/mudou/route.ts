@@ -57,7 +57,8 @@ export async function GET(req: Request) {
           real += a2;
           esperado += tot * (a1 / (a1 + b1));
         }
-        if (w >= 2000) itens.push({ uf, d: Math.round(((real - esperado) / w) * 1000) / 10, v: w });
+        // só mostra quando os municípios com dados cobrem a maior parte do que o estado já apurou (senão é amostra pequena demais)
+        if (w >= 2000 && w >= 0.6 * (snap.ufs[uf]?.validos ?? Infinity)) itens.push({ uf, d: Math.round(((real - esperado) / w) * 1000) / 10, v: w });
       }
     }),
   );
