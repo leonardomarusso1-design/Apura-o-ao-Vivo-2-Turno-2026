@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Area } from "@/lib/apuracao/types";
 import Avatar from "./Avatar";
-import { fmtPct } from "./types";
+import { fmtInt, fmtPct } from "./types";
 
 /** Início da apuração: urnas fecham às 17h de Brasília do dia 25. */
 const INICIO = new Date("2026-10-25T17:00:00-03:00").getTime();
@@ -41,7 +41,6 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
         <p className="truncate font-display text-base leading-tight sm:text-lg">{c.nome.split(" ").slice(0, 2).join(" ")}</p>
         <p className="text-xs text-mute">
           {c.partido} · {c.n}
-          {!semVotos ? <strong className="ml-2 text-sm text-paper">{fmtPct(c.pct, 2)}%</strong> : null}
         </p>
       </div>
     </div>
@@ -74,10 +73,22 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
 
       <div className="relative mt-5">
         <span className="absolute -top-5 left-1/2 -translate-x-1/2 rounded-md border border-white/20 bg-ink px-1.5 text-[10px] font-semibold leading-4 text-paper">50%</span>
-        <div className="relative h-3 overflow-hidden rounded-full bg-white/10" role="img" aria-label={`${e.nome} ${fmtPct(pe)}%, ${d.nome} ${fmtPct(pd)}%`}>
+        <div className="relative h-9 overflow-hidden rounded-lg bg-white/10" role="img" aria-label={`${e.nome} ${fmtPct(pe)}%, ${d.nome} ${fmtPct(pd)}%`}>
           <div className="absolute inset-y-0 left-0 rounded-l-full transition-[width] duration-700" style={{ width: `${pe}%`, background: cor(e.n) }} />
           <div className="absolute inset-y-0 right-0 rounded-r-full transition-[width] duration-700" style={{ width: `${pd}%`, background: cor(d.n) }} />
           <div className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-white/80" />
+          {!semVotos ? (
+            <div className="tabular absolute inset-0 flex items-center justify-between px-3 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.55)]">
+              <span className="flex items-baseline gap-2">
+                <strong className="text-lg leading-none sm:text-xl">{fmtPct(e.pct, 2)}%</strong>
+                <span className="text-[10px] font-medium opacity-90 sm:text-xs">{fmtInt(e.votos)} votos</span>
+              </span>
+              <span className="flex flex-row-reverse items-baseline gap-2">
+                <strong className="text-lg leading-none sm:text-xl">{fmtPct(d.pct, 2)}%</strong>
+                <span className="text-[10px] font-medium opacity-90 sm:text-xs">{fmtInt(d.votos)} votos</span>
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
 
