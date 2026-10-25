@@ -544,6 +544,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               <div className="order-1 lg:order-none">
                 <Placar br={data?.br ?? null} ufs={data?.ufs} cor={cor} turno={turno} onCand={escolherCand} candSel={modo === "candidato" ? candN : null} />
               </div>
+              {data?.br ? (
+                <div className="order-1 lg:order-none">
+                  <Participacao br={data.br} />
+                </div>
+              ) : null}
               {turno === 2 && data?.br ? (
                 <div className="order-6 lg:order-none">
                   <MudouDesde1 finalistas={data.br.cands.slice(0, 2).map((c) => ({ n: c.n, sq: c.sq, nome: c.nome }))} cor={cor} />
@@ -553,7 +558,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 <Linha pontos={data?.historico ?? []} cor={cor} nome={(n) => data?.br?.cands.find((c) => c.n === n)?.nome ?? String(n)} />
               </div>
               <div className="order-7 lg:order-none">
-                {data?.br && data.br.pctApurado >= 99.9 ? <Participacao br={data.br} /> : data ? <Projecao p={data.projecao} cor={cor} /> : null}
+                {data && !(data.br && data.br.pctApurado >= 99.9) ? <Projecao p={data.projecao} cor={cor} /> : null}
               </div>
             </div>
 
