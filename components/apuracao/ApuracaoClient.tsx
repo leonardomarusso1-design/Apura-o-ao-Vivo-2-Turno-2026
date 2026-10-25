@@ -652,7 +652,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               <div className="order-5 empty:hidden lg:order-none lg:shrink-0">
                 <LiveBox />
               </div>
-              <div className="order-4 lg:order-none lg:min-h-[170px] lg:flex-1">
+              <div className="order-4 lg:order-none lg:min-h-[440px] lg:flex-1">
                 <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
               </div>
               <div className="order-8 lg:order-none lg:shrink-0">

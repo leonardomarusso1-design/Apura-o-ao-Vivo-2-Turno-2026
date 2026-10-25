@@ -11,7 +11,7 @@ import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 
 type Cor = (n: number | undefined) => string;
-const POLL = 15_000;
+const POLL = 30_000;
 
 export default function MapaExterior({
   total,
@@ -177,7 +177,7 @@ export default function MapaExterior({
             <path d={WORLD_BORDERS} fill="none" stroke="#2e3a35" strokeWidth={0.5 / zoom.k} />
             {EXT_CIDADES.map((c) => {
               const r = cidades[c.cd];
-              const lider = r?.top[0];
+              const lider = r && r.v > 0 ? r.top[0] : undefined; // sem votos ainda: cinza, nunca "verde" de quem aparece primeiro na lista
               const base = r ? 3 + Math.sqrt(r.el / maxEl) * 9 : 2.6;
               const rad = base / Math.sqrt(zoom.k);
               return (
@@ -243,11 +243,11 @@ export default function MapaExterior({
                 onClick={() => setSel(c.cd)}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left ${sel === c.cd ? "bg-ink" : ""}`}
               >
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cor(c.top[0]?.n) }} />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: c.v > 0 ? cor(c.top[0]?.n) : "#3a4640" }} />
                 <Bandeira iso={isoDe(c.cd)} w={22} />
                 <span className="min-w-0 flex-1 truncate">{nomeDe(c.cd)}</span>
                 <span className="tabular text-xs text-mute">{fmtInt(c.el)} el.</span>
-                <span className="tabular w-14 text-right text-xs">{c.top[0] ? `${fmtPct(c.top[0].pct, 1)}%` : "—"}</span>
+                <span className="tabular w-14 text-right text-xs">{c.v > 0 && c.top[0] ? `${fmtPct(c.top[0].pct, 1)}%` : "—"}</span>
               </button>
             </li>
           ))}

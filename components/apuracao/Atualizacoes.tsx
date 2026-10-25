@@ -41,7 +41,7 @@ function Noticias() {
   }, []);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs lg:h-auto lg:min-h-0 lg:flex-1">
+      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-sm lg:h-auto lg:min-h-0 lg:flex-1">
         {n === null ? (
           <li className="py-8 text-center text-xs text-mute">Buscando as últimas notícias…</li>
         ) : n.length === 0 ? (
@@ -55,10 +55,10 @@ function Noticias() {
                 rel="noopener noreferrer nofollow"
                 className="clicavel block rounded-xl border border-white/[0.04] bg-white/[0.02] p-2.5"
               >
-                <span className="mb-0.5 flex items-center gap-1.5 text-[10px] text-mute">
+                <span className="mb-1 flex items-center gap-1.5 text-[11px] text-mute">
                   <span className="font-semibold text-paper/80">{x.fonte}</span>·<span className="tabular">{atras(x.t)}</span>
                 </span>
-                <span className="block text-xs leading-snug text-paper/90">{x.titulo} <span aria-hidden className="text-mute">↗</span></span>
+                <span className="block text-[14px] leading-snug text-paper">{x.titulo} <span aria-hidden className="text-mute">↗</span></span>
               </a>
             </li>
           ))
@@ -109,7 +109,7 @@ export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: {
       ) : aba === "noticias" ? (
         <Noticias />
       ) : (
-      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-xs lg:h-auto lg:min-h-0 lg:flex-1">
+      <ul className="h-72 space-y-2 overflow-y-auto overscroll-contain pr-1 text-sm lg:h-auto lg:min-h-0 lg:flex-1">
         {eventos.length === 0 ? (
           <li className="py-8 text-center text-mute text-xs">
             Aguardando primeiras urnas totalizadas pelo TSE...
@@ -137,7 +137,7 @@ export default function Atualizacoes({ eventos, cor, mural = false, pct = 0 }: {
                   <span>·</span>
                   <span className="tabular">{hora(e.t)}</span>
                 </div>
-                <p className="text-paper/90 text-xs leading-snug">
+                <p className="text-paper text-[14px] leading-snug">
                   {e.texto}
                 </p>
               </div>
