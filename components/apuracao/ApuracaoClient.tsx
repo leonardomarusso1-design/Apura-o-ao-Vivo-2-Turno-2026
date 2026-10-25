@@ -19,6 +19,7 @@ import { fmtPct, makeCor, type Payload } from "./types";
 import type { PontoReplay } from "@/lib/apuracao/types";
 import ApoieModal from "./ApoieModal";
 import { TurnoContext } from "./TurnoContext";
+import ChatApuracao from "./ChatApuracao";
 import SeletorCandidato from "./SeletorCandidato";
 import PainelCandidato from "./PainelCandidato";
 import type { ResumoMun } from "./MapaMunicipiosBR";
@@ -645,6 +646,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               </div>
               <div className="order-4 lg:order-none lg:min-h-[170px] lg:flex-1">
                 <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
+              </div>
+              <div className="order-7 lg:order-none lg:shrink-0 empty:hidden">
+                <ChatApuracao />
               </div>
               <div className="order-8 lg:order-none lg:shrink-0">
                 <div className="grid grid-cols-2 gap-2">

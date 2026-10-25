@@ -13,6 +13,10 @@ export default function Privacidade() {
         Você pode cancelar a qualquer momento pelo link de descadastro.
       </p>
       <p className="mt-3">
+        Chat ao vivo: o login com Google serve só para confirmar que você é uma pessoa. Guardamos um identificador anônimo (hash), o apelido que você
+        escolher e as mensagens por poucas horas, para moderação. Não guardamos seu e-mail nem seu nome do Google.
+      </p>
+      <p className="mt-3">
         Guardamos também um identificador técnico do seu acesso (hash do IP, sem o IP original) para evitar abuso.
         Não perguntamos nem armazenamos em quem você vota. Não vendemos nem compartilhamos sua lista de contatos com
         anunciantes.

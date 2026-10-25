@@ -10,18 +10,20 @@ const gScript = usaGoogle ? " https://www.googletagmanager.com" : "";
 const gConnect = usaGoogle
   ? " https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net"
   : "";
+const usaChat = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+const gsi = usaChat ? " https://accounts.google.com/gsi/" : "";
 const gImg = usaGoogle ? " https://www.google-analytics.com https://*.google-analytics.com https://*.googletagmanager.com" : "";
 
 // 'unsafe-inline' em script continua porque o Next injeta scripts inline e o nonce obrigaria a renderizar toda página
 // de forma dinâmica (sem cache de CDN). O risco fica baixo porque o site não renderiza HTML de usuário.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com${gScript}${vercelLive}`,
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://challenges.cloudflare.com${gsi}${gScript}${vercelLive}`,
+  `style-src 'self' 'unsafe-inline'${gsi}`,
   `img-src 'self' data: blob:${gImg}${vercelLive}`,
   "font-src 'self' data:",
-  `connect-src 'self'${gConnect}${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
-  `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://player.twitch.tv https://iframe.videodelivery.net${vercelLive}`,
+  `connect-src 'self'${gsi}${gConnect}${vercelLive}${isPreview ? " wss://ws-us3.pusher.com" : ""}`,
+  `frame-src https://challenges.cloudflare.com${gsi} https://www.youtube-nocookie.com https://www.youtube.com https://player.twitch.tv https://iframe.videodelivery.net${vercelLive}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
