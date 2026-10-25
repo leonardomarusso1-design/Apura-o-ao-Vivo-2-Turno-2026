@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Avatar from "./Avatar";
 
 type Finalista = { n: number; sq?: number; nome: string };
-type Item = { uf: string; d: number };
+type Item = { uf: string; d: number; bruto?: number };
 
 const f1 = (n: number) => n.toFixed(1).replace(".", ",");
 
@@ -15,6 +15,7 @@ const f1 = (n: number) => n.toFixed(1).replace(".", ",");
  */
 export default function MudouDesde1({ finalistas, cor }: { finalistas: Finalista[]; cor: (n: number | undefined) => string }) {
   const [itens, setItens] = useState<Item[] | null>(null);
+  const [media, setMedia] = useState(0);
   const [x, y] = [...finalistas].sort((p, q) => p.n - q.n); // ordem estável: d > 0 = o de menor número cresceu
   const nx = x?.n;
   const ny = y?.n;
@@ -27,8 +28,11 @@ export default function MudouDesde1({ finalistas, cor }: { finalistas: Finalista
       try {
         const r = await fetch(`/api/mudou?a=${nx}&b=${ny}`);
         if (r.ok) {
-          const j = (await r.json()) as { ok: boolean; itens?: Item[] };
-          if (vivo && j.ok && j.itens) setItens(j.itens);
+          const j = (await r.json()) as { ok: boolean; itens?: Item[]; media?: number };
+          if (vivo && j.ok && j.itens) {
+            setItens(j.itens);
+            setMedia(j.media ?? 0);
+          }
         }
       } catch {
         /* tenta de novo no próximo ciclo */
@@ -52,7 +56,7 @@ export default function MudouDesde1({ finalistas, cor }: { finalistas: Finalista
     <div key={c.n} className="mt-2">
       <p className="flex items-center gap-2 text-xs font-semibold">
         <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={20} />
-        <span>Onde {c.nome.split(" ")[0]} cresceu</span>
+        <span>Onde {c.nome.split(" ")[0]} cresceu mais</span>
       </p>
       {lista.length === 0 ? (
         <p className="mt-1 text-[11px] text-mute">Nenhum estado até agora</p>
@@ -77,7 +81,12 @@ export default function MudouDesde1({ finalistas, cor }: { finalistas: Finalista
   return (
     <section className="glass-panel rounded-xl p-3" aria-label="O que mudou desde o 1º turno">
       <h2 className="text-[11px] font-semibold uppercase tracking-wider text-paper">O que mudou desde o 1º turno</h2>
-      <p className="text-[10px] text-mute">Nas urnas já apuradas, em pontos, contra os mesmos municípios no 1º turno.</p>
+      <p className="text-[10px] text-mute">Nos municípios já apurados, em pontos, acima ou abaixo da média do país contra o 1º turno.</p>
+      {itens.length > 0 && Math.abs(media) >= 0.1 ? (
+        <p className="mt-1 text-[10px] text-mute">
+          Na média do país, {(media > 0 ? x : y).nome.split(" ")[0]} está {f1(Math.abs(media))} ponto{Math.abs(media) >= 1.5 ? "s" : ""} acima do 1º turno (os dois dividem os votos dos outros candidatos).
+        </p>
+      ) : null}
       {bloco(x, listaX)}
       {bloco(y, listaY)}
     </section>
