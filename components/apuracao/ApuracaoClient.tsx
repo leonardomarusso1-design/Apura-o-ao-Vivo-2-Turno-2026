@@ -26,6 +26,7 @@ import PainelCandidato from "./PainelCandidato";
 import type { ResumoMun } from "./MapaMunicipiosBR";
 import Linha from "./Linha";
 import MudouDesde1 from "./MudouDesde1";
+import SlotMapa from "./SlotMapa";
 
 import Credito from "../Credito";
 import { track } from "@/lib/track";
@@ -647,11 +648,15 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 <div className="pointer-events-auto absolute bottom-2 left-2 hidden w-[220px] lg:block">
                   <AdSlot indice={0} label="Anuncie aqui" />
                 </div>
-                <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[220px] lg:block">
-                  <AdSlot indice={1} label="Anuncie aqui" />
+                <div className="pointer-events-auto absolute bottom-2 right-2 hidden w-[260px] lg:block">
+                  <SlotMapa />
                 </div>
               </div>
             </section>
+
+            <div className="order-3 lg:hidden">
+              <SlotMapa />
+            </div>
 
             {/* coluna direita */}
             <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1"}>
