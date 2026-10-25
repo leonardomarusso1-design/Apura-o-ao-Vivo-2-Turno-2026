@@ -519,9 +519,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               </div>
             ) : null}
           <BarraDisputa br={data?.br ?? null} cor={cor} turno={turno} />
-          <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
+          <div className={`flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 ${uf === "ZZ" ? "lg:grid-cols-1" : "lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]"}`}>
             {/* coluna esquerda */}
-            <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
+            <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1"}>
               {esperandoVotos ? (
                 <p className="order-1 rounded-lg border border-line bg-panel px-3 py-2 text-xs text-mute lg:order-none" role="status">
                   <span className="pulse-dot mr-2 inline-block h-2 w-2 rounded-full bg-amber align-middle" />
@@ -627,7 +627,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             </section>
 
             {/* coluna direita */}
-            <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
+            <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1"}>
               {modo === "candidato" && candN != null && !uf ? (
                 <div className="order-3 lg:order-none">
                   <PainelCandidato
