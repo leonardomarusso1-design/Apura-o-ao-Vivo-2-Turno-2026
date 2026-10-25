@@ -8,6 +8,7 @@ import type { CidadeRes } from "@/lib/apuracao/exterior";
 import type { Area } from "@/lib/apuracao/types";
 import { fmtInt, fmtPct } from "./types";
 import Bandeira from "./Bandeira";
+import Avatar from "./Avatar";
 
 type Cor = (n: number | undefined) => string;
 const POLL = 30_000;
@@ -84,9 +85,55 @@ export default function MapaExterior({
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
+  // Resumo do exterior (somando as cidades que o TSE já publicou)
+  const [todosPaises, setTodosPaises] = useState(false);
+  const resumo = useMemo(() => {
+    const arr = Object.values(cidades);
+    const el = arr.reduce((a, c) => a + c.el, 0);
+    const validos = arr.reduce((a, c) => a + c.v, 0);
+    const pa = el > 0 ? arr.reduce((a, c) => a + c.pa * c.el, 0) / el : 0;
+    const por = new Map<number, { n: number; nome: string; partido: string; votos: number }>();
+    for (const c of arr)
+      for (const t of c.top) {
+        const x = por.get(t.n) ?? { n: t.n, nome: t.nome, partido: t.partido, votos: 0 };
+        x.votos += t.votos;
+        por.set(t.n, x);
+      }
+    const cands = [...por.values()].sort((a, b) => b.votos - a.votos || a.n - b.n).slice(0, 2).sort((a, b) => a.n - b.n);
+    const paises = new Map<string, { iso: string; el: number; cidades: number; fechadas: number; v: number; votos: Map<number, { n: number; nome: string; votos: number }> }>();
+    for (const c of arr) {
+      const iso = EXT_CIDADES.find((x) => x.cd === c.cd)?.iso;
+      if (!iso) continue;
+      const p = paises.get(iso) ?? { iso, el: 0, cidades: 0, fechadas: 0, v: 0, votos: new Map() };
+      p.el += c.el;
+      p.cidades++;
+      if (c.pa >= 99.99) p.fechadas++;
+      p.v += c.v;
+      for (const t of c.top) {
+        const y = p.votos.get(t.n) ?? { n: t.n, nome: t.nome, votos: 0 };
+        y.votos += t.votos;
+        p.votos.set(t.n, y);
+      }
+      paises.set(iso, p);
+    }
+    const lista = [...paises.values()].sort((a, b) => b.el - a.el);
+    return { el, validos, pa, cands, lista };
+  }, [cidades]);
+  const nomePais = (iso: string) => {
+    try {
+      return new Intl.DisplayNames(["pt-BR"], { type: "region" }).of(iso) ?? iso;
+    } catch {
+      return iso;
+    }
+  };
+  const mil = (n: number) => (n >= 1000 ? `${fmtInt(n / 1000)} mil` : fmtInt(n));
+  const paPainel = total && total.pctApurado > 0 ? total.pctApurado : resumo.pa;
+
   const vb = `0 0 ${WORLD_W} ${WORLD_H}`;
   return (
     <section className="rounded-2xl border border-line bg-panel p-3 sm:p-5" aria-label="Exterior">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-5">
+      <div className="min-w-0">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <nav className="text-sm text-mute">
           <button onClick={onVoltar} className="underline">
@@ -206,6 +253,83 @@ export default function MapaExterior({
           ))}
         </ul>
       ) : null}
+      </div>
+
+      <aside className="mt-4 rounded-2xl border border-line bg-ink/40 p-4 lg:mt-0" aria-label="Resumo do exterior">
+        <h3 className="font-display text-xl">Exterior</h3>
+        <p className="tabular text-xs text-mute">
+          {fmtPct(paPainel, 1)}% das urnas · {mil(resumo.el)} eleitores
+        </p>
+
+        <div className="mt-3 border-t border-line pt-3">
+          <p className="flex items-center justify-between text-xs text-mute">
+            <span>Presidente no exterior</span>
+            <span>Votos válidos</span>
+          </p>
+          {resumo.cands.length === 2 ? (
+            <div className="mt-2 grid gap-2">
+              {resumo.cands.map((c) => (
+                <div key={c.n} className="flex items-center gap-3">
+                  <Avatar n={c.n} nome={c.nome} cor={cor(c.n)} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{c.nome.split(" ").slice(0, 2).join(" ")}</p>
+                    <p className="text-[11px] text-mute">{c.partido} · {c.n}</p>
+                  </div>
+                  <strong className="tabular text-lg" style={{ color: cor(c.n) }}>
+                    {resumo.validos > 0 ? `${fmtPct((c.votos / resumo.validos) * 100, 1)}%` : "—"}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-mute">Aguardando o TSE divulgar o exterior.</p>
+          )}
+          <p className="mt-2 text-[11px] leading-snug text-mute">
+            {resumo.validos > 0
+              ? `Soma dos votos já publicados pelo TSE em ${comDados} cidades. O total oficial do exterior sai junto com o do Brasil.`
+              : "O TSE ainda não publicou votos do exterior. O total oficial sai a partir das 17h, junto com o do Brasil."}
+          </p>
+        </div>
+
+        <div className="mt-3 border-t border-line pt-3">
+          <p className="flex items-center justify-between text-xs text-mute">
+            <span>Por país</span>
+            <span>{resumo.lista.length} países</span>
+          </p>
+          <ul className="mt-2 divide-y divide-line">
+            {(todosPaises ? resumo.lista : resumo.lista.slice(0, 8)).map((p) => {
+              const l = [...p.votos.values()].sort((a, b) => b.votos - a.votos)[0];
+              const temVotos = p.v > 0 && l;
+              const fechado = p.fechadas === p.cidades;
+              return (
+                <li key={p.iso} className="flex items-center gap-3 py-2">
+                  <Bandeira iso={p.iso} w={28} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{nomePais(p.iso)}</p>
+                    <p className="text-[11px] text-mute">
+                      {p.cidades} {p.cidades === 1 ? "cidade" : "cidades"} · {mil(p.el)} eleitores
+                    </p>
+                  </div>
+                  {temVotos ? (
+                    <span className="tabular text-sm font-bold" style={{ color: cor(l.n) }}>
+                      {fmtPct((l.votos / p.v) * 100, 1)}%
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-mute">{fechado ? "urnas fechadas" : "aguardando"}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {resumo.lista.length > 8 ? (
+            <button type="button" onClick={() => setTodosPaises((v) => !v)} className="mt-2 text-xs underline">
+              {todosPaises ? "Mostrar menos" : `Ver todos os ${resumo.lista.length} países`}
+            </button>
+          ) : null}
+        </div>
+        <p className="mt-3 text-[11px] text-mute">Fora do Brasil, só se vota para presidente.</p>
+      </aside>
+      </div>
     </section>
   );
 }
