@@ -114,6 +114,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   const [candN, setCandN] = useState<number | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [busca, setBusca] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [aba, setAba] = useState<"presidente" | "governadores" | "senado" | "federais" | "estaduais">("presidente");
 
   useEffect(() => {
@@ -347,6 +348,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
     ["federais", "Deputados"],
   ] as const;
   const abaAtiva = aba === "estaduais" ? "federais" : aba;
+  const btnIcone = "grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line text-mute transition hover:bg-white/5 hover:text-paper";
   const btnTopo = "h-8 whitespace-nowrap rounded-lg border border-line px-2.5 text-xs hover:bg-white/5";
 
   const aguardandoT2 = Date.now() < new Date(ELECTION_ISO).getTime();
@@ -421,10 +423,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             </button>
           ))}
         </nav>
-        <button onClick={() => setBusca(true)} className={btnTopo} aria-label="Buscar estado ou cidade">
-          Buscar <kbd className="ml-1 hidden rounded border border-line px-1 text-[10px] text-mute sm:inline">Ctrl K</kbd>
-        </button>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5">
           {online ? (
             <span className="tabular flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 text-xs text-emerald-200" title="Pessoas com o site aberto agora" aria-live="polite">
               <span className="relative flex h-2 w-2">
@@ -432,43 +431,60 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
               <strong className="text-xs text-white">{new Intl.NumberFormat("pt-BR").format(online)}</strong>
-              <span className="hidden sm:inline">online agora</span>
+              <span className="hidden sm:inline">online</span>
             </span>
           ) : null}
-          <span className="tabular hidden items-center gap-1.5 text-xs text-mute 2xl:flex" aria-live="polite">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="tabular hidden items-center gap-1.5 text-[11px] text-mute 2xl:flex" aria-live="polite">
             {statusTxt}
             {erro ? " · reconectando…" : ""}
           </span>
-          <button
-            onClick={() => {
-              setAba("presidente");
-              setUf(uf === "ZZ" ? null : "ZZ");
-            }}
-            aria-pressed={uf === "ZZ"}
-            className={`${btnTopo} ${uf === "ZZ" ? "!border-lime bg-lime text-ink" : ""}`}
-          >
-            Exterior
+          <button onClick={() => setBusca(true)} className={btnIcone} aria-label="Buscar estado ou cidade" title="Buscar (Ctrl K)">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          </button>
+          <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnIcone} aria-label="Compartilhar" title={copiado ? "Texto copiado" : "Compartilhar"}>
+            {copiado ? (
+              <span className="text-xs font-bold text-lime">✓</span>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></svg>
+            )}
+          </button>
+          <button onClick={() => { track("modo_tv", { turno }); void entrarTv(); }} className={btnIcone} aria-label="Tela cheia (modo TV)" title="Tela cheia (modo TV)">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
           </button>
           {pixAtivo ? (
             <button onClick={() => { track("apoie_abrir"); setApoie(true); }} className={`${btnTopo} !border-lime/60 text-lime`}>
-              Apoie
+              ♥ Apoie
             </button>
           ) : null}
-          <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnTopo}>
-            {copiado ? "Texto copiado ✓" : "Compartilhar"}
-          </button>
+          <div className="relative">
+            <button onClick={() => setMenu((v) => !v)} className={btnIcone} aria-label="Mais opções" aria-haspopup="menu" aria-expanded={menu} title="Mais">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+            </button>
+            {menu ? (
+              <>
+                <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar menu" tabIndex={-1} onClick={() => setMenu(false)} />
+                <div role="menu" className="absolute right-0 top-9 z-50 w-52 rounded-xl border border-line bg-panel p-1 text-sm shadow-2xl">
+                  <a role="menuitem" href="/anunciar" className="block rounded-lg px-3 py-2 text-amber hover:bg-white/5">Anunciar aqui</a>
+                  <a role="menuitem" href="/apuracao/perguntas" className="block rounded-lg px-3 py-2 hover:bg-white/5">Perguntas frequentes</a>
+                  <a role="menuitem" href="/jogo" className="block rounded-lg px-3 py-2 hover:bg-white/5">Jogo da espera</a>
+                  <a role="menuitem" href="/privacidade" className="block rounded-lg px-3 py-2 text-mute hover:bg-white/5">Privacidade</a>
+                </div>
+              </>
+            ) : null}
+          </div>
           {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
-            <button onClick={() => { track("chat_abrir", { turno }); setChatAberto((a) => !a); }} className={`${btnTopo} ${chatAberto ? "!border-lime/60 text-lime" : ""}`} aria-pressed={chatAberto}>
-              💬 Chat
+            <button
+              onClick={() => { track("chat_abrir", { turno }); setChatAberto((a) => !a); }}
+              aria-pressed={chatAberto}
+              className={`flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-bold transition ${chatAberto ? "border border-lime/60 bg-lime/10 text-lime" : "bg-lime text-ink shadow-[0_0_18px_rgba(198,242,78,0.45)] hover:brightness-110"}`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+              </span>
+              💬 Chat ao vivo
             </button>
           ) : null}
-          <a href="/anunciar" className={`${btnTopo} inline-flex items-center border-amber/50 text-amber`}>
-            Anunciar
-          </a>
-          <button onClick={() => { track("modo_tv", { turno }); void entrarTv(); }} className={btnTopo}>
-            Tela cheia
-          </button>
         </div>
       </header>
       <p className="tabular mb-2 text-[11px] text-mute 2xl:hidden">{statusTxt}{erro ? " · reconectando…" : ""}</p>
@@ -554,11 +570,21 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                         setModo(m);
                         if (uf) setUf(null);
                       }}
-                      className={`h-8 rounded-lg px-3 transition ${modo === m && !uf ? "bg-white/10 text-paper ring-1 ring-white/25" : "text-mute hover:text-paper"}`}
+                      className={`h-7 rounded-lg px-2.5 transition ${modo === m && !uf ? "bg-white/10 text-paper ring-1 ring-white/25" : "text-mute hover:text-paper"}`}
                     >
                       {nome}
                     </button>
                   ))}
+                  <button
+                    onClick={() => {
+                      setAba("presidente");
+                      setUf(uf === "ZZ" ? null : "ZZ");
+                    }}
+                    aria-pressed={uf === "ZZ"}
+                    className={`h-7 rounded-lg px-2.5 transition ${uf === "ZZ" ? "bg-lime font-semibold text-ink" : "text-mute hover:text-paper"}`}
+                  >
+                    Exterior
+                  </button>
                   <SeletorCandidato
                     cands={data?.br?.cands ?? []}
                     valor={modo === "candidato" ? candN : null}
