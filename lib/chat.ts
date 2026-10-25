@@ -69,31 +69,24 @@ function norm(s: string): string {
 }
 const colapsa = (s: string) => s.replace(/(.)\1+/g, "$1");
 
-// pedaços fortes: bloqueados mesmo grudados em outra palavra
-const FORTES = ["caralho", "carai", "buceta", "bucet", "porra", "merda", "foder", "fodase", "fodasse", "foda se", "viado", "viadinho", "arrombad", "desgraca", "vagabund", "otario", "babaca", "escroto", "cacete", "puta que", "putaria", "putinha", "filho da puta", "filha da puta", "cuzao", "cusao", "retardad", "imbecil", "idiota", "lixo humano", "macaco", "crioulo", "sapatao", "mongol", "vai se fuder", "vsf", "vtnc", "tnc", "pqp", "fdp", "krl", "crl", "prr", "nazista", "estupr"];
-// palavras curtas: só como palavra inteira
-const PALAVRAS = new Set(["cu", "puta", "puto", "pau", "pica", "piroca", "rola", "xota", "xoxota", "punheta", "bosta", "cuzao", "otaria", "vadia", "vagabunda"]);
-
-/** "f d p" / "c u" -> "fdp" / "cu": junta letras soltas em sequência. */
-const juntaLetras = (s: string) => s.replace(/\b(?:[a-z] ){1,}[a-z]\b/g, (m) => m.replace(/ /g, ""));
+// Filtro enxuto: só palavras de ódio (preconceito), e só como palavra inteira, para não barrar conversa normal.
+// Palavrões comuns e xingamentos entre torcidas passam; quem passar do ponto é apagado/banido no /admin/chat.
+const PROIBIDAS = new Set(["crioulo", "crioula", "sapatao", "retardado", "retardada", "mongoloide", "viado", "viadao"]);
 
 export function palavrao(texto: string): boolean {
-  const n = norm(texto);
-  const c = colapsa(juntaLetras(n));
-  const junto = c.replace(/ /g, "");
-  if (FORTES.some((f) => c.includes(colapsa(f)) || (f.length >= 5 && junto.includes(colapsa(f.trim()).replace(/ /g, ""))))) return true;
-  return c.split(" ").some((p) => p && PALAVRAS.has(p));
+  const c = colapsa(norm(texto));
+  return c.split(" ").some((p) => p && PROIBIDAS.has(p));
 }
 
 export const temLink = (t: string) =>
-  /(https?:|www\.|\.com|\.br\b|\.net|\.org|\.ly\b|bit\.ly|t\.me|wa\.me|whats|zap|telegram|@\w+|\b\d{4,}[\s.-]?\d{3,}|\b\d{8,}\b)/i.test(t.normalize("NFD").replace(/[̀-ͯ]/g, ""));
+  /(https?:|www\.|\.com|\.br\b|\.net|\.org|\.ly\b|bit\.ly|t\.me|wa\.me|@\w+|\(?\d{2}\)?\s?9?\d{4}[\s.-]\d{4}|\b\d{9,}\b)/i.test(t.normalize("NFD").replace(/[̀-ͯ]/g, ""));
 
 export const APELIDO_RE = /^[\p{L}\p{N}_.-]{3,16}$/u;
 const RESERVADOS = ["admin", "administrador", "moderador", "moderacao", "mod", "apuracao", "tse", "marusso", "leomvideomaker", "leomarussobr", "toqy", "gcard", "oficial", "suporte"];
 export function erroApelido(n: string): string | null {
   if (!APELIDO_RE.test(n)) return "Apelido: 3 a 16 letras, números, ponto, _ ou -.";
   const x = norm(n).replace(/ /g, "");
-  if (RESERVADOS.some((r) => x.includes(r))) return "Esse apelido não pode ser usado.";
+  if (RESERVADOS.some((r) => x === r || (r.length >= 6 && x.includes(r)))) return "Esse apelido não pode ser usado.";
   if (palavrao(n) || temLink(n)) return "Escolha outro apelido.";
   return null;
 }
