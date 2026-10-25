@@ -11,7 +11,7 @@ import Bandeira from "./Bandeira";
 import Avatar from "./Avatar";
 
 type Cor = (n: number | undefined) => string;
-const POLL = 30_000;
+const POLL = 15_000;
 
 export default function MapaExterior({
   total,

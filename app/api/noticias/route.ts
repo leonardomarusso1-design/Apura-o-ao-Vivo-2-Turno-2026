@@ -8,5 +8,5 @@ export const maxDuration = 20;
 /** Manchetes de política (só texto, sem Globo): título, veículo e link para a matéria original. */
 export async function GET() {
   const itens = await getNoticias().catch(() => []);
-  return NextResponse.json({ ok: itens.length > 0, itens }, { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300" } });
+  return NextResponse.json({ ok: itens.length > 0, itens }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
 }

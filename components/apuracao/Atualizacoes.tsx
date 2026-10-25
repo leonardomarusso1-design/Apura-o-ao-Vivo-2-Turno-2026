@@ -31,7 +31,7 @@ function Noticias() {
       } catch {
         /* mantém */
       }
-      if (alive) t = setTimeout(load, 180_000);
+      if (alive) t = setTimeout(load, 40_000);
     };
     void load();
     return () => {

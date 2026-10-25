@@ -3,7 +3,7 @@ import { redis } from "@/lib/redis";
 export type Noticia = { t: string; titulo: string; fonte: string; url: string };
 
 const UA = { "User-Agent": "Mozilla/5.0 (compatible; ApuracaoBot/1.0)", Accept: "application/rss+xml, application/xml, text/xml" };
-const TTL_S = 180;
+const TTL_S = 45;
 const MAX = 30;
 const IDADE_MAX_MS = 48 * 3_600_000;
 

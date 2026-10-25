@@ -19,5 +19,5 @@ export async function GET(req: Request) {
   const r = await mapaMunicipios(ele, c, uf, ttl).catch(() => null);
   if (!r) return NextResponse.json({ ok: false }, { headers: { "Cache-Control": "no-store" } });
   if ("pendente" in r) return NextResponse.json({ ok: true, pendente: true }, { headers: { "Cache-Control": "no-store" } });
-  return NextResponse.json({ ok: true, ...r }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } });
+  return NextResponse.json({ ok: true, ...r }, { headers: { "Cache-Control": "public, s-maxage=20, stale-while-revalidate=40" } });
 }

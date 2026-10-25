@@ -25,5 +25,5 @@ export async function GET(req: Request) {
   if (snapP && snapP.status === "aguardando" && !snapP.demo) return NextResponse.json({ ok: false, res: null });
   const ele = snapP ? snapP.eleicao : 6259; // presidente: rodada exibida; demais: eleição estadual 1º turno
   const r = await resultadoMunicipio(ele, c, uf, cd);
-  return NextResponse.json({ ok: Boolean(r), res: r }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } });
+  return NextResponse.json({ ok: Boolean(r), res: r }, { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" } });
 }

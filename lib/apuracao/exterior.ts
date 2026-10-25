@@ -13,7 +13,7 @@ export type CidadeRes = {
 };
 export type ExteriorData = { geradoEm: string; ele: number; cidades: Record<string, CidadeRes> };
 
-const FRESH_MS = 45_000;
+const FRESH_MS = 20_000;
 const FRESH_PREVIA_MS = 300_000;
 const key = (ele: number) => `ext:v1:${ele}`;
 const lock = (ele: number) => `ext:lock:${ele}`;

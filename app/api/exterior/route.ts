@@ -15,6 +15,6 @@ export async function GET(req: Request) {
   const data = snap.demo ? null : await getExterior(snap.eleicao, snap.previa, extJaTem, (snap.br?.cands ?? []).map((c) => ({ n: c.n, nome: c.nome, partido: c.partido })));
   return NextResponse.json(
     { ok: Boolean(data), geradoEm: data?.geradoEm ?? null, cidades: data?.cidades ?? {} },
-    { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },
+    { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20" } },
   );
 }
