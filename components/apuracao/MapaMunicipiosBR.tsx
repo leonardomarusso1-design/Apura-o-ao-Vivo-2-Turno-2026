@@ -27,6 +27,12 @@ function margem(it: ItemMapa): number {
   if (a.v !== undefined && b.v !== undefined) return Math.max(0, a.v - b.v);
   return it.vt ? Math.max(0, ((a.pct - b.pct) / 100) * it.vt) : 0;
 }
+/** Líder do município, ou undefined se ainda não entrou nenhum voto (fica cinza no mapa). */
+function lidDe(it: ItemMapa | undefined) {
+  const l = it?.top[0];
+  if (!it || !l) return undefined;
+  return (l.v ?? 0) > 0 || (it.vt ?? 0) > 0 || (it.vt === undefined && l.v === undefined && l.pct > 0) ? l : undefined;
+}
 /** Raio da bolha (área proporcional à vantagem). */
 const altura = (m: number, max: number) => 1.1 + 12 * Math.sqrt(Math.min(1, m / Math.max(1, max)));
 const fmtVotos = (n: number) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(".", ",")} mi` : n >= 1000 ? `${Math.round(n / 1000)} mil` : String(Math.round(n)));
@@ -91,7 +97,7 @@ const Camada = memo(function Camada({
     <g data-uf={uf}>
       {geo.m.map((g) => {
         const it = porId.get(g.i) ?? porId.get(g.i.slice(0, 6)) ?? porNome.get(norm(g.n));
-        const l = it?.top[0];
+        const l = lidDe(it);
         let fill = "#161d29";
         let op = 0.7;
         if (modo === "vantagem") {
@@ -99,7 +105,7 @@ const Camada = memo(function Camada({
           op = 1;
         } else if (modo === "candidato" && candN != null) {
           const c = it?.top.find((x) => x.n === candN);
-          if (it) {
+          if (it && l) {
             fill = cor(candN);
             op = 0.16 + 0.84 * Math.min(1, Math.max(0, ((c?.pct ?? 0) - lo) / Math.max(1, hi - lo)));
           }
@@ -137,7 +143,7 @@ const Bolhas = memo(function Bolhas({ geo, itens, cor, max }: { geo: Geo; itens:
     const out: { k: string; x: number; y: number; r: number; n: number }[] = [];
     for (const g of geo.m) {
       const it = id.get(g.i) ?? id.get(g.i.slice(0, 6)) ?? nm.get(norm(g.n));
-      const l = it?.top[0];
+      const l = lidDe(it);
       if (!it || !l) continue;
       const c = centro(g.d);
       if (!c) continue;
@@ -234,7 +240,7 @@ export default function MapaMunicipiosBR({
     let lidera = 0;
     for (const itens of Object.values(dados))
       for (const it of itens) {
-        const l = it.top[0];
+        const l = lidDe(it);
         if (!l) continue;
         const m = margem(it);
         if (m > maxM) maxM = m;

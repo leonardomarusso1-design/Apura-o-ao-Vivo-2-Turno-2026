@@ -96,7 +96,8 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
       <svg viewBox={geo.vb.join(" ")} className="h-full w-full" role="img" aria-label={`Mapa dos municípios de ${uf}`}>
         {geo.m.map((g) => {
           const it = achar(g);
-          const l = it?.top[0];
+          const l0 = it?.top[0];
+          const l = it && l0 && ((l0.v ?? 0) > 0 || (it.vt ?? 0) > 0 || (it.vt === undefined && l0.v === undefined && l0.pct > 0)) ? l0 : undefined;
           const dif = it && it.top[1] ? it.top[0].pct - it.top[1].pct : 20;
           return (
             <path
