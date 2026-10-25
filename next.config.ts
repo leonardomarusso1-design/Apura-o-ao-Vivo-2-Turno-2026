@@ -49,14 +49,16 @@ const config: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   async redirects() {
+    // Dia da apuração: quem abre a home cai direto na apuração (redirecionamento temporário: para voltar à página de espera, apague esta linha).
+    const home = [{ source: "/", destination: "/apuracao", permanent: false }];
     const principal = hostPrincipal();
-    if (!principal || process.env.VERCEL_ENV !== "production") return [];
-    return ANTIGOS.filter((h) => h !== principal).map((h) => ({
+    if (!principal || process.env.VERCEL_ENV !== "production") return home;
+    return [...home, ...ANTIGOS.filter((h) => h !== principal).map((h) => ({
       source: "/:path*",
       has: [{ type: "host" as const, value: h }],
       destination: `https://${principal}/:path*`,
       permanent: true,
-    }));
+    }))];
   },
   async rewrites() {
     return [{ source: "/.well-known/security.txt", destination: "/security.txt" }];
