@@ -21,6 +21,9 @@ const VALID = new Set(EXT_CIDADES.map((c) => c.cd)); // só buscamos códigos co
 
 let mem: ExteriorData | null = null;
 
+// Cidades que fecham primeiro (fusos à frente do Brasil): Oriente Médio, Ásia, Europa Oriental. Servem de sonda.
+const SONDA = ["30414", "30619", "29289", "29360", "29637", "29483", "39322", "29335", "39306", "30627", "30538", "30317", "30163", "29785", "30740", "29653", "30422", "29262"].filter((cd) => VALID.has(cd));
+
 async function fetchCidade(cd: string, ele: number): Promise<CidadeRes | "none" | null> {
   if (!VALID.has(cd)) return null;
   try {
@@ -78,14 +81,14 @@ export async function getExterior(ele: number, previa: boolean, forcar = false):
   if (got !== "OK" && cached) return cached; // outra instância está coletando
   if (!forcar && (await redis<string>(["GET", `ext:404:${ele}`]))) return cached;
 
-  // Sonda 6 cidades: se nenhuma existe ainda (404), não dispara as ~186 requisições. Uma só não basta: cada cidade fecha em um horário.
+  // Sonda de ~18 cidades que fecham primeiro: se nenhuma existe ainda (404), não dispara as ~186 requisições.
   // "forcar" = o site já sabe (pelo agregado ZZ do TSE) que o exterior tem apuração: busca tudo, sem sondar.
-  const probes = await Promise.all(EXT_CIDADES.slice(0, 6).map((c) => fetchCidade(c.cd, ele)));
+  const probes = await Promise.all(SONDA.map((cd) => fetchCidade(cd, ele)));
   if (!forcar && probes.every((p) => p === "none")) {
     await redis(["SET", `ext:404:${ele}`, "1", "EX", 60]);
     return cached;
   }
-  const rest = EXT_CIDADES.slice(6).map((c) => c.cd);
+  const rest = EXT_CIDADES.map((c) => c.cd).filter((cd) => !SONDA.includes(cd));
   const found = await pool(rest, 8, (cd) => fetchCidade(cd, ele));
   const cidades: Record<string, CidadeRes> = { ...(cached?.cidades ?? {}) };
   for (const r of [...probes, ...found]) if (r && r !== "none") cidades[r.cd] = r;
