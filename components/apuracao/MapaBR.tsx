@@ -174,18 +174,18 @@ export default function MapaBR({ ufs, cor, selecionada, onSelect, tv = false, mo
   const estilo = (uf: string): { fill: string; op: number; rot: string } => {
     const a = ufs[uf];
     const l = lider(uf);
-    if (!a || !l) return { fill: "#131a24", op: 1, rot: "—" };
+    if (!a || !l) return { fill: "#323d4d", op: 1, rot: "—" };
     if (modo === "vantagem") {
       const d = a.cands.length > 1 ? l.votos - a.cands[1].votos : l.votos;
       const m = d >= 1_000_000 ? `${(d / 1_000_000).toFixed(1).replace(".", ",")}M` : d >= 1000 ? `${Math.round(d / 1000)}k` : String(d);
       return { fill: cor(l.n), op: 0.35 + 0.65 * Math.sqrt(d / maxDif), rot: `+${m}` };
     }
     if (modo === "apurado") {
-      return { fill: "#3b82f6", op: 0.15 + 0.85 * (a.pctApurado / 100), rot: `${Math.round(a.pctApurado)}%` };
+      return { fill: "#3b82f6", op: 0.32 + 0.68 * (a.pctApurado / 100), rot: `${Math.round(a.pctApurado)}%` };
     }
     if (modo === "candidato") {
       const c = candDe(uf);
-      if (!c) return { fill: "#131a24", op: 1, rot: "—" };
+      if (!c) return { fill: "#323d4d", op: 1, rot: "—" };
       return { fill: cor(c.n), op: Math.min(1, 0.25 + (c.pct / 80) * 0.75), rot: `${Math.round(c.pct)}%` };
     }
     return { fill: cor(l.n), op: Math.min(1, Math.max(0.45, (l.pct - 45) / 25 + 0.4)), rot: `${Math.round(l.pct)}%` };

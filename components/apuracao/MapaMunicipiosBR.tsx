@@ -17,7 +17,7 @@ export type ResumoMun = { partido: string; n: number; qt: number; rot?: string }
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const VB = "0 0 1000 1030";
-const FUNDO = "#121a26";
+const FUNDO = "#202c3d";
 
 /** Vantagem em votos do líder sobre o 2º colocado. */
 function margem(it: ItemMapa): number {
@@ -122,7 +122,7 @@ const Camada = memo(function Camada({
             data-n={g.n}
             fill={fill}
             fillOpacity={op}
-            stroke={modo === "vantagem" ? "#2b3a52" : "#07090e"}
+            stroke={modo === "vantagem" ? "#3b4c66" : "#07090e"}
             strokeWidth={modo === "vantagem" ? 0.3 : 0.35}
           />
         );
