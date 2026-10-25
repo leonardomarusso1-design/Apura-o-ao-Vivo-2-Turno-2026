@@ -157,7 +157,7 @@ export default function MapaExterior({
           ref={svg}
           viewBox={vb}
           className="block w-full touch-pan-y select-none"
-          style={{ aspectRatio: `${WORLD_W}/${WORLD_H}`, cursor: zoom.k > 1 ? "grab" : "default" }}
+          style={{ aspectRatio: `${WORLD_W}/${WORLD_H}`, width: `min(100%, calc(max(340px, 100dvh - 420px) * ${WORLD_W / WORLD_H}))`, margin: "0 auto", cursor: zoom.k > 1 ? "grab" : "default" }}
           role="img"
           aria-label="Mapa-múndi com as cidades onde há seções eleitorais"
           onPointerDown={(e) => {
