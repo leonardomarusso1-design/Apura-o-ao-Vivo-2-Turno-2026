@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Area } from "@/lib/apuracao/types";
+import type { Area, Ponto } from "@/lib/apuracao/types";
 import Avatar from "./Avatar";
 import { fmtInt, fmtPct } from "./types";
 
@@ -16,7 +16,7 @@ const hms = (ms: number) => {
 const milhoes = (n: number) => `${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n / 1e6)} milhões`;
 
 /** Cabo de guerra: um candidato de cada lado, barra que cresce de cada ponta e marcador de 50%. */
-export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor: (n: number | undefined) => string; turno: 1 | 2 }) {
+export default function BarraDisputa({ br, cor, turno, historico }: { br: Area | null; cor: (n: number | undefined) => string; turno: 1 | 2; historico?: Ponto[] }) {
   const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => {
     setAgora(Date.now());
@@ -33,6 +33,13 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
   const pe = semVotos ? 0 : e.pct;
   const pd = semVotos ? 0 : d.pct;
   const lider = semVotos ? null : e.votos === d.votos ? null : e.votos > d.votos ? e : d;
+
+  // última vez que a liderança mudou de mãos (só pontos com voto apurado)
+  let troca: { n: number; t: string } | null = null;
+  const pts = (historico ?? []).filter((p) => p.pct > 0 && (p.c[0]?.pct ?? 0) > 0);
+  for (let i = 1; i < pts.length; i++) if (pts[i].c[0]?.n !== pts[i - 1].c[0]?.n) troca = { n: pts[i].c[0].n, t: pts[i].t };
+  const horaTroca = troca ? new Date(troca.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
+  const trocaVale = troca !== null && lider !== null && troca.n === lider.n;
 
   const lado = (c: typeof e, dir: "l" | "r") => (
     <div className={`flex min-w-0 items-center gap-2.5 ${dir === "r" ? "flex-row-reverse text-right" : ""}`}>
@@ -55,6 +62,13 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
             <>A apuração começa em <span className="tabular">{hms(INICIO - (agora ?? INICIO))}</span></>
           ) : semVotos ? (
             "Aguardando os primeiros votos"
+          ) : lider && trocaVale && lider ? (
+            <>
+              <span style={{ color: cor(lider.n) }}>{lider.nome.split(" ")[0]}</span> passa à frente às <span className="tabular">{horaTroca}</span>
+              <span className="block text-[11px] font-sans text-mute">
+                na frente por <span className="tabular">{new Intl.NumberFormat("pt-BR").format(Math.abs(e.votos - d.votos))}</span> votos
+              </span>
+            </>
           ) : lider ? (
             <>{lider.nome.split(" ")[0]} na frente por <span className="tabular">{new Intl.NumberFormat("pt-BR").format(Math.abs(e.votos - d.votos))}</span> votos</>
           ) : (

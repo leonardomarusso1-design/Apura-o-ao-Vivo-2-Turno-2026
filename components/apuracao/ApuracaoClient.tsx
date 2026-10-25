@@ -531,7 +531,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 </p>
               </div>
             ) : null}
-          <BarraDisputa br={data?.br ?? null} cor={cor} turno={turno} />
+          <BarraDisputa br={data?.br ?? null} cor={cor} turno={turno} historico={data?.historico} />
           <div className={`flex flex-col gap-2 lg:grid lg:min-h-0 lg:flex-1 ${uf === "ZZ" ? "lg:grid-cols-1" : "lg:grid-cols-[270px_minmax(0,1fr)_270px] xl:grid-cols-[300px_minmax(0,1fr)_320px]"}`}>
             {/* coluna esquerda */}
             <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-2 lg:overflow-y-auto lg:pr-1"}>
