@@ -545,7 +545,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               </div>
               {turno === 2 && data?.br ? (
                 <div className="order-6 lg:order-none">
-                  <MudouDesde1 ufs={data.ufs} finalistas={data.br.cands.slice(0, 2).map((c) => ({ n: c.n, sq: c.sq, nome: c.nome }))} cor={cor} />
+                  <MudouDesde1 finalistas={data.br.cands.slice(0, 2).map((c) => ({ n: c.n, sq: c.sq, nome: c.nome }))} cor={cor} />
                 </div>
               ) : null}
               <div className="order-6 lg:order-none [@media(max-height:900px)]:lg:hidden">

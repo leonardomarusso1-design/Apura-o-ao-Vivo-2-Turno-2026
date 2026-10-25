@@ -1,60 +1,54 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Area } from "@/lib/apuracao/types";
 import Avatar from "./Avatar";
 
 type Finalista = { n: number; sq?: number; nome: string };
+type Item = { uf: string; d: number };
 
 const f1 = (n: number) => n.toFixed(1).replace(".", ",");
-const MIN_APURADO = 1; // só compara estados com pelo menos 1% das seções totalizadas
 
 /**
  * "O que mudou desde o 1º turno": por estado, quanto o voto dos dois finalistas se moveu.
- * Base: no 1º turno, a fatia de cada um sobre a soma dos dois; agora, o % dos votos válidos do 2º turno.
- * Só conta as urnas já apuradas, então no começo da apuração os números oscilam bastante.
+ * O servidor (/api/mudou) compara só os municípios que já têm voto no 2º turno com o resultado deles no 1º,
+ * para a diferença não vir de "as primeiras urnas são de lugares diferentes".
  */
-export default function MudouDesde1({ ufs, finalistas, cor }: { ufs: Record<string, Area> | undefined; finalistas: Finalista[]; cor: (n: number | undefined) => string }) {
-  const [r1, setR1] = useState<Record<string, Area> | null>(null);
+export default function MudouDesde1({ finalistas, cor }: { finalistas: Finalista[]; cor: (n: number | undefined) => string }) {
+  const [itens, setItens] = useState<Item[] | null>(null);
+  const [x, y] = [...finalistas].sort((p, q) => p.n - q.n); // ordem estável: d > 0 = o de menor número cresceu
+  const nx = x?.n;
+  const ny = y?.n;
 
   useEffect(() => {
+    if (!nx || !ny) return;
     let vivo = true;
-    fetch("/api/apuracao?t=1")
-      .then((r) => (r.ok ? (r.json() as Promise<{ ufs?: Record<string, Area> }>) : null))
-      .then((j) => {
-        if (vivo && j?.ufs) setR1(j.ufs);
-      })
-      .catch(() => undefined);
+    let t: ReturnType<typeof setTimeout>;
+    const load = async () => {
+      try {
+        const r = await fetch(`/api/mudou?a=${nx}&b=${ny}`);
+        if (r.ok) {
+          const j = (await r.json()) as { ok: boolean; itens?: Item[] };
+          if (vivo && j.ok && j.itens) setItens(j.itens);
+        }
+      } catch {
+        /* tenta de novo no próximo ciclo */
+      }
+      if (vivo) t = setTimeout(load, 45_000);
+    };
+    void load();
     return () => {
       vivo = false;
+      clearTimeout(t);
     };
-  }, []);
+  }, [nx, ny]);
 
-  const [a, b] = finalistas;
+  const listaX = useMemo(() => (itens ?? []).filter((i) => i.d >= 0.05).sort((p, q) => q.d - p.d).slice(0, 3), [itens]);
+  const listaY = useMemo(() => (itens ?? []).filter((i) => i.d <= -0.05).sort((p, q) => p.d - q.d).slice(0, 3), [itens]);
+  const maxAbs = Math.max(2, ...(itens ?? []).map((i) => Math.abs(i.d)));
 
-  // d > 0: o 1º finalista da lista cresceu no estado; d < 0: o 2º cresceu
-  const difs = useMemo(() => {
-    const out: { uf: string; d: number }[] = [];
-    if (!r1 || !ufs || !a || !b) return out;
-    for (const [uf, atual] of Object.entries(ufs)) {
-      if (uf === "ZZ" || atual.pctApurado < MIN_APURADO || atual.validos <= 0) continue;
-      const ca = atual.cands.find((c) => c.n === a.n);
-      const ant = r1[uf];
-      const va = ant?.cands.find((c) => c.n === a.n)?.votos;
-      const vb = ant?.cands.find((c) => c.n === b.n)?.votos;
-      if (!ca || va === undefined || vb === undefined || va + vb <= 0) continue;
-      out.push({ uf, d: ca.pct - (va / (va + vb)) * 100 });
-    }
-    return out;
-  }, [r1, ufs, a, b]);
+  if (!x || !y || itens === null) return null;
 
-  if (!a || !b || !r1) return null;
-
-  const listaA = difs.filter((x) => x.d >= 0.05).sort((x, y) => y.d - x.d).slice(0, 3);
-  const listaB = difs.filter((x) => x.d <= -0.05).sort((x, y) => x.d - y.d).slice(0, 3);
-  const maxAbs = Math.max(2, ...difs.map((x) => Math.abs(x.d)));
-
-  const bloco = (c: Finalista, lista: { uf: string; d: number }[]) => (
+  const bloco = (c: Finalista, lista: Item[]) => (
     <div key={c.n} className="mt-2">
       <p className="flex items-center gap-2 text-xs font-semibold">
         <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={20} />
@@ -64,14 +58,14 @@ export default function MudouDesde1({ ufs, finalistas, cor }: { ufs: Record<stri
         <p className="mt-1 text-[11px] text-mute">Nenhum estado até agora</p>
       ) : (
         <ul className="mt-1 grid gap-1">
-          {lista.map((x) => (
-            <li key={x.uf} className="tabular flex items-center gap-2 text-[11px]">
-              <span className="w-8 shrink-0 rounded bg-white/10 px-1 py-0.5 text-center text-[10px] font-bold text-paper">{x.uf}</span>
+          {lista.map((i) => (
+            <li key={i.uf} className="tabular flex items-center gap-2 text-[11px]">
+              <span className="w-8 shrink-0 rounded bg-white/10 px-1 py-0.5 text-center text-[10px] font-bold text-paper">{i.uf}</span>
               <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                <span className="block h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, (Math.abs(x.d) / maxAbs) * 100)}%`, background: cor(c.n) }} />
+                <span className="block h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, (Math.abs(i.d) / maxAbs) * 100)}%`, background: cor(c.n) }} />
               </span>
               <strong className="w-12 shrink-0 text-right" style={{ color: cor(c.n) }}>
-                +{f1(Math.abs(x.d))}
+                +{f1(Math.abs(i.d))}
               </strong>
             </li>
           ))}
@@ -83,9 +77,9 @@ export default function MudouDesde1({ ufs, finalistas, cor }: { ufs: Record<stri
   return (
     <section className="glass-panel rounded-xl p-3" aria-label="O que mudou desde o 1º turno">
       <h2 className="text-[11px] font-semibold uppercase tracking-wider text-paper">O que mudou desde o 1º turno</h2>
-      <p className="text-[10px] text-mute">Em pontos, sobre o voto dos dois finalistas, nas urnas já apuradas.</p>
-      {bloco(a, listaA)}
-      {bloco(b, listaB)}
+      <p className="text-[10px] text-mute">Nas urnas já apuradas, em pontos, contra os mesmos municípios no 1º turno.</p>
+      {bloco(x, listaX)}
+      {bloco(y, listaY)}
     </section>
   );
 }
