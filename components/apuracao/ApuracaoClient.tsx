@@ -20,6 +20,7 @@ import type { PontoReplay } from "@/lib/apuracao/types";
 import ApoieModal from "./ApoieModal";
 import { TurnoContext } from "./TurnoContext";
 import ChatApuracao from "./ChatApuracao";
+import BarraDisputa from "./BarraDisputa";
 import SeletorCandidato from "./SeletorCandidato";
 import PainelCandidato from "./PainelCandidato";
 import type { ResumoMun } from "./MapaMunicipiosBR";
@@ -106,6 +107,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   const [novo, setNovo] = useState(false);
   const [refCode, setRefCode] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
+  const [chatAberto, setChatAberto] = useState(false);
   const [modo, setModo] = useState<ModoMapa | "municipios">("estados");
   const [resumoMun, setResumoMun] = useState<ResumoMun[]>([]);
   const [online, setOnline] = useState<number | null>(null);
@@ -364,7 +366,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
 
   return (
     <TurnoContext.Provider value={turno}>
-    <div className="mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-3 pt-2 lg:h-full lg:min-h-0 lg:px-4">
+    <div className={`mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-3 pt-2 lg:h-full lg:min-h-0 lg:px-4 ${chatAberto ? "lg:pr-[396px]" : ""}`}>
       {novo && !diaDaEleicao && turno === 2 ? (
         <div className="mb-3 rounded-2xl border border-lime/40 bg-panel p-3">
           <p className="text-sm font-semibold">Você está na lista ✓</p>
@@ -449,6 +451,11 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
           <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnTopo}>
             {copiado ? "Link copiado ✓" : "Compartilhar"}
           </button>
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
+            <button onClick={() => { track("chat_abrir", { turno }); setChatAberto((a) => !a); }} className={`${btnTopo} ${chatAberto ? "!border-lime/60 text-lime" : ""}`} aria-pressed={chatAberto}>
+              💬 Chat
+            </button>
+          ) : null}
           <a href="/anunciar" className={`${btnTopo} inline-flex items-center border-amber/50 text-amber`}>
             Anunciar
           </a>
@@ -511,6 +518,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
                 ) : null}
               </div>
             ) : null}
+          <BarraDisputa br={data?.br ?? null} cor={cor} turno={turno} />
           <div className="flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]">
             {/* coluna esquerda */}
             <div className="contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1">
@@ -647,9 +655,6 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               <div className="order-4 lg:order-none lg:min-h-[170px] lg:flex-1">
                 <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
               </div>
-              <div className="order-7 lg:order-none lg:shrink-0 empty:hidden">
-                <ChatApuracao />
-              </div>
               <div className="order-8 lg:order-none lg:shrink-0">
                 <div className="grid grid-cols-2 gap-2">
                   <AdSlot indice={2} label="Anuncie aqui" alto="h-[96px] [@media(max-height:820px)]:h-[72px]" />
@@ -688,6 +693,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
         </p>
       </footer>
 
+      <ChatApuracao aberto={chatAberto} onFechar={() => setChatAberto(false)} online={online} />
       {pixAtivo ? <ApoieModal aberto={apoie} onClose={() => setApoie(false)} /> : null}
       <BuscaModal aberto={busca} onClose={() => setBusca(false)} onSelectUf={(u) => { setAba("presidente"); setUf(u); }} />
     </div>
