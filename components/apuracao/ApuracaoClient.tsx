@@ -269,11 +269,18 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
   const cor = useMemo(() => makeCor(data?.br?.cands.map((c) => ({ n: c.n, partido: c.partido })) ?? []), [data]);
 
   const compartilhar = async () => {
-    const url = `${SITE_URL}/apuracao`;
+    const url = `${SITE_URL}/apuracao/${turno}`;
+    const br = data?.br;
+    const lider = br?.cands?.[0];
+    const bonito = (n: string) => n.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+    const texto =
+      br && br.pctApurado > 0 && lider && !data?.demo && !data?.previa
+        ? `Começou a apuração. ${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(br.pctApurado)}% apurado, ${bonito(lider.nome)} na frente com ${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(lider.pct)}%.\nAcompanhe ao vivo, atualiza sozinho:\n${url}`
+        : `🗳️ Apuração do ${turno}º turno AO VIVO, atualizando sozinha (dados do TSE)\nPlacar, mapa por estado e projeção:\n${url}`;
     try {
-      if (navigator.share) await navigator.share({ title: "Apuração ao vivo", text: share, url });
+      if (navigator.share) await navigator.share({ text: texto });
       else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(texto);
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2000);
       }
@@ -449,7 +456,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             </button>
           ) : null}
           <button onClick={() => { track("compartilhar", { turno }); void compartilhar(); }} className={btnTopo}>
-            {copiado ? "Link copiado ✓" : "Compartilhar"}
+            {copiado ? "Texto copiado ✓" : "Compartilhar"}
           </button>
           {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
             <button onClick={() => { track("chat_abrir", { turno }); setChatAberto((a) => !a); }} className={`${btnTopo} ${chatAberto ? "!border-lime/60 text-lime" : ""}`} aria-pressed={chatAberto}>
