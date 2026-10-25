@@ -28,6 +28,11 @@ const corDe = (n: string) => {
   return CORES[h % CORES.length];
 };
 const RAPIDAS = ["🔥", "👏", "😮", "😂", "🇧🇷"];
+const EMOJIS = [
+  "😀", "😂", "🤣", "😍", "😎", "🥳", "😭", "😡", "😱", "😮", "🤔", "🙄", "😅", "😬", "🥲", "😴",
+  "👏", "🙌", "👍", "👎", "🙏", "💪", "🤝", "✌️", "🫡", "🤞", "👀", "🧠", "❤️", "💚", "💛", "💙",
+  "🔥", "⚡", "🎉", "🏆", "🇧🇷", "🗳️", "📺", "📊", "⏳", "🚨", "💥", "✅", "❌", "🤯", "🤡", "🫠",
+];
 const fmtN = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 
 /** Bate-papo ao vivo em painel lateral: login com Google + apelido. Só consulta quando está aberto. Sem GOOGLE_CLIENT_ID não aparece. */
@@ -39,6 +44,9 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
   const [texto, setTexto] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [emotes, setEmotes] = useState(false);
+  const [novas, setNovas] = useState(false);
+  const ultimoId = useRef("");
   const lista = useRef<HTMLDivElement>(null);
   const colado = useRef(true);
   const btn = useRef<HTMLDivElement>(null);
@@ -78,7 +86,12 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
 
   useEffect(() => {
     const el = lista.current;
-    if (el && colado.current) el.scrollTop = el.scrollHeight;
+    const id = msgs.length ? msgs[msgs.length - 1].id : "";
+    if (el && colado.current) {
+      el.scrollTop = el.scrollHeight;
+      setNovas(false);
+    } else if (id && id !== ultimoId.current && ultimoId.current) setNovas(true);
+    ultimoId.current = id;
   }, [msgs, aberto]);
 
   const entrar = useCallback(async (credential: string) => {
@@ -162,6 +175,7 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
         onScroll={(e) => {
           const el = e.currentTarget;
           colado.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+          if (colado.current) setNovas(false);
         }}
         className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
         role="log"
@@ -180,6 +194,21 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
         ))}
       </div>
 
+      {novas ? (
+        <button
+          type="button"
+          onClick={() => {
+            const el = lista.current;
+            if (el) el.scrollTop = el.scrollHeight;
+            colado.current = true;
+            setNovas(false);
+          }}
+          className="mx-auto -mt-10 mb-2 h-8 rounded-full bg-lime px-4 text-xs font-semibold text-ink shadow-lg"
+        >
+          ↓ Novas mensagens
+        </button>
+      ) : null}
+
       <div className="border-t border-line px-4 pb-4 pt-3">
         {off ? (
           <p className="text-sm text-amber">O chat está pausado agora.</p>
@@ -192,21 +221,52 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
                 </button>
               ))}
             </div>
+            {emotes ? (
+              <div className="rounded-2xl border border-line bg-panel p-3" role="dialog" aria-label="Emojis">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-semibold">Emojis</span>
+                  <button type="button" onClick={() => setEmotes(false)} className="h-7 w-7 rounded-full text-sm hover:bg-white/10" aria-label="Fechar emojis">
+                    ✕
+                  </button>
+                </div>
+                <div className="grid max-h-[150px] grid-cols-8 gap-1 overflow-y-auto">
+                  {EMOJIS.map((e) => (
+                    <button key={e} type="button" onClick={() => setTexto((t) => (t + e).slice(0, 200))} className="h-9 rounded-lg text-xl hover:bg-white/10">
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                setEmotes(false);
                 void mandar(texto);
               }}
               className="flex gap-2"
             >
-              <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={200} placeholder={`Falar como ${me.nick}`} className="h-11 min-w-0 flex-1 rounded-full border border-line bg-black/30 px-4 text-sm text-paper outline-none focus:border-lime" />
+              <div className="relative min-w-0 flex-1">
+                <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={200} placeholder="Escreva no chat" className="h-11 w-full rounded-full border border-line bg-black/30 pl-4 pr-11 text-sm text-paper outline-none focus:border-lime" />
+                <button type="button" onClick={() => setEmotes((v) => !v)} aria-label="Abrir emojis" aria-expanded={emotes} className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-lg hover:bg-white/10">
+                  🙂
+                </button>
+              </div>
               <button type="submit" disabled={enviando || !texto.trim()} className="h-11 rounded-full bg-lime px-5 text-sm font-semibold text-ink disabled:opacity-40">
                 Enviar
               </button>
             </form>
-            <button type="button" onClick={() => void sair()} className="justify-self-start text-[11px] text-mute underline">
-              Sair do chat
-            </button>
+            <p className="text-[11px] text-mute">
+              Como <strong className="text-paper">{me.nick}</strong> ·{" "}
+              <button type="button" onClick={() => void sair()} className="underline">
+                trocar
+              </button>{" "}
+              ·{" "}
+              <button type="button" onClick={() => void sair()} className="underline">
+                sair
+              </button>{" "}
+              · Chat moderado
+            </p>
           </div>
         ) : (
           <div className="grid gap-2">

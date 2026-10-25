@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   if (gap !== "OK" && process.env.UPSTASH_REDIS_REST_URL) return NextResponse.json({ ok: false, erro: "Espere 2 segundos." }, { status: 429 });
   const ultima = await redis<string>(["GETSET", `chat:v1:last:${uid}`, lim.m]);
   await redis(["EXPIRE", `chat:v1:last:${uid}`, 120]);
-  if (ultima === lim.m) return NextResponse.json({ ok: false, erro: "Mensagem repetida." }, { status: 422 });
+  if (ultima === lim.m && /[\p{L}\p{N}]/u.test(lim.m)) return NextResponse.json({ ok: false, erro: "Mensagem repetida." }, { status: 422 });
 
   const msg: Msg = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, t: Date.now(), uid, u: nick, m: lim.m };
   const ok = await redisPipeline([["LPUSH", K_MSGS, JSON.stringify(msg)], ["LTRIM", K_MSGS, 0, MAX_MSGS - 1]]);

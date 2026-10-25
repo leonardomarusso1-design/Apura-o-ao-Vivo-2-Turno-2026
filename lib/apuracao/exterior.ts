@@ -69,18 +69,19 @@ async function read(ele: number): Promise<ExteriorData | null> {
 }
 
 /** Cidades do exterior: 1 coleta a cada ~45s para todo mundo (lock no Redis), nunca por visitante. */
-export async function getExterior(ele: number, previa: boolean): Promise<ExteriorData | null> {
+export async function getExterior(ele: number, previa: boolean, forcar = false): Promise<ExteriorData | null> {
   const cached = await read(ele);
   const maxAge = previa ? FRESH_PREVIA_MS : FRESH_MS;
   if (cached && Date.now() - new Date(cached.geradoEm).getTime() < maxAge) return cached;
 
   const got = await redis<string>(["SET", lock(ele), "1", "NX", "EX", 40]);
   if (got !== "OK" && cached) return cached; // outra instância está coletando
-  if (await redis<string>(["GET", `ext:404:${ele}`])) return cached;
+  if (!forcar && (await redis<string>(["GET", `ext:404:${ele}`]))) return cached;
 
   // Sonda 6 cidades: se nenhuma existe ainda (404), não dispara as ~186 requisições. Uma só não basta: cada cidade fecha em um horário.
+  // "forcar" = o site já sabe (pelo agregado ZZ do TSE) que o exterior tem apuração: busca tudo, sem sondar.
   const probes = await Promise.all(EXT_CIDADES.slice(0, 6).map((c) => fetchCidade(c.cd, ele)));
-  if (probes.every((p) => p === "none")) {
+  if (!forcar && probes.every((p) => p === "none")) {
     await redis(["SET", `ext:404:${ele}`, "1", "EX", 60]);
     return cached;
   }
