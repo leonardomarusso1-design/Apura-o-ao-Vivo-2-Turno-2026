@@ -18,6 +18,7 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
   const [geo, setGeo] = useState<Geo | null | "falta">(null);
   const [dados, setDados] = useState<ItemMapa[] | null>(null);
   const [tent, setTent] = useState(0);
+  const [tg, setTg] = useState(0); // tentativas de baixar o desenho
   const [hover, setHover] = useState<{ x: number; y: number; it: ItemMapa; d: string } | null>(null);
 
   useEffect(() => {
@@ -25,19 +26,27 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
     setGeo(null);
     setDados(null);
     setTent(0);
+    setTg(0);
   }, [uf, cargo, inicial]);
 
   useEffect(() => {
     if (!aberto) return;
     let vivo = true;
+    let t: ReturnType<typeof setTimeout> | undefined;
     fetch(`/geo/mun/${uf.toLowerCase()}.json`)
       .then((r) => (r.ok ? (r.json() as Promise<Geo>) : Promise.reject()))
       .then((g) => vivo && setGeo(g))
-      .catch(() => vivo && setGeo("falta"));
+      .catch(() => {
+        if (!vivo) return;
+        // falha de rede/arquivo grande: tenta de novo algumas vezes antes de desistir
+        if (tg < 5) t = setTimeout(() => setTg((x) => x + 1), 2500);
+        else setGeo("falta");
+      });
     return () => {
       vivo = false;
+      if (t) clearTimeout(t);
     };
-  }, [aberto, uf]);
+  }, [aberto, uf, tg]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -76,12 +85,12 @@ export default function MapaMunicipios({ uf, cargo, inicial = false, fit = false
       </button>
     );
   if (geo === "falta") return <p className="mt-4 text-xs text-mute">O desenho dos municípios ainda não foi instalado neste site.</p>;
-  if (!geo || !dados) return <div className="mt-4 h-48 animate-pulse rounded-xl bg-panel" role="status" aria-label="Carregando municípios" />;
+  if (!geo) return <div className="mt-4 h-48 animate-pulse rounded-xl bg-panel" role="status" aria-label="Carregando municípios" />;
 
   const achar = (g: Geo["m"][number]) => porId.get(g.i) ?? porId.get(g.i.slice(0, 6)) ?? porNome.get(norm(g.n));
   return (
     <div className={`relative ${fit ? "flex h-full flex-col" : "mt-4"}`} onPointerLeave={() => setHover(null)}>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">Municípios · {dados.length}</p>
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-mute">{dados ? `Municípios · ${dados.length}` : "Aguardando os primeiros votos · municípios"}</p>
       <div className={fit ? "min-h-0 flex-1" : "h-[60vh] max-h-[520px]"}>
       <ZoomBox>
       <svg viewBox={geo.vb.join(" ")} className="h-full w-full" role="img" aria-label={`Mapa dos municípios de ${uf}`}>
