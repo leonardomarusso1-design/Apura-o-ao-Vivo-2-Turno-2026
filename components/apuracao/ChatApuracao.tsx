@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { STICKERS, stickerDe } from "@/lib/chat-stickers";
 
-type Msg = { id: string; t: number; u: string; m: string };
+type Msg = { id: string; t: number; u: string; m: string; r?: { u: string; m: string } };
 type Me = { logado: boolean; nick?: string };
 
 const CID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
@@ -45,6 +46,8 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [emotes, setEmotes] = useState(false);
+  const [figs, setFigs] = useState(false);
+  const [resp, setResp] = useState<Msg | null>(null);
   const [novas, setNovas] = useState(false);
   const ultimoId = useRef("");
   const lista = useRef<HTMLDivElement>(null);
@@ -134,10 +137,12 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
     setEnviando(true);
     setErro("");
     try {
-      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ m }) });
+      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ m, re: resp?.id }) });
       const j = (await r.json()) as { ok: boolean; erro?: string };
       if (j.ok) {
         setTexto("");
+        setResp(null);
+        setFigs(false);
         colado.current = true;
         void ler();
       } else {
@@ -160,12 +165,13 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
 
   return (
     <aside className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-line bg-ink shadow-2xl sm:w-[380px]" aria-label="Chat ao vivo">
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
+      <style>{`@keyframes chatPop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}.chat-fig{animation:chatPop .35s ease-out}@media (prefers-reduced-motion:reduce){.chat-fig{animation:none}}`}</style>
+      <header className="flex items-center justify-between gap-2 border-b border-line px-3 py-2">
         <div className="flex items-baseline gap-2">
-          <h2 className="font-display text-lg">Chat ao vivo</h2>
+          <h2 className="text-sm font-bold">Chat ao vivo</h2>
           {online ? <span className="text-xs text-mute">👥 {fmtN(online)}</span> : null}
         </div>
-        <button type="button" onClick={onFechar} className="h-9 rounded-full border border-line px-4 text-xs font-semibold hover:bg-white/5">
+        <button type="button" onClick={onFechar} className="h-8 rounded-full border border-line px-3 text-xs font-semibold hover:bg-white/5">
           ✕ Fechar chat
         </button>
       </header>
@@ -177,21 +183,40 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
           colado.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
           if (colado.current) setNovas(false);
         }}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
+        className="min-h-0 flex-1 overflow-y-auto px-3 py-2"
         role="log"
         aria-live="polite"
       >
         {msgs.length === 0 ? <p className="text-sm text-mute">Ninguém falou ainda. Seja o primeiro!</p> : null}
-        {msgs.map((m) => (
-          <div key={m.id} className="flex gap-2.5 py-1.5">
-            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-ink" style={{ background: corDe(m.u) }} aria-hidden>
-              {m.u.slice(0, 1).toUpperCase()}
-            </span>
-            <p className="min-w-0 break-words text-[15px] leading-snug">
-              <strong style={{ color: corDe(m.u) }}>{m.u}:</strong> <span className="text-paper/95">{m.m}</span>
-            </p>
-          </div>
-        ))}
+        {msgs.map((m) => {
+          const fig = stickerDe(m.m);
+          return (
+            <div key={m.id} className="group py-[3px]">
+              {m.r ? (
+                <p className="truncate pl-3 text-[11px] leading-tight text-mute">
+                  ↪ <span className="font-semibold" style={{ color: corDe(m.r.u) }}>{m.r.u}</span> {stickerDe(m.r.m)?.e ?? m.r.m}
+                </p>
+              ) : null}
+              <div className="flex items-start gap-1.5">
+                {fig ? (
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-bold leading-tight" style={{ color: corDe(m.u) }}>{m.u}</p>
+                    <span className="chat-fig inline-block text-[44px] leading-none" role="img" aria-label={fig.nome}>{fig.e}</span>
+                  </div>
+                ) : (
+                  <p className="min-w-0 flex-1 break-words text-[13px] leading-[1.3]">
+                    <strong style={{ color: corDe(m.u) }}>{m.u}:</strong> <span className="text-paper/95">{m.m}</span>
+                  </p>
+                )}
+                {me.logado ? (
+                  <button type="button" onClick={() => setResp(m)} aria-label={`Responder ${m.u}`} className="shrink-0 rounded px-1 text-xs text-mute opacity-50 hover:bg-white/10 hover:opacity-100 group-hover:opacity-100">
+                    ↩
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {novas ? (
@@ -205,22 +230,42 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
           }}
           className="mx-auto -mt-10 mb-2 h-8 rounded-full bg-lime px-4 text-xs font-semibold text-ink shadow-lg"
         >
-          ↓ Novas mensagens
+          ↓ Chat pausado · novas mensagens
         </button>
       ) : null}
 
-      <div className="border-t border-line px-4 pb-4 pt-3">
+      <div className="border-t border-line px-3 pb-3 pt-2">
         {off ? (
           <p className="text-sm text-amber">O chat está pausado agora.</p>
         ) : me.logado ? (
-          <div className="grid gap-2">
-            <div className="flex gap-2" aria-label="Reações rápidas">
+          <div className="grid gap-1.5">
+            {resp ? (
+              <div className="flex items-center gap-2 rounded-lg border border-line bg-white/5 px-2 py-1 text-[11px]">
+                <span className="min-w-0 flex-1 truncate">↪ Respondendo <b style={{ color: corDe(resp.u) }}>{resp.u}</b>: {stickerDe(resp.m)?.e ?? resp.m}</span>
+                <button type="button" onClick={() => setResp(null)} aria-label="Cancelar resposta" className="px-1 text-mute hover:text-paper">✕</button>
+              </div>
+            ) : null}
+            <div className="flex gap-1.5" aria-label="Reações rápidas">
               {RAPIDAS.map((e) => (
-                <button key={e} type="button" disabled={enviando} onClick={() => void mandar(e)} className="h-9 w-9 rounded-full border border-line text-base hover:bg-white/10 disabled:opacity-40">
+                <button key={e} type="button" disabled={enviando} onClick={() => void mandar(e)} className="h-8 w-8 rounded-full border border-line text-sm hover:bg-white/10 disabled:opacity-40">
                   {e}
                 </button>
               ))}
+              <button type="button" onClick={() => { setFigs((v) => !v); setEmotes(false); }} aria-expanded={figs} className="ml-auto h-8 rounded-full border border-line px-3 text-xs font-semibold hover:bg-white/10">
+                🎭 Figurinhas
+              </button>
             </div>
+            {figs ? (
+              <div className="rounded-2xl border border-line bg-panel p-2" role="dialog" aria-label="Figurinhas">
+                <div className="grid max-h-[170px] grid-cols-6 gap-1 overflow-y-auto">
+                  {STICKERS.map((f) => (
+                    <button key={f.id} type="button" disabled={enviando} title={f.nome} onClick={() => void mandar(`:s:${f.id}:`)} className="h-12 rounded-xl text-3xl transition hover:scale-110 hover:bg-white/10 disabled:opacity-40">
+                      {f.e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {emotes ? (
               <div className="rounded-2xl border border-line bg-panel p-3" role="dialog" aria-label="Emojis">
                 <div className="mb-2 flex items-center justify-between">
@@ -247,12 +292,12 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
               className="flex gap-2"
             >
               <div className="relative min-w-0 flex-1">
-                <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={200} placeholder="Escreva no chat" className="h-11 w-full rounded-full border border-line bg-black/30 pl-4 pr-11 text-sm text-paper outline-none focus:border-lime" />
-                <button type="button" onClick={() => setEmotes((v) => !v)} aria-label="Abrir emojis" aria-expanded={emotes} className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-lg hover:bg-white/10">
+                <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={200} placeholder="Escreva no chat" className="h-10 w-full rounded-full border border-line bg-black/30 pl-4 pr-11 text-sm text-paper outline-none focus:border-lime" />
+                <button type="button" onClick={() => { setEmotes((v) => !v); setFigs(false); }} aria-label="Abrir emojis" aria-expanded={emotes} className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-lg hover:bg-white/10">
                   🙂
                 </button>
               </div>
-              <button type="submit" disabled={enviando || !texto.trim()} className="h-11 rounded-full bg-lime px-5 text-sm font-semibold text-ink disabled:opacity-40">
+              <button type="submit" disabled={enviando || !texto.trim()} className="h-10 rounded-full bg-lime px-4 text-sm font-semibold text-ink disabled:opacity-40">
                 Enviar
               </button>
             </form>
@@ -277,7 +322,7 @@ export default function ChatApuracao({ aberto, onFechar, online }: { aberto: boo
           </div>
         )}
         {erro ? <p className="mt-2 text-xs text-amber">{erro}</p> : null}
-        <p className="mt-2 text-[11px] leading-snug text-mute">Respeite todo mundo. Palavrões, ofensas, links e spam são apagados e a conta é bloqueada. Conversa entre usuários, sem relação com o TSE.</p>
+        <p className="mt-1.5 text-[10px] leading-snug text-mute">Sem palavrões, ofensas, links ou spam: a conta é bloqueada. Conversa entre usuários, sem relação com o TSE.</p>
       </div>
     </aside>
   );

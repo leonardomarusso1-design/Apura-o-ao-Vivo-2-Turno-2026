@@ -1,3 +1,4 @@
+import { STICKER_RE, stickerDe } from "./chat-stickers";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export const K_MSGS = "chat:v1:msgs"; // LIST (mais nova primeiro) de JSON Msg
@@ -9,8 +10,9 @@ export const MAX_CHARS = 200;
 export const COOKIE = "chat_s";
 export const SESSAO_SEG = 60 * 60 * 12;
 
-export type Msg = { id: string; t: number; uid: string; u: string; m: string };
-export type MsgPub = { id: string; t: number; u: string; m: string };
+export type Resp = { u: string; m: string }; // citação da mensagem respondida (copiada no servidor)
+export type Msg = { id: string; t: number; uid: string; u: string; m: string; r?: Resp };
+export type MsgPub = { id: string; t: number; u: string; m: string; r?: Resp };
 
 export const clientId = () => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
@@ -94,6 +96,7 @@ export function erroApelido(n: string): string | null {
 
 export function limparMsg(m: unknown): { ok: true; m: string } | { ok: false; erro: string } {
   if (typeof m !== "string") return { ok: false, erro: "vazio" };
+  if (STICKER_RE.test(m)) return stickerDe(m) ? { ok: true, m } : { ok: false, erro: "Figurinha inválida." };
   const t = m.replace(/[\u0000-\u001f\u007f​-‏‪-‮⁠﻿]/g, " ").replace(/\s+/g, " ").trim();
   if (!t) return { ok: false, erro: "vazio" };
   if (t.length > MAX_CHARS) return { ok: false, erro: `Máximo de ${MAX_CHARS} caracteres.` };

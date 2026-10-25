@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { redis, redisPipeline } from "@/lib/redis";
 import { limited } from "@/lib/ratelimit";
 import { forbidden, readJson, sameOrigin } from "@/lib/security";
+import { STICKER_RE } from "@/lib/chat-stickers";
 import { K_BAN, K_MSGS, K_OFF, MAX_MSGS, limparMsg, uidDaSessao, type Msg, type MsgPub } from "@/lib/chat";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function GET() {
   const msgs: MsgPub[] = (r ? brutos.map(parse) : (brutos as Msg[]))
     .filter((m): m is Msg => Boolean(m))
     .reverse()
-    .map(({ id, t, u, m }) => ({ id, t, u, m }));
+    .map(({ id, t, u, m, r }) => ({ id, t, u, m, ...(r ? { r } : {}) }));
   return NextResponse.json({ off, msgs }, { headers: { "Cache-Control": "public, s-maxage=2, stale-while-revalidate=4" } });
 }
 
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return forbidden();
   const uid = uidDaSessao(req.headers.get("cookie"));
   if (!uid) return NextResponse.json({ ok: false, erro: "Entre com o Google para conversar." }, { status: 401 });
-  const b = await readJson<{ m?: unknown }>(req, 1024);
+  const b = await readJson<{ m?: unknown; re?: unknown }>(req, 1024);
   if (!b) return NextResponse.json({ ok: false, erro: "Mensagem inválida." }, { status: 400 });
 
   const [off, banido, nick] = await Promise.all([
@@ -54,9 +55,16 @@ export async function POST(req: Request) {
   if (gap !== "OK" && process.env.UPSTASH_REDIS_REST_URL) return NextResponse.json({ ok: false, erro: "Espere 2 segundos." }, { status: 429 });
   const ultima = await redis<string>(["GETSET", `chat:v1:last:${uid}`, lim.m]);
   await redis(["EXPIRE", `chat:v1:last:${uid}`, 120]);
-  if (ultima === lim.m && /[\p{L}\p{N}]/u.test(lim.m)) return NextResponse.json({ ok: false, erro: "Mensagem repetida." }, { status: 422 });
+  if (ultima === lim.m && /[\p{L}\p{N}]/u.test(lim.m) && !STICKER_RE.test(lim.m)) return NextResponse.json({ ok: false, erro: "Mensagem repetida." }, { status: 422 });
 
-  const msg: Msg = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, t: Date.now(), uid, u: nick, m: lim.m };
+  // resposta: copiamos a citação da mensagem original no servidor (o cliente só manda o id)
+  let r: Msg["r"];
+  if (typeof b.re === "string" && b.re.length <= 20) {
+    const recentes = ((await redis<unknown[]>(["LRANGE", K_MSGS, 0, 79])) ?? []).map(parse);
+    const alvo = recentes.find((x): x is Msg => Boolean(x) && (x as Msg).id === b.re);
+    if (alvo) r = { u: alvo.u, m: alvo.m.slice(0, 60) };
+  }
+  const msg: Msg = { ...(r ? { r } : {}), id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, t: Date.now(), uid, u: nick, m: lim.m };
   const ok = await redisPipeline([["LPUSH", K_MSGS, JSON.stringify(msg)], ["LTRIM", K_MSGS, 0, MAX_MSGS - 1]]);
   if (!ok) {
     if (process.env.UPSTASH_REDIS_REST_URL) return NextResponse.json({ ok: false, erro: "Tente de novo." }, { status: 503 });
