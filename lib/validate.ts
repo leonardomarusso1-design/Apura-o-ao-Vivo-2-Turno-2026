@@ -12,6 +12,8 @@ export function normalizePhoneBR(v: unknown): string | null {
   let d = v.replace(/\D/g, "");
   if (d.startsWith("55") && d.length >= 12) d = d.slice(2);
   if (d.length !== 11 && d.length !== 10) return null;
+  // Celular antigo sem o 9 (ex.: 11 9710-3695 -> 8 dígitos começando em 6-9): o WhatsApp só existe com o 9 na frente.
+  if (d.length === 10 && /^[6-9]/.test(d.slice(2))) d = `${d.slice(0, 2)}9${d.slice(2)}`;
   const ddd = Number(d.slice(0, 2));
   if (ddd < 11 || ddd > 99) return null;
   if (d.length === 11 && d[2] !== "9") return null; // celular

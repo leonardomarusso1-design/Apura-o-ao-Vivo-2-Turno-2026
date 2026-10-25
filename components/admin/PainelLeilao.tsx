@@ -68,7 +68,10 @@ export default function PainelLeilao() {
             <ol className="grid gap-3">
               {dados.lances.map((l, i) => {
                 const vence = i < dados.cotas;
-                const tel = l.whatsapp.replace(/\D/g, "");
+                let tel = l.whatsapp.replace(/\D/g, "");
+                // lances antigos: celular salvo sem o 9 (55 + DDD + 8 dígitos começando em 6-9) -> conserta só na hora de abrir o WhatsApp
+                if (/^55\d{2}[6-9]\d{7}$/.test(tel)) tel = `${tel.slice(0, 4)}9${tel.slice(4)}`;
+                const telFmt = tel.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3");
                 return (
                   <li key={l.id} className={`grid gap-1 rounded-2xl border p-4 text-sm ${vence ? "border-lime/60 bg-panel" : "border-line"}`}>
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -86,11 +89,11 @@ export default function PainelLeilao() {
                     <div className="flex flex-wrap gap-2 pt-1">
                       <a
                         className="inline-flex h-10 items-center rounded-xl bg-lime px-3 font-semibold text-ink"
-                        href={`https://wa.me/${tel}?text=${encodeURIComponent(`Olá, ${l.nome}! Aqui é do Apuração Ao Vivo 2026. Seu lance de ${brl(l.valor)} está entre os vencedores. Vamos combinar o pagamento e a arte?`)}`}
+                        href={`https://wa.me/${tel}?text=${encodeURIComponent(`Olá, ${l.nome}! Aqui é do Apuração Ao Vivo 2026. Recebi sua proposta de ${brl(l.valor)} para anunciar na apuração. Podemos conversar?`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        WhatsApp {l.whatsapp.replace(/^55(\d{2})(\d{4,5})(\d{4})$/, "($1) $2-$3")}
+                        WhatsApp {telFmt}
                       </a>
                       <a className="inline-flex h-10 items-center rounded-xl border border-line px-3" href={`mailto:${l.email}`}>
                         {l.email}
