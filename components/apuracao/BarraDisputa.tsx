@@ -35,10 +35,10 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
   const lider = semVotos ? null : e.votos === d.votos ? null : e.votos > d.votos ? e : d;
 
   const lado = (c: typeof e, dir: "l" | "r") => (
-    <div className={`flex min-w-0 items-center gap-3 ${dir === "r" ? "flex-row-reverse text-right" : ""}`}>
-      <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={56} eager />
+    <div className={`flex min-w-0 items-center gap-2.5 ${dir === "r" ? "flex-row-reverse text-right" : ""}`}>
+      <Avatar n={c.n} sq={c.sq} nome={c.nome} cor={cor(c.n)} size={40} eager />
       <div className="min-w-0">
-        <p className="truncate font-display text-xl leading-tight sm:text-2xl">{c.nome.split(" ").slice(0, 2).join(" ")}</p>
+        <p className="truncate font-display text-base leading-tight sm:text-lg">{c.nome.split(" ").slice(0, 2).join(" ")}</p>
         <p className="text-xs text-mute">
           {c.partido} · {c.n}
           {!semVotos ? <strong className="ml-2 text-sm text-paper">{fmtPct(c.pct, 2)}%</strong> : null}
@@ -48,10 +48,10 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
   );
 
   return (
-    <section className="glass-panel rounded-2xl px-4 py-3" aria-label="Disputa pela presidência">
+    <section className="glass-panel rounded-xl px-3 py-2" aria-label="Disputa pela presidência">
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         {lado(e, "l")}
-        <p className="hidden text-center font-display text-base sm:block sm:text-xl" aria-live="polite">
+        <p className="hidden text-center font-display text-sm sm:block sm:text-base" aria-live="polite">
           {contagem ? (
             <>A apuração começa em <span className="tabular">{hms(INICIO - (agora ?? INICIO))}</span></>
           ) : semVotos ? (
@@ -72,16 +72,16 @@ export default function BarraDisputa({ br, cor, turno }: { br: Area | null; cor:
         </p>
       ) : null}
 
-      <div className="relative mt-6">
+      <div className="relative mt-5">
         <span className="absolute -top-5 left-1/2 -translate-x-1/2 rounded-md border border-white/20 bg-ink px-1.5 text-[10px] font-semibold leading-4 text-paper">50%</span>
-        <div className="relative h-4 overflow-hidden rounded-full bg-white/10" role="img" aria-label={`${e.nome} ${fmtPct(pe)}%, ${d.nome} ${fmtPct(pd)}%`}>
+        <div className="relative h-3 overflow-hidden rounded-full bg-white/10" role="img" aria-label={`${e.nome} ${fmtPct(pe)}%, ${d.nome} ${fmtPct(pd)}%`}>
           <div className="absolute inset-y-0 left-0 rounded-l-full transition-[width] duration-700" style={{ width: `${pe}%`, background: cor(e.n) }} />
           <div className="absolute inset-y-0 right-0 rounded-r-full transition-[width] duration-700" style={{ width: `${pd}%`, background: cor(d.n) }} />
           <div className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-white/80" />
         </div>
       </div>
 
-      <p className="mt-2 text-xs text-mute">
+      <p className="mt-1.5 text-[11px] text-mute">
         <strong className="text-paper">{fmtPct(br?.pctApurado ?? 0, br && br.pctApurado >= 10 ? 1 : 2).replace(/,00$/, "")}%</strong> apurado
         {falta > 0 ? <> · faltam {milhoes(falta)} de eleitores a apurar</> : null}
       </p>

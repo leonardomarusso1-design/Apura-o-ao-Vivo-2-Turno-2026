@@ -347,7 +347,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
     ["federais", "Deputados"],
   ] as const;
   const abaAtiva = aba === "estaduais" ? "federais" : aba;
-  const btnTopo = "h-9 whitespace-nowrap rounded-xl border border-line px-3 text-xs sm:text-sm hover:bg-white/5";
+  const btnTopo = "h-8 whitespace-nowrap rounded-lg border border-line px-2.5 text-xs hover:bg-white/5";
 
   const aguardandoT2 = Date.now() < new Date(ELECTION_ISO).getTime();
   const trocaTurno = (
@@ -362,7 +362,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
           key={n}
           href={href}
           aria-current={turno === n ? "page" : undefined}
-          className={`flex h-8 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-semibold transition sm:text-sm ${turno === n ? "bg-lime text-ink" : "text-mute hover:bg-white/10 hover:text-paper"}`}
+          className={`flex h-7 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-xs font-semibold transition ${turno === n ? "bg-lime text-ink" : "text-mute hover:bg-white/10 hover:text-paper"}`}
         >
           {nome}
           {n === 2 && turno !== 2 && aguardandoT2 ? <span className="rounded bg-amber/20 px-1 text-[9px] font-bold uppercase text-amber">25/10</span> : null}
@@ -373,7 +373,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
 
   return (
     <TurnoContext.Provider value={turno}>
-    <div className={`mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-3 pt-2 lg:h-full lg:min-h-0 lg:px-4 ${chatAberto ? "lg:pr-[396px]" : ""}`}>
+    <div className={`mx-auto flex w-full max-w-[1920px] flex-col px-3 pb-2 pt-1.5 lg:h-full lg:min-h-0 lg:px-3 ${chatAberto ? "lg:pr-[396px]" : ""}`}>
       {novo && !diaDaEleicao && turno === 2 ? (
         <div className="mb-3 rounded-2xl border border-lime/40 bg-panel p-3">
           <p className="text-sm font-semibold">Você está na lista ✓</p>
@@ -402,9 +402,9 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
         </p>
       ) : null}
 
-      <header className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 lg:flex-nowrap">
+      <header className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-2 lg:flex-nowrap">
         <div className="shrink-0">
-          <h1 className="font-display text-xl leading-none sm:text-2xl">Apuração 2026</h1>
+          <h1 className="font-display text-lg leading-none sm:text-xl">Apuração 2026</h1>
           <Credito compact />
         </div>
         {trocaTurno}
@@ -415,7 +415,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               role="tab"
               aria-selected={abaAtiva === k}
               onClick={() => setAba(k)}
-              className={`h-8 shrink-0 whitespace-nowrap rounded-xl px-3 text-xs font-medium transition sm:text-sm ${abaAtiva === k ? "bg-white/10 text-paper" : "text-mute hover:text-paper"}`}
+              className={`h-7 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-xs font-medium transition ${abaAtiva === k ? "bg-white/10 text-paper" : "text-mute hover:text-paper"}`}
             >
               {nome}
             </button>
@@ -426,12 +426,12 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
         </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {online ? (
-            <span className="tabular flex h-9 items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 text-xs text-emerald-200" title="Pessoas com o site aberto agora" aria-live="polite">
+            <span className="tabular flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 text-xs text-emerald-200" title="Pessoas com o site aberto agora" aria-live="polite">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              <strong className="text-sm text-white">{new Intl.NumberFormat("pt-BR").format(online)}</strong>
+              <strong className="text-xs text-white">{new Intl.NumberFormat("pt-BR").format(online)}</strong>
               <span className="hidden sm:inline">online agora</span>
             </span>
           ) : null}
@@ -503,32 +503,20 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             ) : null}
           </div>
         ) : (
-          <div className="flex flex-col gap-3 lg:h-full lg:min-h-0">
+          <div className="flex flex-col gap-2 lg:h-full lg:min-h-0">
             {(aguardando && !data?.br) || (turno === 2 && !data?.demo && (data?.br?.pctApurado ?? 0) === 0) ? (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line bg-panel px-4 py-2.5" role="status">
-                <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-amber" />
-                <p className="font-display text-base sm:text-lg">{turno === 2 ? "2º turno · aguardando os primeiros votos" : "Aguardando o TSE"}</p>
-                <p className="min-w-0 flex-1 basis-64 text-xs text-mute sm:text-sm">
-                  {turno === 2
-                    ? "A divulgação começa quando as urnas fecham, em 25 de outubro, às 17h (Brasília). O mapa já está aqui e se preenche sozinho: não precisa recarregar."
-                    : "Os dados do 1º turno aparecem aqui assim que o TSE divulgar."}
+              <div className="flex items-center gap-2 rounded-lg border border-line bg-panel px-3 py-1.5 text-xs" role="status">
+                <span className="pulse-dot inline-block h-2 w-2 shrink-0 rounded-full bg-amber" />
+                <p className="min-w-0 truncate">
+                  <strong className="font-semibold">{turno === 2 ? "Aguardando os primeiros votos" : "Aguardando o TSE"}</strong>
+                  <span className="hidden text-mute sm:inline"> · o mapa se preenche sozinho, sem recarregar</span>
                 </p>
-                {turno === 2 ? (
-                  <a href="/apuracao/1" className="inline-flex h-9 items-center rounded-lg bg-lime px-3 text-xs font-semibold text-ink">
-                    Ver o 1º turno
-                  </a>
-                ) : null}
-                {turno === 2 ? (
-                  <a href="/jogo" className="inline-flex h-9 items-center rounded-lg border border-line px-3 text-xs font-semibold text-paper hover:bg-white/5">
-                    🎮 Jogar enquanto espera
-                  </a>
-                ) : null}
               </div>
             ) : null}
           <BarraDisputa br={data?.br ?? null} cor={cor} turno={turno} />
-          <div className={`flex flex-col gap-3 lg:grid lg:min-h-0 lg:flex-1 ${uf === "ZZ" ? "lg:grid-cols-1" : "lg:grid-cols-[300px_minmax(0,1fr)_300px] xl:grid-cols-[340px_minmax(0,1fr)_360px]"}`}>
+          <div className={`flex flex-col gap-2 lg:grid lg:min-h-0 lg:flex-1 ${uf === "ZZ" ? "lg:grid-cols-1" : "lg:grid-cols-[270px_minmax(0,1fr)_270px] xl:grid-cols-[300px_minmax(0,1fr)_320px]"}`}>
             {/* coluna esquerda */}
-            <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-3 lg:overflow-y-auto lg:pr-1"}>
+            <div className={uf === "ZZ" ? "contents lg:hidden" : "contents lg:flex lg:min-h-0 lg:flex-col lg:gap-2 lg:overflow-y-auto lg:pr-1"}>
               {esperandoVotos ? (
                 <p className="order-1 rounded-lg border border-line bg-panel px-3 py-2 text-xs text-mute lg:order-none" role="status">
                   <span className="pulse-dot mr-2 inline-block h-2 w-2 rounded-full bg-amber align-middle" />
@@ -547,7 +535,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
             </div>
 
             {/* centro: mapa */}
-            <section className="order-2 flex min-h-[420px] flex-col rounded-2xl border border-line bg-panel/60 p-2 sm:p-3 lg:order-none lg:min-h-0" aria-label="Mapa">
+            <section className="order-2 flex min-h-[420px] flex-col rounded-xl border border-line bg-panel/60 p-2 lg:order-none lg:min-h-0" aria-label="Mapa">
               <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
                 <div className="flex flex-wrap items-center gap-1" role="tablist" aria-label="Modo do mapa">
                   {(
@@ -659,7 +647,7 @@ export default function ApuracaoClient({ initial = null, turno = 2, pixAtivo = f
               <div className="order-5 empty:hidden lg:order-none lg:shrink-0">
                 <LiveBox />
               </div>
-              <div className="order-4 lg:order-none lg:min-h-[440px] lg:flex-1">
+              <div className="order-4 lg:order-none lg:min-h-[360px] lg:flex-1">
                 <Atualizacoes eventos={data?.eventos ?? []} cor={cor} mural={turno === 2} pct={data?.br?.pctApurado ?? 0} />
               </div>
               <div className="order-8 lg:order-none lg:shrink-0">

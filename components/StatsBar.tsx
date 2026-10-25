@@ -39,7 +39,7 @@ export default function StatsBar() {
 
   return (
     <div className="border-b border-white/[0.06] bg-[#07090e]/90 backdrop-blur-md sticky top-0 z-40 transition-colors">
-      <div className="mx-auto flex h-10 w-full max-w-[1800px] items-center justify-between gap-4 px-4 text-xs lg:px-6">
+      <div className="mx-auto flex h-7 w-full max-w-[1800px] items-center justify-between gap-4 px-4 text-[11px] lg:px-6">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="relative flex h-2 w-2 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
